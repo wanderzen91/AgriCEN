@@ -25,7 +25,7 @@ jobs:
           ssh -i key.pem -p 2222 -o StrictHostKeyChecking=no romain@$SERVER_IP << 'EOF'
 
             echo "==> Navigating to project directory..."
-            cd /srv/app_agricole/Flask-Leaflet
+            cd /srv/app_agricole/AgriCEN
 
             echo "==> Fetching and resetting branch to origin/main..."
             git fetch origin
