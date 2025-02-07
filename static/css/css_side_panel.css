@@ -1,0 +1,60 @@
+/* Conteneur principal pour le panneau */
+.side-panel {
+position: fixed;
+top: 56px; /* Hauteur de la navbar */
+right: -35%; /* Caché par défaut */
+width: 35%; /* Taille visible une fois ouvert */
+height: calc(100% - 56px); /* Hauteur de l'écran moins la navbar */
+background-color: #f8f9fa;
+box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+overflow-y: auto;
+transition: right 1s ease; /* Animation de glissement */
+z-index: 500;
+}
+
+
+/* Contenu du panneau */
+.side-panel-content {
+padding: 20px;
+}
+
+/* Bouton pour fermer le panneau */
+.side-panel-header {
+display: flex;
+justify-content: flex-end;
+padding: 10px;
+background-color: #174193;
+border-bottom: 1px solid #ddd;
+}
+
+.side-panel-header button {
+border: none;
+background-color: transparent;
+font-size: 16px;
+}
+
+
+/* Retirer la surbrillance bleue sur l'accordéon */
+.accordion-button:not(.collapsed) {
+    background-color: #77B82A; /* Couleur de fond transparente */
+    color: inherit; /* Conserve la couleur du texte */
+    box-shadow: none; /* Supprime l'effet d'ombre */
+    border-color: #dee2e6; /* Optionnel : ajustez la couleur de la bordure */
+}
+
+.accordion-button:hover {
+    background-color: #D67816; /* Couleur légèrement transparente au survol */
+    color: white;
+}
+
+/* Ajuster les bordures pour harmoniser */
+.accordion-button {
+    border: none;
+    outline: none;
+}
+
+/* Ajout d'une bordure visible entre les sections si nécessaire */
+.accordion-button.collapsed {
+    background-color: #77B82A;
+    border-bottom: 1px solid #ddd; /* Optionnel : ajustez la bordure */
+}

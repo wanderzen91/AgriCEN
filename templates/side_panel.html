@@ -1,0 +1,87 @@
+
+<div id="sidePanel" class="side-panel">
+    <!-- En-tête avec uniquement le bouton Fermer -->
+    <div class="side-panel-header d-flex justify-content-between align-items-center">
+        <button id="closePanel" class="btn btn-secondary btn-sm">
+            <i class="bi bi-x"></i> Fermer
+        </button>
+    </div>
+
+<!-- Contenu principal avec les détails -->
+<div id="panelContent" class="side-panel-content">
+    <h5 style="color: #174193; font-weight: bold; margin-bottom:15px">Détails du contrat</h5>
+    <div class="accordion" id="accordionExample">
+        <!-- Section Informations générales -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Informations générales
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne">
+                <div class="accordion-body">
+                    <p id="panelNomSite"><strong></strong></p>
+                    <p id="panelCodeSite"><strong></strong></p>
+                    <p id="panelAgriculteur"><strong></strong></p>
+                    <p id="panelDateNaissanceAgriculteur"><strong></strong></p>
+                    <p id="panelContact"><strong></strong></p>
+                </div>
+            </div>
+        </div>
+        <!-- Section Exploitation -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                    Exploitation
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="headingTwo">
+                <div class="accordion-body">
+                    <p id="panelSociete"><strong></strong></p>
+                    <p id="panelSiret"><strong></strong></p>
+                    <p id="panelAdresseEtablissement"><strong></strong></p>
+                    <p id="panelActivitePrincipale"><strong></strong></p>
+                    <p id="panelCategorieJuridique"><strong></strong></p>
+                    <p id="panelTrancheEffectif"><strong></strong></p>
+                    <p id="panelTypeProduction"><strong></strong></p>
+                    <p id="panelTypeAgriculture"><strong></strong></p>
+                    <p id="panelTypeProduit"><strong></strong></p>
+                </div>
+            </div>
+        </div>
+        <!-- Section Partenariat CEN -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+                    Partenariat CEN
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse show" aria-labelledby="headingThree">
+                <div class="accordion-body">
+                    <p id="panelTypeContrat"><strong></strong></p>
+                    <p id="panelDateSignature"><strong></strong></p>
+                    <p id="panelDatePriseEffet"><strong></strong></p>
+                    <p id="panelDateFin"><strong></strong></p>
+                    <p id="PanelReferent"><strong></strong></p>
+                    <p id="PanelSurfaceContractualisee"><strong></strong></p>
+                    <p id="PanelTypeMilieu"><strong></strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="side-panel-footer d-flex justify-content-end gap-2">
+        <button class="btn btn-primary btn-sm" style="margin-top: 10px;" onclick="editContract()">
+            <i class="bi bi-pencil-square"></i> Modifier
+        </button>
+        <div>
+            <form id="deleteContractForm" method="POST" action="">
+                <button type="button" class="btn btn-danger btn-sm" style="margin-top: 10px;" onclick="deleteContract();">
+                    <i class="bi bi-trash"></i> Supprimer
+                </button>
+            </form>
+        </div>        
+    </div>
+
+    <!-- Section des boutons Modifier et Supprimer -->
+
+

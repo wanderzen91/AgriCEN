@@ -1,0 +1,475 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/css_modal_edition.css') }}">
+
+<div class="container mt-5 p-4 shadow-sm bg-white rounded">
+    <!-- Titre principal -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Modifier le contrat</h2>
+        <button onclick="goBackOrRedirect()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Retour à la carte
+        </a>
+    </div>
+
+    <!-- Conteneur pour la carte et le formulaire -->
+    <div class="d-flex flex-wrap" style="min-height: 600px;">
+        <!-- Carte à gauche -->
+        <div class="flex-grow-1" id="map-container" style="min-width: 300px;">
+            <div id="small_map"></div>
+        </div>
+
+        <!-- Formulaire à droite -->
+        <div class="flex-grow-2 bg-light p-4 rounded shadow-sm" id="form-container" style="width: 65%;">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <!-- Onglets pour organiser les champs -->
+                <ul class="nav nav-tabs" id="modalTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="infos-general-tab" data-bs-toggle="tab" data-bs-target="#infos-general" type="button" role="tab" aria-controls="infos-general" aria-selected="true">Informations générales</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="exploitation-tab" data-bs-toggle="tab" data-bs-target="#exploitation" type="button" role="tab" aria-controls="exploitation" aria-selected="false">Exploitation</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="contrat-tab" data-bs-toggle="tab" data-bs-target="#contrat" type="button" role="tab" aria-controls="contrat" aria-selected="false">Partenariat CEN</button>
+                    </li>
+                </ul>
+
+                <!-- Contenu des onglets -->
+                <div class="tab-content mt-4">
+                    <!-- Onglet Informations générales -->
+                    <div class="tab-pane fade show active" id="infos-general" role="tabpanel" aria-labelledby="infos-general-tab">
+                        <div class="row gx-4 gy-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.nom_site.label }}
+                                    {{ form.nom_site(class="form-control", readonly=True) }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.nom_agri.label }}
+                                    {{ form.nom_agri(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.date_naissance.label }}
+                                    {{ form.date_naissance(class="form-control") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.code_site.label }}
+                                    {{ form.code_site(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.prenom_agri.label }}
+                                    {{ form.prenom_agri(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.contact.label }}
+                                    {{ form.contact(class="form-control") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Exploitation -->
+                    <div class="tab-pane fade" id="exploitation" role="tabpanel" aria-labelledby="exploitation-tab">
+                        <div class="row gx-4 gy-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.siret.label }}
+                                    <div class="input-group">
+                                        {{ form.siret(class="form-control") }}
+                                        <button type="button" class="btn btn-primary" name="fetch_sirene">Actualiser</button>
+                                    </div>
+                                    {% for error in form.siret.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.activite_principale.label }}
+                                    {{ form.activite_principale(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.categorie_juridique.label }}
+                                    {{ form.categorie_juridique(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="type_production_tagify" class="form-label">Types de Production</label>
+                                    <input id="type_production_tagify" class="form-control" name="type_production_display" placeholder="Ajouter des types de production">
+                                    <select id="type_production" name="type_production" multiple hidden>
+                                        {% for value, label in form.type_production.choices %}
+                                            <option value="{{ value }}" {% if value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.nom_societe.label }}
+                                    {{ form.nom_societe(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.adresse_etablissement.label }}
+                                    {{ form.adresse_etablissement(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.tranche_effectif.label }}
+                                    {{ form.tranche_effectif(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="produit_fini_tagify" class="form-label">Produits Finis</label>
+                                    <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
+                                    <select id="produit_fini" name="produit_fini" multiple hidden>
+                                        {% for value, label in form.produit_fini.choices %}
+                                            <option value="{{ value }}" {% if value in form.produit_fini.data %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                    {{ form.type_agriculture.label }}
+                                    {% for subfield in form.type_agriculture %}
+                                        <div class="form-check">
+                                            {{ subfield(class="form-check-input") }}
+                                            <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+                                        </div>
+                                    {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Partenariat CEN -->
+                    <div class="tab-pane fade" id="contrat" role="tabpanel" aria-labelledby="contrat-tab">
+                        <div class="row gx-4 gy-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.appellation_contrat.label }}
+                                    {{ form.appellation_contrat(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.date_signature.label }}
+                                    {{ form.date_signature(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.date_prise_effet.label }}
+                                    {{ form.date_prise_effet(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.date_fin.label }}
+                                    {{ form.date_fin(class="form-control") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.nom_referent.label }}
+                                    {{ form.nom_referent(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.prenom_referent.label }}
+                                    {{ form.prenom_referent(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.surf_contractualisee.label }}
+                                    {{ form.surf_contractualisee(class="form-control") }}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="type_milieu_tagify" class="form-label">Types de Milieu</label>
+                                    <input id="type_milieu_tagify" class="form-control" name="type_milieu_display" placeholder="Ajouter des types de milieu">
+                                    <select id="type_milieu" name="type_milieu" multiple hidden>
+                                        {% for value, label in form.type_milieu.choices %}
+                                            <option value="{{ value }}" {% if value in form.type_milieu.data %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Boutons d'action -->
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Enregistrer les modifications
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialisation de la carte
+        var map = L.map('small_map').setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
+
+        // Couche de tuiles OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors',
+        }).addTo(map);
+
+        // Création du marqueur
+        var marker = L.marker([{{ contrat.latitude }}, {{ contrat.longitude }}]).addTo(map);
+
+        // Ajout du popup au marqueur
+        marker.bindPopup("{{ contrat.nom_site }}");
+
+        // Gestion des événements pour afficher/masquer le popup
+        marker.on('mouseover', function () {
+            marker.openPopup(); // Affiche le popup au survol
+        });
+
+        marker.on('mouseout', function () {
+            marker.closePopup(); // Cache le popup lorsque la souris quitte le marqueur
+        });
+
+        // Popup reste visible si l'utilisateur clique sur le marqueur
+        marker.on('click', function () {
+            marker.openPopup();
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+    // Préparer les données pour Tagify avec émojis pour `type_production`
+    const typeProductionChoices = [
+        {% for value, label in form.type_production.choices %}
+            { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
+        {% endfor %}
+    ];
+
+    // Initialiser Tagify pour `type_production`
+    const tagifyTypeProduction = new Tagify(document.querySelector("#type_production_tagify"), {
+        whitelist: typeProductionChoices,
+        enforceWhitelist: true,
+        dropdown: { enabled: 0 },
+        templates: {
+            tag: function(tagData) {
+                return `
+                    <tag title="${tagData.label}" contenteditable="false" spellcheck="false" class="tagify__tag">
+                        <span class="tagify__tag-text">${tagData.emoji || ""} ${tagData.label}</span>
+                        <x title="Supprimer ce tag" class="tagify__tag__removeBtn"></x>
+                    </tag>
+                `;
+            },
+            dropdownItem: function(suggestion) {
+                return `
+                    <div class="tagify__dropdown__item" tabindex="0" role="option">
+                        ${suggestion.emoji || ""} ${suggestion.label}
+                    </div>
+                `;
+            }
+        }
+    });
+
+    // Préremplir Tagify pour `type_production`
+    const selectedTypeProduction = [
+        {% for value in form.type_production.data %}
+            {
+                value: "{{ value }}",
+                label: "{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
+                emoji: emojiTypeProductionMapping["{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}"] || "❓"
+            },
+        {% endfor %}
+    ];
+    tagifyTypeProduction.addTags(selectedTypeProduction);
+
+    // Synchronisation avec le champ caché
+    syncTagifyWithHidden(tagifyTypeProduction, "#type_production");
+
+    // Répétez pour `produit_fini`
+    const produitFiniChoices = [
+        {% for value, label in form.produit_fini.choices %}
+            { value: "{{ value }}", label: "{{ label }}", emoji: emojiProduitFiniMapping["{{ label }}"] || "❓" },
+        {% endfor %}
+    ];
+
+    const tagifyProduitFini = new Tagify(document.querySelector("#produit_fini_tagify"), {
+        whitelist: produitFiniChoices,
+        enforceWhitelist: true,
+        dropdown: { enabled: 0 },
+        templates: {
+            tag: function(tagData) {
+                return `
+                    <tag title="${tagData.label}" contenteditable="false" spellcheck="false" class="tagify__tag">
+                        <span class="tagify__tag-text">${tagData.emoji || ""} ${tagData.label}</span>
+                        <x title="Supprimer ce tag" class="tagify__tag__removeBtn"></x>
+                    </tag>
+                `;
+            },
+            dropdownItem: function(suggestion) {
+                return `
+                    <div class="tagify__dropdown__item" tabindex="0" role="option">
+                        ${suggestion.emoji || ""} ${suggestion.label}
+                    </div>
+                `;
+            }
+        }
+    });
+
+    const selectedProduitFini = [
+        {% for value in form.produit_fini.data %}
+            {
+                value: "{{ value }}",
+                label: "{{ form.produit_fini.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
+                emoji: emojiProduitFiniMapping["{{ form.produit_fini.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}"] || "❓"
+            },
+        {% endfor %}
+    ];
+    tagifyProduitFini.addTags(selectedProduitFini);
+
+    syncTagifyWithHidden(tagifyProduitFini, "#produit_fini");
+
+    // Préparer les données pour Tagify avec les émojis
+    const typeMilieuChoices = [
+    {% for value, label in form.type_milieu.choices %}
+        { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeMilieuMapping["{{ label }}"] || "❓" },
+    {% endfor %}
+    ];
+
+    // Préremplir Tagify avec les valeurs actuelles
+    const selectedTypeMilieu = [
+    {% for value in form.type_milieu.data %}
+        {
+            value: "{{ value }}",
+            label: "{{ form.type_milieu.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
+            emoji: emojiTypeMilieuMapping["{{ form.type_milieu.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}"] || "❓"
+        },
+    {% endfor %}
+    ];
+
+    // Initialiser Tagify avec personnalisation des templates
+    const tagifyTypeMilieu = new Tagify(document.querySelector("#type_milieu_tagify"), {
+        whitelist: typeMilieuChoices,
+        enforceWhitelist: true,
+        dropdown: { enabled: 0 },
+        templates: {
+            tag: function(tagData) {
+                return `
+                    <tag title="${tagData.label}" contenteditable="false" spellcheck="false" class="tagify__tag">
+                        <span class="tagify__tag-text">${tagData.emoji || ""} ${tagData.label}</span>
+                        <x title="Supprimer ce tag" class="tagify__tag__removeBtn"></x>
+                    </tag>
+                `;
+            },
+            dropdownItem: function(suggestion) {
+                return `
+                    <div class="tagify__dropdown__item" tabindex="0" role="option">
+                        ${suggestion.emoji || ""} ${suggestion.label}
+                    </div>
+                `;
+            }
+        }
+    });
+
+    tagifyTypeMilieu.addTags(selectedTypeMilieu);
+
+    
+    syncTagifyWithHidden(tagifyTypeMilieu, "#type_milieu");
+
+
+    // Synchroniser Tagify avec le champ caché
+    function syncTagifyWithHidden(tagifyInstance, hiddenSelector) {
+        tagifyInstance.on("change", function () {
+            const selectedValues = tagifyInstance.value.map(tag => tag.value);
+            const hiddenField = document.querySelector(hiddenSelector);
+            hiddenField.innerHTML = "";
+            selectedValues.forEach(value => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.selected = true;
+                hiddenField.appendChild(option);
+            });
+        });
+    }
+    });
+
+    console.log("Type Milieu Choices:", [
+    {% for value, label in form.type_milieu.choices %}
+        { value: "{{ value }}", label: "{{ label }}" },
+    {% endfor %}
+]);
+
+
+function goBackOrRedirect() {
+    if (document.referrer) {
+        // Si la page précédente existe, revenir à cette page
+        history.back();
+    } else {
+        // Sinon, rediriger vers la carte
+        window.location.href = "{{ url_for('map_page') }}";
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const fetchSireneButton = document.querySelector('[name="fetch_sirene"]');
+    const siretInput = document.querySelector('[name="siret"]');
+
+    fetchSireneButton.addEventListener("click", async function (event) {
+        event.preventDefault();
+
+        const siret = siretInput.value.trim();
+
+        // Envoyer les données sans validation côté client
+        try {
+            const response = await fetch("/api/siret", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ siret }),
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Erreur",
+                    text: data.error,
+                });
+            } else {
+                // Remplir les champs avec les données reçues
+                document.querySelector('[name="nom_societe"]').value =
+                    data.denomination || "Non renseigné";
+                document.querySelector('[name="adresse_etablissement"]').value =
+                    data.adresse_etablissement || "Non renseigné";
+                document.querySelector('[name="tranche_effectif"]').value =
+                    data.tranche_effectif || "Non renseigné";
+                document.querySelector('[name="categorie_juridique"]').value =
+                    data.categorie_juridique || "Non renseigné";
+                document.querySelector('[name="activite_principale"]').value =
+                    data.activite_principale || "Non renseigné";
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Succès",
+                    text: "Les données ont été récupérées avec succès.",
+                });
+            }
+        } catch (error) {
+            console.error("Erreur :", error);
+            Swal.fire({
+                icon: "error",
+                title: "Erreur serveur",
+                text: "Une erreur s'est produite lors de la récupération des données.",
+            });
+        }
+    });
+});
+
+        
+</script>
+
+<style>
+    #small_map {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,235 @@
+/* styles.css */
+
+body, html {
+height: 100%;
+margin: 0;
+padding: 0;
+overflow: hidden; 
+}
+
+#map {
+flex: 1;
+margin-left: -1.3em;
+margin-right: -1.3em;
+z-index: 1; 
+height: calc(100vh - 56px); /* 56px correspond à la hauteur de la navbar */
+}
+
+.container-fluid {
+display: flex;
+flex-direction: column;
+height: 100%;
+}
+
+.navbar-brand
+{
+padding-top: .3125rem;
+padding-bottom: .3125rem;
+margin-right: 1rem;
+font-size: 1.25rem;
+text-decoration: none;
+white-space: nowrap;
+margin-left: 20px;
+}
+
+
+/* Conteneur principal pour le panneau */
+.side-panel {
+position: fixed;
+top: 56px; /* Hauteur de la navbar */
+right: -35%; /* Caché par défaut */
+width: 35%; /* Taille visible une fois ouvert */
+height: calc(100% - 56px); /* Hauteur de l'écran moins la navbar */
+background-color: #f8f9fa;
+box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+overflow-y: auto;
+transition: right 1s ease; /* Animation de glissement */
+z-index: 500;
+}
+
+
+/* Contenu du panneau */
+.side-panel-content {
+padding: 20px;
+}
+
+/* Bouton pour fermer le panneau */
+.side-panel-header {
+display: flex;
+justify-content: flex-end;
+padding: 10px;
+background-color: #49a724;
+border-bottom: 1px solid #ddd;
+}
+
+.side-panel-header button {
+border: none;
+background-color: transparent;
+font-size: 16px;
+}
+
+
+/* Retirer la surbrillance bleue sur l'accordéon */
+.accordion-button:not(.collapsed) {
+background-color: transparent; /* Couleur de fond transparente */
+color: inherit; /* Conserve la couleur du texte */
+box-shadow: none; /* Supprime l'effet d'ombre */
+border-color: #dee2e6; /* Optionnel : ajustez la couleur de la bordure */
+}
+
+/* Ajuster les bordures pour harmoniser */
+.accordion-button {
+border: none;
+outline: none;
+}
+
+/* Ajout d'une bordure visible entre les sections si nécessaire */
+.accordion-button.collapsed {
+border-bottom: 1px solid #ddd; /* Optionnel : ajustez la bordure */
+}
+
+
+.modal-backdrop {
+  --bs-backdrop-zindex: 450;
+}
+
+.leaflet-top {
+  z-index: 450;
+}
+
+
+#flash-messages {
+  position: fixed; /* Fixe la position pour ne pas affecter la mise en page */
+  top: 8%; /* Distance par rapport au haut */
+  left: 50%; /* Centre horizontalement */
+  transform: translateX(-50%); /* Décalage pour centrer parfaitement */
+  z-index: 1200; /* S'assure qu'ils apparaissent au-dessus des autres éléments */
+  width: 80%; /* Largeur maximale */
+  max-width: 600px; /* Limite la largeur pour plus d'esthétique */
+  pointer-events: none; /* Permet de cliquer à travers si nécessaire */
+}
+
+#flash-messages .alert {
+  pointer-events: auto; /* Active les interactions pour les boutons d'alerte */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ajoute une ombre douce */
+  opacity: 0.95; /* Légèrement transparent pour un meilleur effet */
+}
+
+
+
+/* Style pour les champs Tagify */
+.tagify__input {
+    border-radius: 8px !important;
+    border: 1px solid #ced4da !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 1rem;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.tagify__input:focus {
+    border-color: #5e72e4;
+    box-shadow: 0 0 5px rgba(94, 114, 228, 0.5);
+}
+
+/* Styliser les tags */
+.tagify__tag {
+  text-decoration: none !important;
+  background-color: #5e72e4 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+
+.tagify__tag-removeBtn {
+    color: #ffffff !important;
+}
+
+.tagify__dropdown {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Style pour le modal */
+.modal-content {
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    background-color: #174193;
+    color: #ffffff;
+    border-bottom: 2px solid #3c4ba6;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: #174193;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #3c4ba6;
+}
+
+
+
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-footer .btn-secondary {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.modal-footer .btn-secondary:hover {
+    background-color: #e9ecef;
+    border-color: #bbb;
+}
+
+
+.leaflet-left .leaflet-control {
+    margin-left: 25px;
+}
+
+.leaflet-bottom  .leaflet-control {
+    margin-bottom: 75px;
+}
+
+
+#loader {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: auto; /* Ajuste la taille selon l'image */
+    height: auto;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background-color: rgba(255, 255, 255, 0.5); /* Ajoute un fond blanc semi-transparent */
+    border-radius: 10px; /* Coins arrondis */
+    padding: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Ombre pour éviter l'effet de ligne grise */
+    text-align: center;
+}
+
+#loader img {
+    width: 100%; /* Ajuste la taille de l'image */
+    height: auto;
+}
