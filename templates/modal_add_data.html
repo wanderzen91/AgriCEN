@@ -31,28 +31,11 @@
                                         {{ form.nom_site.label }}
                                         {{ form.nom_site(class="form-control", id="modal_nom_site", readonly=True) }}
                                     </div>
-                                    <div class="mb-3">
-                                        {{ form.nom_agri.label }}
-                                        {{ form.nom_agri(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.contact.label }}
-                                        {{ form.contact(class="form-control") }}
-                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         {{ form.code_site.label }}
                                         {{ form.code_site(class="form-control", id="modal_code_site", readonly=True) }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.prenom_agri.label }}
-                                        {{ form.prenom_agri(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.date_naissance.label }}
-                                        {{ form.date_naissance(class="form-control") }}
-                                        <small class="text-muted">Ce champ est facultatif.</small>
                                     </div>
                                 </div>
                             </div>
@@ -73,12 +56,21 @@
                                         {% endfor %}
                                     </div>
                                     <div class="mb-3">
-                                        {{ form.adresse_etablissement.label }}
-                                        {{ form.adresse_etablissement(class="form-control") }}
+                                        {{ form.prenom_agri.label }}
+                                        {{ form.prenom_agri(class="form-control") }}
                                     </div>
                                     <div class="mb-3">
-                                        {{ form.tranche_effectif.label }}
-                                        {{ form.tranche_effectif(class="form-control") }}
+                                        {{ form.nom_agri.label }}
+                                        {{ form.nom_agri(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.date_naissance.label }}
+                                        {{ form.date_naissance(class="form-control") }}
+                                        <small class="text-muted">Ce champ est facultatif.</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.contact.label }}
+                                        {{ form.contact(class="form-control") }}
                                     </div>
                                     <div class="mb-3">
                                         {{ form.type_production.label }}
@@ -92,20 +84,6 @@
                                         <div class="text-danger">{{ error }}</div>
                                     {% endfor %}
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        {{ form.nom_societe.label }}
-                                        {{ form.nom_societe(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.activite_principale.label }}
-                                        {{ form.activite_principale(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.categorie_juridique.label }}
-                                        {{ form.categorie_juridique(class="form-control") }}
-                                    </div>
                                     <div class="mb-3">
                                         {{ form.produit_fini.label }}
                                         <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
@@ -114,6 +92,28 @@
                                                 <option value="{{ value }}">{{ label }}</option>
                                             {% endfor %}
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.nom_societe.label }}
+                                        {{ form.nom_societe(class="form-control", readonly=True) }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.adresse_etablissement.label }}
+                                        {{ form.adresse_etablissement(class="form-control", readonly=True) }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.activite_principale.label }}
+                                        {{ form.activite_principale(class="form-control", readonly=True) }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.categorie_juridique.label }}
+                                        {{ form.categorie_juridique(class="form-control", readonly=True) }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.tranche_effectif.label }}
+                                        {{ form.tranche_effectif(class="form-control", readonly=True) }}
                                     </div>
                                     <div class="mb-3">
                                         {{ form.type_agriculture.label }}

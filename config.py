@@ -28,8 +28,3 @@ class Config:
     }
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-
-    # Debugging: afficher la valeur actuelle de l'URI
-    print(SQLALCHEMY_DATABASE_URI)
-    print(SQLALCHEMY_BINDS)

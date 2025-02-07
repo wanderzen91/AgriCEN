@@ -83,6 +83,8 @@ def populate_form_choices(form):
         logging.error(f"Erreur lors du chargement des choix dynamiques : {e}")
         flash("Erreur lors du chargement des données du formulaire.", "danger")
 
+
+
 @app.route('/sites_cen_geojson')
 def get_sites_cen_geojson():
     sites = VueSites.query.all()
@@ -109,6 +111,7 @@ def get_sites_cen_geojson():
     }
     
     return jsonify(geojson_data)
+
 
 
 def fetch_siret_data(siret, flash_messages = False):
@@ -631,5 +634,6 @@ def dataviz_page():
     return redirect('https://superset.wanderzen.fr/superset/dashboard/ac7ee9d3-0b70-4b5a-ab12-85fa8902ad95/?native_filters_key=1E8OrhaQWKwHkNOL-XNkq3P7SqIrJ31O-dCGuceUos3gXMTbszYVrUmzjDrIZVcE')  
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+
+
+
