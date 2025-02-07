@@ -41,7 +41,7 @@ jobs:
               docker-compose up -d
             else
               echo "No changes requiring a container rebuild. Restarting application inside container..."
-              docker exec agricen-web-1 kill -HUP 1 || true
+              docker restart flask-leaflet_web_1
             fi
 
             echo "==> Deployment complete!"
