@@ -665,72 +665,71 @@ autocomplete(
     }
 
 
-function filterMarkers() {
-    showLoader(); // Afficher le loader
 
-    const nomProprietaire = document.getElementById('searchNom').value.trim();
-    const nomSociete = document.getElementById('searchSociete').value.trim();
-    const referent = document.getElementById('searchReferent').value.trim();
-    const typeContrat = document.getElementById('searchTypeContrat').value.trim();
-    const typeProduction = document.getElementById('searchTypeProduction').value.trim();
-    const produitFini = document.getElementById('searchProduitFini').value.trim();
-    const typeAgriculture = document.getElementById('searchTypeAgriculture').value.trim();
-    const surfContractualisee = document.getElementById('searchSurfaceContractualisee').value.trim();
-
-    let hasResults = false;
-
-    // Simuler un chargement de 500ms avant d'afficher les résultats
-    setTimeout(() => {
-        allMarkers.forEach(item => {
-            let match = true;
-            let data = item.data;
-
-            if (nomProprietaire && data.agriculteur !== nomProprietaire) match = false;
-            if (typeContrat && data.type_contrat !== typeContrat) match = false;
-            if (typeAgriculture && data.type_agriculture !== typeAgriculture) match = false;
-            if (nomSociete && data.nom_societe !== nomSociete) match = false;
-            if (referent && data.referent !== referent) match = false;
-
-            // Filtre pour plusieurs types de production
-            if (typeProduction) {
-                const selectedProductions = typeProduction.split(",");
-                if (!selectedProductions.some(selected => data.type_productions.includes(selected.trim()))) {
-                    match = false;
+    function filterMarkers() {
+        showLoader(); // Afficher le loader
+    
+        const nomProprietaire = document.getElementById('searchNom').value.trim().toLowerCase();
+        const nomSociete = document.getElementById('searchSociete').value.trim().toLowerCase();
+        const referent = document.getElementById('searchReferent').value.trim().toLowerCase();
+        const typeContrat = document.getElementById('searchTypeContrat').value.trim().toLowerCase();
+        const typeProduction = document.getElementById('searchTypeProduction').value.trim().toLowerCase();
+        const produitFini = document.getElementById('searchProduitFini').value.trim().toLowerCase();
+        const typeAgriculture = document.getElementById('searchTypeAgriculture').value.trim().toLowerCase();
+    
+    
+        let hasResults = false;
+    
+        // Simuler un chargement de 500ms avant d'afficher les résultats
+        setTimeout(() => {
+            allMarkers.forEach(item => {
+                let match = true;
+                let data = item.data;
+    
+                if (nomProprietaire && data.agriculteur.toLowerCase().trim() !== nomProprietaire) match = false;
+                if (typeContrat && data.type_contrat.toLowerCase().trim() !== typeContrat) match = false;
+                if (typeAgriculture && data.type_agriculture.toLowerCase().trim() !== typeAgriculture) match = false;
+                if (nomSociete && data.nom_societe.toLowerCase().trim() !== nomSociete) match = false;
+                if (referent && data.referent.toLowerCase().trim() !== referent) match = false;
+    
+                if (typeProduction) {
+                    const selectedProductions = typeProduction.split(",").map(e => e.trim().toLowerCase());
+                    if (!data.type_productions || !selectedProductions.some(selected => data.type_productions.map(p => p.toLowerCase()).includes(selected))) {
+                        match = false;
+                    }
                 }
-            }
-
-            // Filtre pour plusieurs produits finis
-            if (produitFini) {
-                const selectedProducts = produitFini.split(",");
-                if (!selectedProducts.some(selected => data.produits_finis.includes(selected.trim()))) {
-                    match = false;
+    
+                if (produitFini) {
+                    const selectedProducts = produitFini.split(",").map(e => e.trim().toLowerCase());
+                    if (!data.produits_finis || !selectedProducts.some(selected => data.produits_finis.map(p => p.toLowerCase()).includes(selected))) {
+                        match = false;
+                    }
                 }
-            }
-
-            // Plutôt que de supprimer les marqueurs, on les rend invisibles
-            if (match) {
-                item.marker.setOpacity(1); // Visible
-                item.marker.setLatLng([data.latitude, data.longitude]); // Remet à sa position réelle
-                hasResults = true;
-            } else {
-                item.marker.setOpacity(0); // Invisible
-                item.marker.setLatLng([0, 0]); // Déplace en dehors de la vue pour éviter l'interaction
-            }
-        });
-
-        if (!hasResults) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Aucun résultat trouvé',
-                text: 'Aucun contrat ne correspond aux filtres sélectionnés.'
+    
+                // Plutôt que de supprimer les marqueurs, on les rend invisibles
+                if (match) {
+                    item.marker.setOpacity(1); // Visible
+                    item.marker.setLatLng([data.latitude, data.longitude]); // Remet à sa position réelle
+                    hasResults = true;
+                } else {
+                    item.marker.setOpacity(0); // Invisible
+                    item.marker.setLatLng([0, 0]); // Déplace en dehors de la vue pour éviter l'interaction
+                }
             });
-        }
-        
-        closeModal('searchModal'); // Fermer la modale après application
-
-        hideLoader(); 
-    }, 500); // ⏳ Délai de 500ms avant d'afficher les résultats
-}
+    
+            if (!hasResults) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Aucun résultat trouvé',
+                    text: 'Aucun contrat ne correspond aux filtres sélectionnés.'
+                });
+            }
+            
+            closeModal('searchModal'); // Fermer la modale après application
+    
+            hideLoader(); 
+        }, 500); // ⏳ Délai de 500ms avant d'afficher les résultats
+    }
 
     function showLoader() {
         document.getElementById('loader').style.display = 'block';
