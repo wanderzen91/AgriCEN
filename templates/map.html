@@ -111,6 +111,7 @@
 
     let selectedSite = null;
     let selectedSiteProps = null;
+    let siteClicked = false;
 
 // Fonction pour afficher la barre de chargement
 function showProgressBar() {
@@ -209,6 +210,8 @@ function loadSites() {
 }
 
 
+
+
 // 🗺️ Fonction pour afficher les sites sur la carte progressivement
 function addGeoJSONToMap(geojsonData) {
     console.log("🗺️ Ajout des données sur la carte...", geojsonData);
@@ -236,11 +239,17 @@ function addGeoJSONToMap(geojsonData) {
                 offset: [0, -10],
             });
 
-            // 🎯 Gérer la sélection du site
-            layer.on('click', function () {
-                console.log(`Site sélectionné : ${props.nom_site}, ${props.codesite}`);
+            layer.on('click', function (e) {
+                console.log(`✅ Site sélectionné : ${props.nom_site}, ${props.codesite}`);
+                
+                const point = e.latlng; // Récupérer la position du clic
+            
+                siteClicked = true; // 🟢 Le site a bien été cliqué !
+            
+                handleSiteClick(props.nom_site, props.codesite, point.lat, point.lng);
             });
-
+            
+        
             // 🔴 Effet hover (changement de couleur)
             layer.on('mouseover', function () {
                 layer.setStyle({ color: 'red', weight: 2 });
