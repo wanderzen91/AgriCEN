@@ -630,3 +630,6 @@ def delete_contract(contract_id):
 def dataviz_page():
     return redirect('https://superset.wanderzen.fr/superset/dashboard/ac7ee9d3-0b70-4b5a-ab12-85fa8902ad95/?native_filters_key=1E8OrhaQWKwHkNOL-XNkq3P7SqIrJ31O-dCGuceUos3gXMTbszYVrUmzjDrIZVcE')  
 
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000)
