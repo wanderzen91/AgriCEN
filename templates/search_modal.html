@@ -1,0 +1,97 @@
+
+<!-- Modal de recherche -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="searchModalLabel">Recherche avancée</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row">
+                        <!-- Colonne 1 -->
+                        <div class="col-md-6">
+                            <!-- Champ de recherche par propriétaire -->
+                            <div class="mb-3">
+                                <label for="searchNom" class="form-label">Propriétaire</label>
+                                <input type="text" id="searchNom" class="form-control" placeholder="Rechercher un(e) propriétaire..." autocomplete="off">
+                                <ul id="suggestionsNom" class="list-group" style="position: absolute; z-index: 2000;"></ul>
+                            </div>
+                            <!-- Champ de recherche par société -->
+                            <div class="mb-3">
+                                <label for="searchSociete" class="form-label">Société</label>
+                                <input type="text" id="searchSociete" class="form-control" placeholder="Rechercher une exploitation..." autocomplete="off">
+                                <ul id="suggestionsSociete" class="list-group" style="position: absolute; z-index: 2000;"></ul>
+                            </div>
+                            <!-- Type de contrat -->
+                            <div class="mb-3">
+                                <label for="searchTypeContrat" class="form-label">Type de contrat</label>
+                                <select id="searchTypeContrat" class="form-select">
+                                    <option value="">Tous</option>
+                                    {% for value, label in form.appellation_contrat.choices %}
+                                        <option value="{{ label }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Type d'agriculture -->
+                            <div class="mb-3">
+                                <label for="searchTypeAgriculture" class="form-label">Type d'agriculture</label>
+                                <select id="searchTypeAgriculture" class="form-select">
+                                    <option value="">Tous</option>
+                                    <option value="biologique">Biologique</option>
+                                    <option value="conventionnelle">Conventionnelle</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Colonne 2 -->
+                        <div class="col-md-6">
+                            <!-- Type de production -->
+                            <div class="mb-3">
+                                <label for="searchTypeProduction" class="form-label">Type de production</label>
+                                <select id="searchTypeProduction" class="form-select">
+                                    <option value="">Tous</option>
+                                    {% for value, label in form.type_production.choices %}
+                                        <option value="{{ label }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Type de produit fini -->
+                            <div class="mb-3">
+                                <label for="searchProduitFini" class="form-label">Type de produit fini</label>
+                                <select id="searchProduitFini" class="form-select">
+                                    <option value="">Tous</option>
+                                    {% for value, label in form.produit_fini.choices %}
+                                        <option value="{{ label }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Surface Contractualisée -->
+                            <div class="mb-3">
+                                <label for="searchSurfaceContractualisee" class="form-label">Surface Contractualisée (ha)</label>
+                                <div class="input-group">
+                                    <select id="searchSurfaceContractualiseeOperator" class="form-select" style="max-width: 145px;">
+                                        <option value=">">Supérieure à</option>
+                                        <option value="<">Inférieure à</option>
+                                    </select>
+                                    <input type="number" id="searchSurfaceContractualiseeValue" class="form-control" placeholder="Valeur en hectares">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Référent -->
+                    <div class="mb-3">
+                        <label for="searchReferent" class="form-label">Référent(e)</label>
+                        <input type="text" id="searchReferent" class="form-control" placeholder="Rechercher un(e) référent(e)..." autocomplete="off">
+                        <ul id="suggestionsReferent" class="list-group" style="position: absolute; z-index: 2000;"></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="resetFilters()">Effacer filtre</button>
+                <button class="btn btn-primary" onclick="filterMarkers()">Filtrer</button>
+            </div>
+        </div>
+    </div>
+</div>

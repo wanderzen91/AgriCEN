@@ -1,0 +1,407 @@
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <form id="addForm" method="POST">
+                {{ form.hidden_tag() }}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Formulaire d'ajout de données</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Onglets pour organiser les champs -->
+                    <ul class="nav nav-tabs" id="modalTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="infos-general-tab" data-bs-toggle="tab" data-bs-target="#infos-general" type="button" role="tab" aria-controls="infos-general" aria-selected="true">Informations générales</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="exploitation-tab" data-bs-toggle="tab" data-bs-target="#exploitation" type="button" role="tab" aria-controls="exploitation" aria-selected="false">Exploitation</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="contrat-tab" data-bs-toggle="tab" data-bs-target="#contrat" type="button" role="tab" aria-controls="contrat" aria-selected="false">Partenariat CEN</button>
+                        </li>
+                    </ul>
+
+                    <!-- Contenu des onglets -->
+                    <div class="tab-content mt-4">
+                        <!-- Onglet Informations générales -->
+                        <div class="tab-pane fade show active" id="infos-general" role="tabpanel" aria-labelledby="infos-general-tab">
+                            <div class="row gx-4 gy-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.nom_site.label }}
+                                        {{ form.nom_site(class="form-control", id="modal_nom_site", readonly=True) }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.nom_agri.label }}
+                                        {{ form.nom_agri(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.contact.label }}
+                                        {{ form.contact(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.code_site.label }}
+                                        {{ form.code_site(class="form-control", id="modal_code_site", readonly=True) }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.prenom_agri.label }}
+                                        {{ form.prenom_agri(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.date_naissance.label }}
+                                        {{ form.date_naissance(class="form-control") }}
+                                        <small class="text-muted">Ce champ est facultatif.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Onglet Exploitation -->
+                        <div class="tab-pane fade" id="exploitation" role="tabpanel" aria-labelledby="exploitation-tab">
+                            <div class="row gx-4 gy-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.siret.label }}
+                                        <div class="input-group">
+                                            {{ form.siret(class="form-control") }}
+                                            <button type="button" class="btn btn-primary" name="fetch_sirene">Rechercher</button>
+                                        </div>
+                                        {% for error in form.siret.errors %}
+                                            <div class="text-danger">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.adresse_etablissement.label }}
+                                        {{ form.adresse_etablissement(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.tranche_effectif.label }}
+                                        {{ form.tranche_effectif(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.type_production.label }}
+                                        <input id="type_production_tagify" class="form-control" name="type_production_display" placeholder="Ajouter des types de production">
+                                        <select id="type_production" name="type_production" multiple hidden>
+                                            {% for value, label in form.type_production.choices %}
+                                                <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% for error in form.type_production.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.nom_societe.label }}
+                                        {{ form.nom_societe(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.activite_principale.label }}
+                                        {{ form.activite_principale(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.categorie_juridique.label }}
+                                        {{ form.categorie_juridique(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.produit_fini.label }}
+                                        <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
+                                        <select id="produit_fini" name="produit_fini" multiple hidden>
+                                            {% for value, label in form.produit_fini.choices %}
+                                                <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.type_agriculture.label }}
+                                        {% for subfield in form.type_agriculture %}
+                                            <div class="form-check">
+                                                {{ subfield(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Onglet Partenariat CEN -->
+                        <div class="tab-pane fade" id="contrat" role="tabpanel" aria-labelledby="contrat-tab">
+                            <div class="row gx-4 gy-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.appellation_contrat.label }}
+                                        {{ form.appellation_contrat(class="form-control") }}
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.date_signature.label }}
+                                        {{ form.date_signature(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.date_prise_effet.label }}
+                                        {{ form.date_prise_effet(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.date_fin.label }}
+                                        {{ form.date_fin(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.nom_referent.label }}
+                                        {{ form.nom_referent(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.prenom_referent.label }}
+                                        {{ form.prenom_referent(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.surf_contractualisee.label }}
+                                        {{ form.surf_contractualisee(class="form-control") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.type_milieu.label }}
+                                        <input id="type_milieu_tagify" class="form-control" name="type_milieu_display" placeholder="Ajouter des types de milieu">
+                                        <select id="type_milieu" name="type_milieu" multiple hidden>
+                                            {% for value, label in form.type_milieu.choices %}
+                                                <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {{ form.submit(class="btn btn-primary") }}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Fonction pour créer une liste de choix avec des émojis
+    function createChoicesWithIcons(choices, emojiMapping) {
+        return choices.map(choice => ({
+            value: choice.value,
+            label: choice.label,
+            emoji: emojiMapping[choice.label] || "❓"
+        }));
+    }
+
+    // Initialisation des données pour Tagify
+    const typeProductionChoices = createChoicesWithIcons(
+        [
+            {% for value, label in form.type_production.choices %}
+                { value: "{{ value }}", label: "{{ label }}" },
+            {% endfor %}
+        ],
+        emojiTypeProductionMapping
+    );
+
+    const produitFiniChoices = createChoicesWithIcons(
+        [
+            {% for value, label in form.produit_fini.choices %}
+                { value: "{{ value }}", label: "{{ label }}" },
+            {% endfor %}
+        ],
+        emojiProduitFiniMapping
+    );
+
+    const typeContratChoices = [
+    {% for value, label in form.appellation_contrat.choices %}
+        {
+            value: "{{ value }}",
+            label: "{{ label }}",
+            emoji: "{{ '❌' if label.lower() == 'non renseigné' else '📜' }}"
+        },
+    {% endfor %}
+];
+
+    const typeMilieuChoices = createChoicesWithIcons(
+        [
+            {% for value, label in form.type_milieu.choices %}
+                { value: "{{ value }}", label: "{{ label }}" },
+            {% endfor %}
+        ],
+        emojiTypeMilieuMapping
+    );
+
+    // Fonction pour initialiser Tagify avec un template personnalisé incluant des émojis
+    function initTagifyWithIcons(inputId, choices) {
+        const input = document.querySelector(inputId);
+        return new Tagify(input, {
+            whitelist: choices,
+            enforceWhitelist: true,
+            dropdown: {
+                classname: "tagify-dropdown",
+                enabled: 0,
+                maxItems: Infinity
+            },
+            templates: {
+                tag: function (tagData) {
+                    return `
+                        <tag title="${tagData.label}" class="tagify__tag">
+                            <span class="tagify__tag-text">${tagData.emoji || ""} ${tagData.label}</span>
+                            <x title="Supprimer cette option" class="tagify__tag__removeBtn"></x>
+                        </tag>
+                    `;
+                },
+                dropdownItem: function (suggestion) {
+                    return `
+                        <div class="tagify__dropdown__item">
+                            ${suggestion.emoji || ""} ${suggestion.label}
+                        </div>
+                    `;
+                }
+            }
+        });
+    }
+
+    // Fonction pour synchroniser Tagify avec un champ caché
+    function syncTagifyWithHidden(tagifyInstance, hiddenSelector) {
+        tagifyInstance.on("change", function () {
+            const selectedValues = tagifyInstance.value.map(tag => tag.value);
+            console.log("Valeurs synchronisées pour", hiddenSelector, selectedValues);
+    
+            // Trouver le champ <select> caché
+            const hiddenField = document.querySelector(hiddenSelector);
+    
+            // Vider le champ <select>
+            hiddenField.innerHTML = "";
+    
+            // Ajouter les options sélectionnées
+            selectedValues.forEach(value => {
+                const option = document.createElement("option");
+                option.value = value;
+                option.selected = true; // Marquer l'option comme sélectionnée
+                hiddenField.appendChild(option);
+            });
+        });
+    }
+
+    document.getElementById("addForm").addEventListener("submit", function(event) {
+        // Liste des champs à valider
+        const fieldsToValidate = [
+            { id: "type_production", message: "Veuillez sélectionner au moins une option dans 'Types de Production'." },
+            { id: "produit_fini", message: "Veuillez sélectionner au moins une option dans 'Produits Finis'." },
+            { id: "type_milieu", message: "Veuillez sélectionner au moins une option dans 'Types de Milieux'." },
+            { id: "appellation_contrat", message: "Veuillez sélectionner au moins une option dans 'Contrats'." }
+        ];
+    
+        // Boucle sur les champs pour valider
+        for (let field of fieldsToValidate) {
+            const element = document.getElementById(field.id);
+            if (!element || element.selectedOptions.length === 0) {
+                event.preventDefault(); // Empêche la soumission du formulaire
+                Swal.fire({
+                    icon: 'error', // Peut être 'success', 'error', 'info', 'warning', ou 'question'
+                    title: 'Erreur',
+                    html: field.message,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Compris'
+                });
+                return; // Sort de la fonction après la première erreur
+            }
+        }
+    });
+    
+
+    // Initialiser Tagify pour chaque champ
+    const tagifyTypeProduction = initTagifyWithIcons("#type_production_tagify", typeProductionChoices);
+    const tagifyProduitFini = initTagifyWithIcons("#produit_fini_tagify", produitFiniChoices);
+    const tagifyTypeContrat = initTagifyWithIcons("#appellation_contrat_tagify", typeContratChoices);
+    const tagifyTypeMilieu = initTagifyWithIcons("#type_milieu_tagify", typeMilieuChoices);
+
+    // Synchronisation avec les champs cachés
+    syncTagifyWithHidden(tagifyTypeProduction, "#type_production");
+    syncTagifyWithHidden(tagifyProduitFini, "#produit_fini");
+    syncTagifyWithHidden(tagifyTypeContrat, "#appellation_contrat");
+    syncTagifyWithHidden(tagifyTypeMilieu, "#type_milieu");
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    const fetchSireneButton = document.querySelector('[name="fetch_sirene"]');
+    const siretInput = document.querySelector('[name="siret"]');
+
+    fetchSireneButton.addEventListener("click", async function (event) {
+        event.preventDefault();
+
+        const siret = siretInput.value.trim();
+
+        // Envoyer les données sans validation côté client
+        try {
+            const response = await fetch("/api/siret", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ siret }),
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Erreur",
+                    text: data.error,
+                });
+            } else {
+                // Remplir les champs avec les données reçues
+                document.querySelector('[name="nom_societe"]').value =
+                    data.denomination || "Non renseigné";
+                document.querySelector('[name="adresse_etablissement"]').value =
+                    data.adresse_etablissement || "Non renseigné";
+                document.querySelector('[name="tranche_effectif"]').value =
+                    data.tranche_effectif || "Non renseigné";
+                document.querySelector('[name="categorie_juridique"]').value =
+                    data.categorie_juridique || "Non renseigné";
+                document.querySelector('[name="activite_principale"]').value =
+                    data.activite_principale || "Non renseigné";
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Succès",
+                    text: "Les données ont été récupérées avec succès.",
+                });
+            }
+        } catch (error) {
+            console.error("Erreur :", error);
+            Swal.fire({
+                icon: "error",
+                title: "Erreur serveur",
+                text: "Une erreur s'est produite lors de la récupération des données.",
+            });
+        }
+    });
+});
+
+
+// Fonction pour afficher des alertes avec des styles personnalisés
+function showAlert(message, type = "success") {
+    const alertBox = document.createElement("div");
+    alertBox.className = `alert alert-${type}`;
+    alertBox.innerText = message;
+
+    document.body.appendChild(alertBox);
+
+    setTimeout(() => {
+        alertBox.remove();
+    }, 5000);
+}
+
+
+
+</script>
+

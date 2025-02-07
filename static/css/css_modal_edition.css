@@ -1,0 +1,72 @@
+.container {
+    max-width: 1500px;
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #174193;
+    border-bottom: 2px solid #321f9e;
+    padding-bottom: 0.5rem;
+}
+
+.nav-tabs .nav-link {
+    font-weight: 600;
+    color: #6c757d;
+    border: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.3s, border-bottom-color 0.3s;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #174193;
+}
+
+.nav-tabs .nav-link.active {
+    color: #174193;
+    border-bottom-color: #174193;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.form-control:focus {
+    border-color: #174193;
+    box-shadow: 0 0 6px rgba(23, 65, 147, 0.2);
+}
+
+label {
+    font-weight: 600;
+    color: #495057;
+}
+
+
+#small_map {
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .d-flex {
+        flex-direction: column;
+    }
+
+    #form-container {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    #map-container {
+        width: 100%;
+    }
+}

@@ -1,0 +1,52 @@
+/* styles.css */
+
+/* Center the table and add padding */
+.center-table {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px; /* Add padding around the table */
+}
+
+/* Ensure the table fits within the viewport */
+.table-container {
+    max-width: 100%;
+    max-height: 100%;
+    overflow-x: auto;
+}
+
+table.dataTable {
+    width: auto;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Style the table header */
+.table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    color: #333;
+}
+
+/* Style the table rows */
+.table tbody td {
+    vertical-align: middle;
+}
+
+
+.content{
+    padding: 40px 0;
+  }
+  /*
+  .filter-wrapper{
+    padding: 30px 0;
+  }*/
+  
+  .filter-checkbox{
+    margin-left: 30px
+  }
+  .filter-checkbox:first-child{
+    margin-left:0
+  }
+  
+  
