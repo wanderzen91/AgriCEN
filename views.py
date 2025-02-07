@@ -625,12 +625,7 @@ def delete_contract(contract_id):
         flash(f"Erreur lors de la suppression du contrat : {str(e)}", "danger")
         return redirect(url_for('map_page'))
 
-
 @app.route('/dataviz_page')
 def dataviz_page():
     return redirect('https://superset.wanderzen.fr/superset/dashboard/ac7ee9d3-0b70-4b5a-ab12-85fa8902ad95/?native_filters_key=1E8OrhaQWKwHkNOL-XNkq3P7SqIrJ31O-dCGuceUos3gXMTbszYVrUmzjDrIZVcE')  
-
-
-
-
 
