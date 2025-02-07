@@ -41,14 +41,14 @@ jobs:
               docker-compose up -d
             else
               echo "No changes requiring a container rebuild. Restarting application inside container..."
-              docker restart flask-leaflet_web_1
+              docker restart agricen-web-1
             fi
 
             echo "==> Waiting for the application to start..."
             sleep 5
 
             echo "==> Checking if the container is running..."
-            if docker ps | grep flask-leaflet_web_1; then
+            if docker ps | grep agricen-web-1; then
               echo "✅ Application is running successfully!"
             else
               echo "❌ Error: The application container is not running!"
