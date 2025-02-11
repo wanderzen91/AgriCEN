@@ -233,3 +233,31 @@ border-bottom: 1px solid #ddd; /* Optionnel : ajustez la bordure */
     width: 100%; /* Ajuste la taille de l'image */
     height: auto;
 }
+
+
+/* Classes pour les badges de type de production */
+.bg-purple {
+    background-color: #6f42c1 !important;
+    color: white !important;
+}
+
+.bg-green {
+    background-color: #73c742 !important;
+    color: white !important;
+}
+
+
+.production-entry {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.remove-production {
+    margin-top: 5px;
+}
+
+#add-production {
+    width: 100%;
+}

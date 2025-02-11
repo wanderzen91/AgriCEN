@@ -96,13 +96,36 @@
                                     {{ form.categorie_juridique(class="form-control") }}
                                 </div>
                                 <div class="mb-3">
-                                    <label for="type_production_tagify" class="form-label">Types de Production</label>
-                                    <input id="type_production_tagify" class="form-control" name="type_production_display" placeholder="Ajouter des types de production">
-                                    <select id="type_production" name="type_production" multiple hidden>
-                                        {% for value, label in form.type_production.choices %}
-                                            <option value="{{ value }}" {% if value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <label class="form-label">Types de Production</label>
+                                    <div id="production-container">
+                                        <div class="production-entry mb-2">
+                                            <div class="row">
+                                                <div class="col-md-5">
+                                                    <select class="form-select type-production">
+                                                        {% for value, label in form.type_production.choices %}
+                                                            <option value="{{ value }}">{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <select class="form-select mode-production">
+                                                        {% for value, label in form.mode_production.choices %}
+                                                            <option value="{{ value }}">{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-danger btn-sm remove-production">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-success btn-sm mt-2" id="add-production">
+                                        <i class="fas fa-plus"></i> Ajouter un type de production
+                                    </button>
+                                    <input type="hidden" name="productions" id="productions-data">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -128,14 +151,12 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                    {{ form.type_agriculture.label }}
-                                    {% for subfield in form.type_agriculture %}
-                                        <div class="form-check">
-                                            {{ subfield(class="form-check-input") }}
-                                            <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
-                                        </div>
-                                    {% endfor %}
+                            <div class="mb-3">
+                                {{ form.mode_production.label }}
+                                {{ form.mode_production(class="form-control") }}
+                                {% for error in form.mode_production.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -404,6 +425,91 @@ function goBackOrRedirect() {
         window.location.href = "{{ url_for('map_page') }}";
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('production-container');
+    const addButton = document.getElementById('add-production');
+    const productionsData = document.getElementById('productions-data');
+
+    // Template HTML pour une nouvelle entrée
+    const entryTemplate = `
+        <div class="production-entry mb-2">
+            <div class="row">
+                <div class="col-md-5">
+                    <select class="form-select type-production">
+                        {% for value, label in form.type_production.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <select class="form-select mode-production">
+                        {% for value, label in form.mode_production.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger btn-sm remove-production">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Fonction pour mettre à jour les données
+    function updateProductionsData() {
+        const entries = container.querySelectorAll('.production-entry');
+        const data = Array.from(entries).map(entry => ({
+            type_production: entry.querySelector('.type-production').value,
+            mode_production: entry.querySelector('.mode-production').value
+        }));
+        productionsData.value = JSON.stringify(data);
+        console.log('Productions mises à jour:', data);  // Pour le débogage
+    }
+
+    // Fonction pour ajouter une nouvelle entrée
+    function addNewEntry() {
+        // Créer un nouvel élément div pour contenir le template
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = entryTemplate.trim();
+        const newEntry = tempDiv.firstElementChild;
+        
+        // Ajouter l'écouteur d'événement pour le bouton de suppression
+        newEntry.querySelector('.remove-production').addEventListener('click', function() {
+            newEntry.remove();
+            updateProductionsData();
+        });
+
+        // Ajouter des écouteurs pour les changements de select
+        newEntry.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', updateProductionsData);
+        });
+
+        container.appendChild(newEntry);
+        updateProductionsData();
+    }
+
+    // Ajouter une nouvelle entrée quand on clique sur le bouton
+    addButton.addEventListener('click', addNewEntry);
+
+    // Initialiser les boutons de suppression existants
+    container.querySelectorAll('.remove-production').forEach(button => {
+        button.addEventListener('click', function() {
+            button.closest('.production-entry').remove();
+            updateProductionsData();
+        });
+    });
+
+    // Initialiser les écouteurs de changement sur les selects existants
+    container.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', updateProductionsData);
+    });
+
+    // Mettre à jour les données initiales
+    updateProductionsData();
+});
 
 document.addEventListener("DOMContentLoaded", function () {
     const fetchSireneButton = document.querySelector('[name="fetch_sirene"]');

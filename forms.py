@@ -33,11 +33,6 @@ class CombinedForm(FlaskForm):
     # Champs Société
     nom_societe = StringField('Nom de la Société', validators=[DataRequired(), Length(max=100)])
     contact = StringField('Contact', validators=[DataRequired(), Length(max=100)])
-    type_agriculture = RadioField(
-        'Agriculture Bio', 
-        choices=[('biologique', 'Oui'), ('conventionnelle', 'Non')], 
-        validators=[DataRequired()]
-    )
     remarques = TextAreaField('Remarques', validators=[Optional(), Length(max=300)])
 
     # Champs Agriculteur
@@ -64,6 +59,13 @@ class CombinedForm(FlaskForm):
         choices=[],  # Les choix seront définis dynamiquement
         validators=[DataRequired()], #Essayer de trouver un validateur personnalisé pour SelectMultipleField car lorsqu'aucune valeur n'est sélectionnée, le champ renvoie une liste vide ([]) et DataRequired() ne considère pas une liste vide comme une valeur invalide, donc la validation passe silencieusement.
         coerce=int  # Convertit les données soumises en `int` automatiquement
+    )
+
+    mode_production = SelectField(
+        'Mode de Production',
+        choices=[],  # Les choix seront définis dynamiquement
+        validators=[DataRequired()],
+        coerce=int  # Convertit les données soumises en int automatiquement
     )
     
     # Champs pour Produits Finis
