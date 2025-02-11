@@ -389,7 +389,6 @@ loadSites();
                 surface_contractualisee: parseFloat(contrat.surface_contractualisee) || 0,
                 referent: contrat.referent || "Non spécifié",
                 type_contrat: contrat.type_contrat || "Non spécifié",
-                type_agriculture: contrat.type_agriculture || "Non spécifié",
                 latitude: parseFloat(contrat.latitude) || 0,
                 longitude: parseFloat(contrat.longitude) || 0,
                 type_productions: contrat.type_productions || [],
@@ -425,7 +424,6 @@ loadSites();
     function viewDetails(contractData) {
         console.log("Type de productions :", contractData.type_productions);
         console.log("Produits finis :", contractData.produits_finis);
-        console.log("Type agriculture :", contractData.type_agriculture);
 
         console.log("Affichage du panneau pour le contrat ID :", contractData.id);
     
@@ -457,19 +455,44 @@ loadSites();
             "filière horticole": "bg-success",
             "filière oléagineux": "bg-success",
             "filière viticole": "bg-success",
-            "filière lait : bovin": "bg-purple",
-            "filière lait : caprin": "bg-purple",
+            "filière lait : bovin": "bg-danger",
+            "filière lait : caprin": "bg-danger",
             "filière aquacole": "bg-primary",
             "Culture marines": "bg-primary",
             "filière saliculture": "bg-danger",
             "filière apiculture": "bg-danger",
         };
 
-        document.getElementById('panelSociete').innerHTML = `<strong>Nom de la société :</strong> ${contractData.nom_societe || "Non spécifié"}`;
 
-        document.getElementById('panelSiret').innerHTML = `<strong>N° SIRET :</strong> ${contractData.siret || "Non spécifié"}`;
+        // Gestion des types de production avec leurs modes de production
+        const modeProductionClasses = {
+            "biologique": "bg-green",
+            "conventionnel": "bg-purple"
+        };
 
-        document.getElementById('panelAdresseEtablissement').innerHTML = `<strong>Adresse de l'établissement :</strong> ${contractData.adresse_etablissement || "Non spécifié"}`;
+// Ajoutons un console.log pour déboguer
+const productionsHtml = contractData.type_productions.map(production => {
+    console.log("Type reçu:", production.type);  
+    console.log("Type en lowercase:", production.type.toLowerCase());
+    const productionClass = productionClasses[production.type.toLowerCase()] || "bg-secondary";
+    console.log("Clés disponibles:", Object.keys(productionClasses));  // Voir toutes les clés
+    console.log("Classe trouvée:", productionClass);  // Voir quelle classe est attribuée
+    const modeProduction = production.mode_production || "Non spécifié";
+    const modeClass = modeProductionClasses[modeProduction.toLowerCase()] || "bg-secondary";
+    return `
+        <div class="mb-1">
+            <span class="badge ${productionClass}">${production.type}</span>
+            <span class="badge ${modeClass} ms-1">${modeProduction}</span>
+        </div>
+    `;
+}).join('') || '<span class="badge bg-secondary">Non spécifié</span>';
+
+
+        document.getElementById('panelSociete').innerHTML = `<strong>Nom de la société :</strong> ${contractData.nom_societe || "Non spécifique"}`;
+
+        document.getElementById('panelSiret').innerHTML = `<strong>N° SIRET :</strong> ${contractData.siret || "Non spécifique"}`;
+
+        document.getElementById('panelAdresseEtablissement').innerHTML = `<strong>Adresse de l'établissement :</strong> ${contractData.adresse_etablissement || "Non spécifique"}`;
 
         document.getElementById('panelActivitePrincipale').innerHTML = `<strong>Activité principale :</strong> ${contractData.activite_principale || "Non spécifié"}`;
     
@@ -478,7 +501,8 @@ loadSites();
         document.getElementById('panelTrancheEffectif').innerHTML = `<strong>Trache effectif de l'établissement :</strong> ${contractData.tranche_effectif || "Non spécifié"}`;
 
         document.getElementById('panelTypeProduction').innerHTML = `
-            <strong>Types de Production :</strong> ${createBadges(contractData.type_productions, "bg-success")}
+            <strong>Types de production :</strong><br>
+            ${productionsHtml}
         `;
     
         // Types de milieu
@@ -491,13 +515,6 @@ loadSites();
             <strong>Nature des produits finis :</strong> ${createBadges(contractData.produits_finis, "bg-warning")}
         `;
     
-        // Gestion du type d'agriculture
-        const agricultureClass = contractData.type_agriculture === "biologique" ? "bg-success" : 
-                                 contractData.type_agriculture === "conventionnel" ? "bg-dark" : 
-                                 "bg-secondary";
-        document.getElementById('panelTypeAgriculture').innerHTML = `
-            <strong>Type d'agriculture :</strong> <span class="badge ${agricultureClass}">${contractData.type_agriculture || "Non spécifié"}</span>
-        `;
     
         // Type de contrat avec classes dynamiques
         const contratClassMapping = {
@@ -688,7 +705,6 @@ autocomplete(
     
                 if (nomProprietaire && data.agriculteur.toLowerCase().trim() !== nomProprietaire) match = false;
                 if (typeContrat && data.type_contrat.toLowerCase().trim() !== typeContrat) match = false;
-                if (typeAgriculture && data.type_agriculture.toLowerCase().trim() !== typeAgriculture) match = false;
                 if (nomSociete && data.nom_societe.toLowerCase().trim() !== nomSociete) match = false;
                 if (referent && data.referent.toLowerCase().trim() !== referent) match = false;
     

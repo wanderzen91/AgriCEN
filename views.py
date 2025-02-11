@@ -10,6 +10,8 @@ import requests
 from shapely.geometry import mapping
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import load_only, selectinload
+from flask_migrate import Migrate
+
 # from sqlalchemy import text
 
 app = Flask(__name__)
@@ -54,6 +56,9 @@ db.init_app(app)
 
 # Fonction pour charger les choix dynamiques
 
+# Configuration de Flask-Migrate
+migrate = Migrate(app, db)
+
 def populate_form_choices(form):
     try:
         # Exécuter toutes les requêtes SQL en une seule transaction
@@ -65,19 +70,28 @@ def populate_form_choices(form):
             TypeContrat.query.options(load_only(TypeContrat.id_type_contrat, TypeContrat.appellation_contrat))
         ).scalars()
 
-        productions = db.session.execute(
-            TypeProduction.query.options(load_only(TypeProduction.id_type_production, TypeProduction.nature_production))
-        ).scalars()
-
         produits_finis = db.session.execute(
             TypeProduitFini.query.options(load_only(TypeProduitFini.id_type_produit_fini, TypeProduitFini.nature_produit_fini))
+        ).scalars()
+
+                # Ajout du chargement des modes de production
+        modes_production = db.session.execute(
+            ModeProduction.query.options(load_only(ModeProduction.id, ModeProduction.nom))
+        ).scalars()
+
+        # Modification du chargement des types de production pour inclure les modes
+        productions = db.session.execute(
+            TypeProduction.query.options(
+                load_only(TypeProduction.id_type_production, TypeProduction.nature_production)
+            ).options(selectinload(TypeProduction.modes_production))
         ).scalars()
 
         # Remplir les choix des champs du formulaire
         form.type_milieu.choices = [(milieu.id_type_milieu, milieu.milieu) for milieu in type_milieux]
         form.appellation_contrat.choices = [(contrat.id_type_contrat, contrat.appellation_contrat) for contrat in contrats]
-        form.type_production.choices = [(prod.id_type_production, prod.nature_production) for prod in productions]
         form.produit_fini.choices = [(prod.id_type_produit_fini, prod.nature_produit_fini) for prod in produits_finis]
+        form.type_production.choices = [(prod.id_type_production, prod.nature_production) for prod in productions]
+        form.mode_production.choices = [(mode.id, mode.nom) for mode in modes_production]
 
     except Exception as e:
         logging.error(f"Erreur lors du chargement des choix dynamiques : {e}")
@@ -329,14 +343,15 @@ def map_page():
                 db.session.add(type_milieu_contrat)
                 db.session.commit()
 
+            # Associer les types de production avec leurs modes de production
+            mode_production_id = int(form.mode_production.data)
             for production_id in request.form.getlist('type_production'):
                 type_production_societe = TypeProductionSociete(
                     id_societe=societe.id_societe,
                     id_type_production=int(production_id),
-                    type_agriculture=form.type_agriculture.data  # Récupéré séparément depuis un autre champ
+                    id_mode_production=mode_production_id
                 )
                 db.session.add(type_production_societe)
-                db.session.commit()
 
             for produit_fini_id in request.form.getlist('produit_fini'):
                 produit_fini_contrat = ProduitFiniContrat(
@@ -367,6 +382,7 @@ def map_page():
             selectinload(Contrat.societe).selectinload(Societe.categorie_juridique_obj),
             selectinload(Contrat.societe).selectinload(Societe.tranche_effectif_obj),
             selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.type_production),
+            selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.mode_production),
             selectinload(Contrat.types_milieu).selectinload(TypeMilieuContrat.type_milieu),
             selectinload(Contrat.produits_finis).selectinload(ProduitFiniContrat.produit_fini),
             selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen),
@@ -382,22 +398,25 @@ def map_page():
         # Types de milieu
         type_milieux = [milieu.type_milieu.milieu for milieu in contrat.types_milieu] if contrat.types_milieu else []
 
-        # Types de production
-        type_productions = [
-            prod.type_production.nature_production
-            for prod in (contrat.societe.types_production_societe if contrat.societe else [])
-            if prod.type_production
-        ]
-
+        # Traitement des types de production avec leurs modes
+        type_productions = []
+        if contrat.societe and contrat.societe.types_production_societe:
+            for tps in contrat.societe.types_production_societe:
+                type_productions.append({
+                    'type': tps.type_production.nature_production,
+                    'mode_production': tps.mode_production.nom if tps.mode_production else None
+                })
+                
         # Produits finis
         produits_finis = [
             produit.produit_fini.nature_produit_fini if produit.produit_fini else "Non spécifié"
             for produit in contrat.produits_finis
         ]
 
-        type_agriculture = (
-            contrat.societe.types_production_societe[0].type_agriculture
-            if contrat.societe and contrat.societe.types_production_societe
+        # Modes de production
+        mode_production = (
+            contrat.societe.types_production_societe[0].mode_production.nom
+            if contrat.societe and contrat.societe.types_production_societe and contrat.societe.types_production_societe[0].mode_production
             else "Non spécifié"
         )
 
@@ -416,7 +435,7 @@ def map_page():
             "categorie_juridique": contrat.societe.categorie_juridique_obj.lib_type_categorie_juridique if contrat.societe and contrat.societe.categorie_juridique_obj else "Non spécifié",
             "activite_principale": contrat.societe.activite_principale_obj.lib_type_activite_principale if contrat.societe and contrat.societe.activite_principale_obj else "Non spécifié",
             "date_naissance": contrat.societe.agriculteurs_intermediaires[0].agriculteur.date_naissance if contrat.societe and contrat.societe.agriculteurs_intermediaires else "Non spécifié",
-            "type_agriculture": type_agriculture,
+            "mode_production": mode_production,
             "type_productions": type_productions,
             "produits_finis": produits_finis,
             "type_contrat": contrat.type_contrat.appellation_contrat if contrat.type_contrat else "Non spécifié",
@@ -446,6 +465,7 @@ def edit_contract(contract_id):
             selectinload(Contrat.societe).selectinload(Societe.categorie_juridique_obj),
             selectinload(Contrat.societe).selectinload(Societe.tranche_effectif_obj),
             selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.type_production),
+            selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.mode_production),
             selectinload(Contrat.types_milieu).selectinload(TypeMilieuContrat.type_milieu),
             selectinload(Contrat.produits_finis).selectinload(ProduitFiniContrat.produit_fini),
             selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen),
@@ -498,7 +518,10 @@ def edit_contract(contract_id):
         form.type_milieu.data = [milieu.type_milieu.id_type_milieu for milieu in contrat.types_milieu]
         form.produit_fini.data = [produit.produit_fini.id_type_produit_fini for produit in contrat.produits_finis]
         form.type_production.data = [prod.type_production.id_type_production for prod in contrat.societe.types_production_societe]
-        form.type_agriculture.data = contrat.societe.types_production_societe[0].type_agriculture if contrat.societe.types_production_societe else ""
+        
+        # Mode de production
+        if contrat.societe.types_production_societe:
+            form.mode_production.data = contrat.societe.types_production_societe[0].id_mode_production
 
     # 🟢 Traitement du formulaire soumis
     elif request.method == 'POST':
@@ -540,8 +563,13 @@ def edit_contract(contract_id):
             # Mise à jour des relations
             contrat.types_milieu = [TypeMilieuContrat(id_type_milieu=mid, id_contrat=contrat.id_contrat) for mid in form.type_milieu.data]
             contrat.produits_finis = [ProduitFiniContrat(id_type_produit_fini=pid, id_contrat=contrat.id_contrat) for pid in form.produit_fini.data]
+            mode_production_id = int(form.mode_production.data)
             contrat.societe.types_production_societe = [
-                TypeProductionSociete(id_type_production=tid, id_societe=contrat.societe.id_societe, type_agriculture=form.type_agriculture.data)
+                TypeProductionSociete(
+                    id_type_production=tid,
+                    id_societe=contrat.societe.id_societe,
+                    id_mode_production=mode_production_id
+                ) 
                 for tid in form.type_production.data
             ]
 

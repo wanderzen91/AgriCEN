@@ -116,12 +116,10 @@
                                         {{ form.tranche_effectif(class="form-control", readonly=True) }}
                                     </div>
                                     <div class="mb-3">
-                                        {{ form.type_agriculture.label }}
-                                        {% for subfield in form.type_agriculture %}
-                                            <div class="form-check">
-                                                {{ subfield(class="form-check-input") }}
-                                                <label class="form-check-label" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
-                                            </div>
+                                        {{ form.mode_production.label }}
+                                        {{ form.mode_production(class="form-control") }}
+                                        {% for error in form.mode_production.errors %}
+                                            <div class="text-danger">{{ error }}</div>
                                         {% endfor %}
                                     </div>
                                 </div>

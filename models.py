@@ -73,10 +73,38 @@ class Societe(db.Model):
 class TypeProduction(db.Model):
     __tablename__ = 'type_production'
     __table_args__ = {'schema': 'referentiel'}
+
     id_type_production = db.Column(db.Integer, primary_key=True)
     nature_production = db.Column(db.String(50))
 
     societes = db.relationship('TypeProductionSociete', back_populates='type_production')
+
+    # Relation avec ModeProduction via TypeProductionMode
+    modes_production = db.relationship(
+        'TypeProductionMode',
+        back_populates='type_production',
+        cascade="all, delete-orphan",
+        overlaps="modes_production,types_production"
+    )
+
+
+# Modèle ModeProduction
+class ModeProduction(db.Model):
+    __tablename__ = 'mode_production'
+    __table_args__ = {'schema': 'referentiel'}
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nom = db.Column(db.String(50), unique=True, nullable=False)
+
+    # Relation avec TypeProductionMode
+    types_production = db.relationship(
+        'TypeProductionMode',
+        back_populates='mode_production',
+        cascade="all, delete-orphan",
+        overlaps="modes_production,types_production"
+    )
+
+
 
 # Table TypeProduitFini
 class TypeProduitFini(db.Model):
@@ -177,17 +205,33 @@ class AgriculteurSociete(db.Model):
     # Relation avec Agriculteur
     agriculteur = db.relationship('Agriculteur', back_populates='societes_intermediaires')
 
+
+# Table d'association TypeProductionMode
+class TypeProductionMode(db.Model):
+    __tablename__ = 'type_production_mode'
+    __table_args__ = {'schema': 'referentiel'}
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_type_production = db.Column(db.Integer, db.ForeignKey('referentiel.type_production.id_type_production'), primary_key=True)
+    id_mode_production = db.Column(db.Integer, db.ForeignKey('referentiel.mode_production.id'), nullable=False)
+
+    # Ajouter les relations back_populates pour éviter les conflits
+    type_production = db.relationship("TypeProduction", back_populates="modes_production")
+    mode_production = db.relationship("ModeProduction", back_populates="types_production")
+
 # Association Table: TypeProduction - Société
 class TypeProductionSociete(db.Model):
     __tablename__ = 'type_production_societe'
     __table_args__ = {'schema': 'saisie'}
+
     id_societe = db.Column(db.Integer, db.ForeignKey('saisie.societe.id_societe'), primary_key=True)
     id_type_production = db.Column(db.Integer, db.ForeignKey('referentiel.type_production.id_type_production'), primary_key=True)
-    type_agriculture = db.Column(db.String(25), nullable=False)
+    id_mode_production = db.Column(db.Integer, db.ForeignKey('referentiel.mode_production.id'), nullable=False)
 
     type_production = db.relationship('TypeProduction', back_populates='societes')
     societe = db.relationship('Societe', back_populates='types_production_societe')
-
+    mode_production = db.relationship('ModeProduction') 
+    
 # Association Table: ProduitFini - Contrat
 class ProduitFiniContrat(db.Model):
     __tablename__ = 'produit_fini_contrat'
