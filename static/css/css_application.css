@@ -261,3 +261,21 @@ border-bottom: 1px solid #ddd; /* Optionnel : ajustez la bordure */
 #add-production {
     width: 100%;
 }
+
+#form-container {
+    max-height: 80vh;  /* Limite la hauteur max à 80% de la hauteur de la fenêtre */
+    overflow-y: auto;  /* Active la barre de défilement verticale si nécessaire */
+}
+
+#modalTabs {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+/* Empêcher d'écraser la carte */
+#map-container {
+    min-width: 300px;
+    flex: 1;
+}
