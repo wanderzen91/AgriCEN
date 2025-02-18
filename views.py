@@ -523,6 +523,28 @@ def edit_contract(contract_id):
         if contrat.societe.types_production_societe:
             form.mode_production.data = contrat.societe.types_production_societe[0].id_mode_production
 
+        # Récupérer les productions existantes
+        existing_productions = {}
+        for prod in contrat.societe.types_production_societe:
+            mode_id = prod.id_mode_production
+            if mode_id not in existing_productions:
+                existing_productions[mode_id] = []
+            existing_productions[mode_id].append(prod.id_type_production)
+        
+        # Convertir en format JSON pour le template
+        initial_productions = [
+            {
+                'type_production': type_prods,
+                'mode_production': str(mode_id)
+            }
+            for mode_id, type_prods in existing_productions.items()
+        ]
+        
+        return render_template('edit_contract.html', 
+                            contrat=contrat, 
+                            form=form, 
+                            initial_productions=json.dumps(initial_productions))
+
     # 🟢 Traitement du formulaire soumis
     elif request.method == 'POST':
         try:
@@ -563,15 +585,42 @@ def edit_contract(contract_id):
             # Mise à jour des relations
             contrat.types_milieu = [TypeMilieuContrat(id_type_milieu=mid, id_contrat=contrat.id_contrat) for mid in form.type_milieu.data]
             contrat.produits_finis = [ProduitFiniContrat(id_type_produit_fini=pid, id_contrat=contrat.id_contrat) for pid in form.produit_fini.data]
-            mode_production_id = int(form.mode_production.data)
-            contrat.societe.types_production_societe = [
-                TypeProductionSociete(
-                    id_type_production=tid,
-                    id_societe=contrat.societe.id_societe,
-                    id_mode_production=mode_production_id
-                ) 
-                for tid in form.type_production.data
-            ]
+            
+            # Récupérer les données de production du formulaire
+            try:
+                all_productions = json.loads(request.form.get('all_productions', '[]'))
+                
+                # Vérifier que nous avons des données valides
+                if not all_productions:
+                    flash("Veuillez ajouter au moins un type de production avec son mode.", "danger")
+                    return render_template('edit_contract.html', contrat=contrat, form=form)
+                
+                # Vérifier que chaque entrée a un mode de production
+                for prod in all_productions:
+                    if not prod.get('mode_production'):
+                        flash("Veuillez sélectionner un mode de production pour chaque type de production.", "danger")
+                        return render_template('edit_contract.html', contrat=contrat, form=form)
+                
+                # Supprimer les anciennes relations
+                TypeProductionSociete.query.filter_by(id_societe=contrat.societe.id_societe).delete()
+                
+                # Créer les nouvelles relations
+                for prod in all_productions:
+                    type_productions = prod.get('type_production', [])
+                    mode_production = prod.get('mode_production')
+                    
+                    if type_productions and mode_production:
+                        for type_prod in type_productions:
+                            type_prod_societe = TypeProductionSociete(
+                                id_type_production=int(type_prod),
+                                id_societe=contrat.societe.id_societe,
+                                id_mode_production=int(mode_production)
+                            )
+                            db.session.add(type_prod_societe)
+                
+            except json.JSONDecodeError:
+                flash("Erreur lors de la lecture des données de production.", "danger")
+                return render_template('edit_contract.html', contrat=contrat, form=form)
 
             db.session.commit()
             flash("Les modifications ont été enregistrées avec succès.", "success")
@@ -665,4 +714,3 @@ def dataviz_page():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
-

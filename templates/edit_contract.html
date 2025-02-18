@@ -7,9 +7,9 @@
     <!-- Titre principal -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Modifier le contrat</h2>
-        <button onclick="goBackOrRedirect()" class="btn btn-outline-secondary btn-sm">
+        <button id="backButton" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left"></i> Retour à la carte
-        </a>
+        </button>
     </div>
 
     <!-- Conteneur pour la carte et le formulaire -->
@@ -133,8 +133,8 @@
                                         <div class="row gx-4 gy-3">
                                             <div class="col-md-5">
                                                 <label class="form-label">Types de Production</label>
-                                                <input id="type_production_tagify" class="form-control" name="type_production_display" placeholder="Ajouter des types de production">
-                                                <select id="type_production" name="type_production" multiple hidden>
+                                                <input class="form-control type-production" placeholder="Ajouter des types de production">
+                                                <select class="type-production-select" name="type_production[]" multiple hidden>
                                                     {% for value, label in form.type_production.choices %}
                                                         <option value="{{ value }}" {% if value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
                                                     {% endfor %}
@@ -142,9 +142,12 @@
                                             </div>
                                             <div class="col-md-5">
                                                 <label class="form-label">Mode de Production</label>
-                                                <select class="form-select mode-production">
+                                                <select class="form-select mode-production" name="mode_production[]">
+                                                    <option value="">Sélectionnez un mode de production</option>
                                                     {% for value, label in form.mode_production.choices %}
-                                                        <option value="{{ value }}">{{ label }}</option>
+                                                        <option value="{{ value }}" {% if value == form.mode_production.data %}selected{% endif %}>
+                                                            {{ label }}
+                                                        </option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -159,7 +162,8 @@
                                 <button type="button" class="btn btn-success btn-sm mt-2" id="add-production">
                                     <i class="fas fa-plus"></i> Ajouter un type de production
                                 </button>
-                                <input type="hidden" name="productions" id="productions-data">
+                                <!-- Champ caché pour stocker toutes les données de production -->
+                                <input type="hidden" name="all_productions" id="all-productions-data">
 
                                 <div class="row mt-4">
                                     <div class="col-12">
@@ -242,6 +246,10 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Add event listener for the back button
+    document.getElementById('backButton').addEventListener('click', goBackOrRedirect);
+
     // 🌍 Initialisation de la carte Leaflet
     const map = L.map('small_map').setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
     
@@ -376,104 +384,272 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 📌 Gestion du retour à la carte
     function goBackOrRedirect() {
-        document.referrer ? history.back() : window.location.href = "{{ url_for('map_page') }}";
+    if (document.referrer && document.referrer !== window.location.href) {
+        history.back(); // 🔄 Retour à la page précédente si elle existe
+    } else {
+        window.location.href = "{{ url_for('map_page') }}"; // 🌍 Redirection vers la carte si pas d'historique
     }
+}
+
 
     // 🏭 Gestion des types de production dynamiques
     const productionContainer = document.getElementById('production-container');
     const addProductionButton = document.getElementById('add-production');
-    const productionsData = document.getElementById('productions-data');
+    const allProductionsData = document.getElementById('all-productions-data');
 
     function addNewProductionEntry() {
-    const div = document.createElement('div');
-    div.className = 'production-entry mb-3';
-    div.innerHTML = `
-        <div class="row gx-4 gy-3">
-            <div class="col-md-5">
-                <label class="form-label">Types de Production</label>
-                <input class="form-control type-production" placeholder="Ajouter des types de production">
+        const div = document.createElement('div');
+        div.className = 'production-entry mb-3';
+        div.innerHTML = `
+            <div class="row gx-4 gy-3">
+                <div class="col-md-5">
+                    <label class="form-label">Types de Production</label>
+                    <input class="form-control type-production" placeholder="Ajouter des types de production">
+                    <select class="type-production-select" name="type_production[]" multiple hidden>
+                        {% for value, label in form.type_production.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Mode de Production</label>
+                    <select class="form-select mode-production" name="mode_production[]">
+                        <option value="">Sélectionnez un mode de production</option>
+                        {% for value, label in form.mode_production.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm remove-production">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
-            <div class="col-md-5">
-                <label class="form-label">Mode de Production</label>
-                <select class="form-select mode-production">
-                    {% for value, label in form.mode_production.choices %}
-                        <option value="{{ value }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="button" class="btn btn-danger btn-sm remove-production">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-    `;
-    productionContainer.appendChild(div);
+        `;
+        productionContainer.appendChild(div);
 
-    // 🔥 Initialisation correcte de Tagify pour les nouvelles entrées
-    const typeProductionInput = div.querySelector('.type-production');
-    const tagifyInstance = new Tagify(typeProductionInput, {
-    whitelist: [{% for value, label in form.type_production.choices %}
-        { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
-    {% endfor %}],
-    enforceWhitelist: true,
-    dropdown: { enabled: 0 },
-    templates: {
-        tag: tagData => `
-            <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
-                <span class="tagify__tag-text">${tagData.emoji || "❓"} ${tagData.label}</span>
-                <x class="tagify__tag__removeBtn"></x>
-            </tag>`,
-        dropdownItem: suggestion => `
-            <div class="tagify__dropdown__item">
-                ${suggestion.emoji || "❓"} ${suggestion.label}
-            </div>`
+        // Initialiser Tagify pour le nouveau champ
+        const typeProductionInput = div.querySelector('.type-production');
+        const tagifyInstance = new Tagify(typeProductionInput, {
+            whitelist: [{% for value, label in form.type_production.choices %}
+                { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
+            {% endfor %}],
+            enforceWhitelist: true,
+            dropdown: { enabled: 0 },
+            templates: {
+                tag: tagData => `
+                    <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
+                        <span class="tagify__tag-text">${tagData.emoji || "❓"} ${tagData.label}</span>
+                        <x class="tagify__tag__removeBtn"></x>
+                    </tag>`,
+                dropdownItem: suggestion => `
+                    <div class="tagify__dropdown__item">
+                        ${suggestion.emoji || "❓"} ${suggestion.label}
+                    </div>`
+            }
+        });
+
+        // Synchroniser avec le select caché
+        typeProductionInput._tagify = tagifyInstance;
+        tagifyInstance.on('change', () => {
+            const selectedValues = tagifyInstance.value.map(item => item.value);
+            const hiddenSelect = div.querySelector('.type-production-select');
+            Array.from(hiddenSelect.options).forEach(option => {
+                option.selected = selectedValues.includes(option.value);
+            });
+            updateAllProductionsData();
+        });
+
+        // Écouter les changements du mode de production
+        div.querySelector('.mode-production').addEventListener('change', updateAllProductionsData);
+
+        // Gérer la suppression
+        div.querySelector('.remove-production').addEventListener('click', () => {
+            div.remove();
+            updateAllProductionsData();
+        });
+
+        updateAllProductionsData();
     }
-});
 
+    function updateAllProductionsData() {
+        const entries = Array.from(productionContainer.querySelectorAll('.production-entry')).map(entry => {
+            const typeProductionSelect = entry.querySelector('.type-production-select');
+            const modeProductionSelect = entry.querySelector('.mode-production');
+            
+            const selectedTypes = Array.from(typeProductionSelect.selectedOptions).map(option => option.value);
+            const selectedMode = modeProductionSelect.value;
+            
+            // Validation visuelle
+            if (!selectedMode) {
+                modeProductionSelect.classList.add('is-invalid');
+            } else {
+                modeProductionSelect.classList.remove('is-invalid');
+            }
+            
+            return {
+                type_production: selectedTypes,
+                mode_production: selectedMode
+            };
+        });
 
-    // 🔄 Synchronisation avec le champ caché
-    typeProductionInput._tagify = tagifyInstance;
-    tagifyInstance.on('change', updateProductionsData);
+        // Mettre à jour le champ caché avec les données JSON
+        allProductionsData.value = JSON.stringify(entries);
+    }
 
-    // Suppression de l'entrée
-    div.querySelector('.remove-production').addEventListener('click', () => {
-        div.remove();
-        updateProductionsData();
+    // Initialiser les Tagify existants
+    document.querySelectorAll('.type-production').forEach(input => {
+        const div = input.closest('.production-entry');
+        const tagifyInstance = new Tagify(input, {
+            whitelist: [{% for value, label in form.type_production.choices %}
+                { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
+            {% endfor %}],
+            enforceWhitelist: true,
+            dropdown: { enabled: 0 },
+            templates: {
+                tag: tagData => `
+                    <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
+                        <span class="tagify__tag-text">${tagData.emoji || "❓"} ${tagData.label}</span>
+                        <x class="tagify__tag__removeBtn"></x>
+                    </tag>`,
+                dropdownItem: suggestion => `
+                    <div class="tagify__dropdown__item">
+                        ${suggestion.emoji || "❓"} ${suggestion.label}
+                    </div>`
+            }
+        });
+
+        input._tagify = tagifyInstance;
+        tagifyInstance.on('change', () => {
+            const selectedValues = tagifyInstance.value.map(item => item.value);
+            const hiddenSelect = div.querySelector('.type-production-select');
+            Array.from(hiddenSelect.options).forEach(option => {
+                option.selected = selectedValues.includes(option.value);
+            });
+            updateAllProductionsData();
+        });
     });
 
-    updateProductionsData();
-}
+    // Initialiser les écouteurs d'événements pour les modes de production existants
+    document.querySelectorAll('.mode-production').forEach(select => {
+        select.addEventListener('change', updateAllProductionsData);
+    });
 
-    function updateProductionsData() {
-        const entries = Array.from(productionContainer.querySelectorAll('.production-entry')).map(entry => ({
-            type_production: entry.querySelector('.type-production')._tagify?.value.map(tag => tag.value) || [],
-            mode_production: entry.querySelector('.mode-production').value || ''
-        }));
-        productionsData.value = JSON.stringify(entries);
-    }
+    // Initialiser les boutons de suppression existants
+    document.querySelectorAll('.remove-production').forEach(button => {
+        button.addEventListener('click', function() {
+            button.closest('.production-entry').remove();
+            updateAllProductionsData();
+        });
+    });
+
+    // Initialiser les données
+    updateAllProductionsData();
 
     // Ajout d'un nouveau type de production
     addProductionButton.addEventListener('click', addNewProductionEntry);
 
-    // Initialisation des entrées existantes
-    productionContainer.querySelectorAll('.type-production').forEach(input => {
-        const tagifyInstance = initializeTagify(input, 
-            [{% for value, label in form.type_production.choices %}
-                { value: "{{ value }}", label: "{{ label }}" },
-            {% endfor %}],
-            emojiTypeProductionMapping
-        );
-        input._tagify = tagifyInstance;
-        tagifyInstance.on('change', updateProductionsData);
-    });
+    // Initialiser les productions existantes
+    const initialProductions = {{ initial_productions | safe }};
+    if (initialProductions && initialProductions.length > 0) {
+        // Supprimer l'entrée par défaut vide
+        productionContainer.innerHTML = '';
+        
+        // Ajouter chaque production existante
+        initialProductions.forEach(prod => {
+            const div = document.createElement('div');
+            div.className = 'production-entry mb-3';
+            div.innerHTML = `
+                <div class="row gx-4 gy-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Types de Production</label>
+                        <input class="form-control type-production" placeholder="Ajouter des types de production">
+                        <select class="type-production-select" name="type_production[]" multiple hidden>
+                            {% for value, label in form.type_production.choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Mode de Production</label>
+                        <select class="form-select mode-production" name="mode_production[]">
+                            <option value="">Sélectionnez un mode de production</option>
+                            {% for value, label in form.mode_production.choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-production">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            productionContainer.appendChild(div);
 
-    productionContainer.querySelectorAll('.remove-production').forEach(button => {
-        button.addEventListener('click', function () {
-            button.closest('.production-entry').remove();
-            updateProductionsData();
+            // Initialiser Tagify
+            const typeProductionInput = div.querySelector('.type-production');
+            const tagifyInstance = new Tagify(typeProductionInput, {
+                whitelist: [{% for value, label in form.type_production.choices %}
+                    { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
+                {% endfor %}],
+                enforceWhitelist: true,
+                dropdown: { enabled: 0 },
+                templates: {
+                    tag: tagData => `
+                        <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
+                            <span class="tagify__tag-text">${tagData.emoji || "❓"} ${tagData.label}</span>
+                            <x class="tagify__tag__removeBtn"></x>
+                        </tag>`,
+                    dropdownItem: suggestion => `
+                        <div class="tagify__dropdown__item">
+                            ${suggestion.emoji || "❓"} ${suggestion.label}
+                        </div>`
+                }
+            });
+
+            // Sélectionner les types de production existants
+            const typeProductionSelect = div.querySelector('.type-production-select');
+            const modeProductionSelect = div.querySelector('.mode-production');
+
+            // Définir le mode de production
+            modeProductionSelect.value = prod.mode_production;
+
+            // Ajouter les types de production
+            const selectedTypes = prod.type_production.map(typeId => {
+                const option = Array.from(typeProductionSelect.options).find(opt => opt.value === String(typeId));
+                if (option) {
+                    option.selected = true;
+                    return {
+                        value: option.value,
+                        label: option.text,
+                        emoji: emojiTypeProductionMapping[option.text] || "❓"
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+
+            tagifyInstance.addTags(selectedTypes);
+
+            // Ajouter les écouteurs d'événements
+            typeProductionInput._tagify = tagifyInstance;
+            tagifyInstance.on('change', () => {
+                const selectedValues = tagifyInstance.value.map(item => item.value);
+                Array.from(typeProductionSelect.options).forEach(option => {
+                    option.selected = selectedValues.includes(option.value);
+                });
+                updateAllProductionsData();
+            });
+
+            modeProductionSelect.addEventListener('change', updateAllProductionsData);
+            div.querySelector('.remove-production').addEventListener('click', function() {
+                div.remove();
+                updateAllProductionsData();
+            });
         });
-    });
+    }
 
     // 🎯 Gestion de l'API SIRENE pour récupérer les données SIRET
     document.querySelector('[name="fetch_sirene"]').addEventListener("click", async function (event) {
