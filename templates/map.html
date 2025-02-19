@@ -402,7 +402,11 @@ loadSites();
             // Ajouter un popup avec les détails du contrat
             marker.bindTooltip(
                 `<strong>Site(s) CEN :</strong> ${contractData.nom_site}<br>
-                <strong>Société :</strong> ${contractData.nom_societe}`,
+                <strong>Société :</strong> ${contractData.nom_societe}<br>
+                <strong>Contrat :</strong> ${contractData.type_contrat}<br>
+                <strong>Date de signature :</strong> ${contractData.date_signature}<br>
+                <strong>Date de prise en effet :</strong> ${contractData.date_prise_effet}<br>
+                <strong>Date de fin :</strong> ${contractData.date_fin}<br>`,
                 {permanent: false, direction: "top", offset: [0, -20]}
             );
 
