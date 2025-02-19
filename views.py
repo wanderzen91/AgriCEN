@@ -255,6 +255,11 @@ def map_page():
 
     if form.submit.data and form.validate_on_submit():  # Si "Enregistrer les données" est cliqué
         try:
+            # Debug prints
+            print("Form Data:", request.form)
+            print("Type Production Data:", request.form.getlist('type_production'))
+            print("Type Production Field:", form.type_production.data)
+            print("Type Production Errors:", form.type_production.errors)
             # Logique pour enregistrer les données
 
             # Ajouter une société
@@ -345,11 +350,18 @@ def map_page():
 
             # Associer les types de production avec leurs modes de production
             mode_production_id = int(form.mode_production.data)
-            for production_id in request.form.getlist('type_production'):
+            type_productions = request.form.getlist('type_production')
+            modes_production = request.form.getlist('mode_production')
+
+            # Créer les associations TypeProductionSociete
+            for i, production_id in enumerate(type_productions):
+                # Utiliser le mode de production correspondant s'il existe, sinon utiliser le premier mode
+                current_mode_id = int(modes_production[i]) if i < len(modes_production) else mode_production_id
+                
                 type_production_societe = TypeProductionSociete(
                     id_societe=societe.id_societe,
                     id_type_production=int(production_id),
-                    id_mode_production=mode_production_id
+                    id_mode_production=current_mode_id
                 )
                 db.session.add(type_production_societe)
 
