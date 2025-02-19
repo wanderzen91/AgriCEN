@@ -88,7 +88,7 @@
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label">Mode de Production</label>
-                                                            <select class="form-select mode-production" name="mode_production_0">
+                                                            <select class="form-select mode-production" name="mode_production">
                                                                 {% for value, label in form.mode_production.choices %}
                                                                     <option value="{{ value }}">{{ label }}</option>
                                                                 {% endfor %}
@@ -378,7 +378,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Mode de Production</label>
-                        <select class="form-select mode-production" name="mode_production_${productionCount}">
+                        <select class="form-select mode-production" name="mode_production">
                             {% for value, label in form.mode_production.choices %}
                                 <option value="{{ value }}">{{ label }}</option>
                             {% endfor %}
