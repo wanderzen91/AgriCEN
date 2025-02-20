@@ -262,19 +262,27 @@ def map_page():
             print("Type Production Errors:", form.type_production.errors)
             # Logique pour enregistrer les données
 
-            # Ajouter une société
-            societe = Societe(
-                nom_societe=form.nom_societe.data,
-                contact=form.contact.data,
-                siret=form.siret.data, 
-                adresse_etablissement=form.adresse_etablissement.data,  
-                tranche_effectif=form.tranche_effectif.data, 
-                categorie_juridique=form.categorie_juridique.data,
-                activite_principale=form.activite_principale.data
-            )
+            # Vérifier si la société existe déjà (par SIRET ou nom)
+            societe = None
+            if form.siret.data:
+                societe = Societe.query.filter_by(siret=form.siret.data).first()
+            if not societe:
+                societe = Societe.query.filter_by(nom_societe=form.nom_societe.data).first()
 
-            db.session.add(societe)
-            db.session.commit()
+            # Si la société n'existe pas, la créer
+            if not societe:
+                societe = Societe(
+                    nom_societe=form.nom_societe.data,
+                    contact=form.contact.data,
+                    siret=form.siret.data, 
+                    adresse_etablissement=form.adresse_etablissement.data,  
+                    tranche_effectif=form.tranche_effectif.data, 
+                    categorie_juridique=form.categorie_juridique.data,
+                    activite_principale=form.activite_principale.data
+                )
+
+                db.session.add(societe)
+                db.session.commit()
 
             # Ajouter un agriculteur
             agriculteur = Agriculteur(
