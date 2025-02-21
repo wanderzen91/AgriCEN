@@ -731,6 +731,30 @@ def dataviz_page():
     return redirect('https://superset.wanderzen.fr/superset/dashboard/ac7ee9d3-0b70-4b5a-ab12-85fa8902ad95/?native_filters_key=1E8OrhaQWKwHkNOL-XNkq3P7SqIrJ31O-dCGuceUos3gXMTbszYVrUmzjDrIZVcE')  
 
 
+@app.route('/api/search_agriculteur', methods=['POST'])
+def search_agriculteur():
+    search_term = request.json.get("search_term", "").strip().lower()
+    if not search_term:
+        return jsonify([]), 200
+
+    # Rechercher les agriculteurs dont le nom ou le prénom contient le terme de recherche
+    agriculteurs = Agriculteur.query.filter(
+        db.or_(
+            db.func.lower(Agriculteur.nom_agri).contains(search_term),
+            db.func.lower(Agriculteur.prenom_agri).contains(search_term)
+        )
+    ).all()
+
+    # Formater les résultats
+    results = [{
+        'id': agri.id_agriculteur,
+        'nom': agri.nom_agri,
+        'prenom': agri.prenom_agri,
+        'display': f"{agri.nom_agri} {agri.prenom_agri}"
+    } for agri in agriculteurs]
+
+    return jsonify(results), 200
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)

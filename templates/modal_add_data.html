@@ -55,55 +55,72 @@
                                             <div class="text-danger">{{ error }}</div>
                                         {% endfor %}
                                     </div>
-                                    <div class="mb-3">
-                                        {{ form.prenom_agri.label }}
-                                        {{ form.prenom_agri(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.nom_agri.label }}
-                                        {{ form.nom_agri(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.date_naissance.label }}
-                                        {{ form.date_naissance(class="form-control") }}
-                                        <small class="text-muted">Ce champ est facultatif.</small>
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.contact.label }}
-                                        {{ form.contact(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        <div id="production-container">
-                                            <div class="production-entry mb-3">
-                                                <div class="row gx-4 gy-3">
-                                                    <div class="col-12">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Types de Production</label>
-                                                            <input class="form-control type-production-tagify" name="type_production_display_0" placeholder="Ajouter des types de production">
-                                                            <select class="type-production-select" name="type_production" multiple hidden>
-                                                                {% for value, label in form.type_production.choices %}
-                                                                    <option value="{{ value }}">{{ label }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Mode de Production</label>
-                                                            <select class="form-select mode-production" name="mode_production">
-                                                                {% for value, label in form.mode_production.choices %}
-                                                                    <option value="{{ value }}">{{ label }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                        <div class="d-flex justify-content-end">
-                                                            <button type="button" class="btn btn-danger btn-sm remove-production">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
+                                    <div class="mb-4">
+                                        <h5 class="mb-3">Informations sur l'exploitant</h5>
+                                        
+                                        <!-- Nouveau champ de recherche avec autocomplétion -->
+                                        <div class="mb-3">
+                                            <label for="search_agriculteur" class="form-label">Rechercher un(e) exploitant(e)</label>
+                                            <div class="position-relative">
+                                                <input type="text" class="form-control" id="search_agriculteur" 
+                                                    placeholder="Rechercher un exploitant existant...">
+                                                <div id="agriculteur_suggestions" class="position-absolute w-100 mt-1" 
+                                                    style="z-index: 1000; display: none;">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Champs existants pour le nom et prénom -->
+                                        <div class="mb-3">
+                                            <label for="nom_agri" class="form-label">Nom de l'exploitant</label>
+                                            {{ form.nom_agri(class="form-control", id="nom_agri") }}
+                                        </div>
+                                        <div class="mb-3">
+                                            {{ form.prenom_agri.label }}
+                                            {{ form.prenom_agri(class="form-control") }}
+                                        </div>
+                                        <div class="mb-3">
+                                            {{ form.date_naissance.label }}
+                                            {{ form.date_naissance(class="form-control") }}
+                                            <small class="text-muted">Ce champ est facultatif.</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            {{ form.contact.label }}
+                                            {{ form.contact(class="form-control") }}
+                                        </div>
+                                        <div class="mb-3">
+                                            <div id="production-container">
+                                                <div class="production-entry mb-3">
+                                                    <div class="row gx-4 gy-3">
+                                                        <div class="col-12">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Types de Production</label>
+                                                                <input class="form-control type-production-tagify" name="type_production_display_0" placeholder="Ajouter des types de production">
+                                                                <select class="type-production-select" name="type_production" multiple hidden>
+                                                                    {% for value, label in form.type_production.choices %}
+                                                                        <option value="{{ value }}">{{ label }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Mode de Production</label>
+                                                                <select class="form-select mode-production" name="mode_production">
+                                                                    {% for value, label in form.mode_production.choices %}
+                                                                        <option value="{{ value }}">{{ label }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="d-flex justify-content-end">
+                                                                <button type="button" class="btn btn-danger btn-sm remove-production">
+                                                                    <i class="fas fa-times"></i>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                            <button type="button" id="add-production" class="btn btn-primary">Ajouter une entrée de production</button>
                                         </div>
-                                        <button type="button" id="add-production" class="btn btn-primary">Ajouter une entrée de production</button>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -521,6 +538,119 @@
             });
         }
     });
+
+    // Ajouter le code JavaScript pour l'autocomplétion
+    const searchInput = document.getElementById('search_agriculteur');
+    const suggestionsDiv = document.getElementById('agriculteur_suggestions');
+    const nomInput = document.getElementById('nom_agri');
+    const prenomInput = document.getElementById('prenom_agri');
+    let debounceTimer;
+
+    // Style pour la liste des suggestions
+    const suggestionsList = document.createElement('div');
+    suggestionsList.className = 'list-group shadow';
+    suggestionsDiv.appendChild(suggestionsList);
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const searchTerm = this.value.trim();
+
+        if (searchTerm.length < 2) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+
+        debounceTimer = setTimeout(async () => {
+            try {
+                const response = await fetch('/api/search_agriculteur', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ search_term: searchTerm })
+                });
+
+                const data = await response.json();
+                suggestionsList.innerHTML = '';
+
+                if (data.length === 0) {
+                    Swal.fire({
+                        icon: "info",
+                        title: "Aucun résultat",
+                        text: "Aucun exploitant trouvé avec ce nom. Veuillez remplir les champs nom et prénom pour créer une nouvelle entrée."
+                    }).then(() => {
+                        // Désactiver et griser le champ de recherche
+                        searchInput.value = '';
+                        searchInput.disabled = true;
+                        searchInput.style.backgroundColor = '#e9ecef';
+                        searchInput.style.cursor = 'not-allowed';
+                    });
+                    suggestionsDiv.style.display = 'none';
+                    return;
+                }
+
+                data.forEach(agriculteur => {
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.textContent = `${agriculteur.nom} ${agriculteur.prenom}`;
+                    
+                    item.addEventListener('click', () => {
+                        nomInput.value = agriculteur.nom;
+                        prenomInput.value = agriculteur.prenom;
+                        searchInput.value = `${agriculteur.nom} ${agriculteur.prenom}`;
+                        suggestionsDiv.style.display = 'none';
+                    });
+                    
+                    suggestionsList.appendChild(item);
+                });
+
+                suggestionsDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Erreur lors de la recherche:', error);
+            }
+        }, 300);
+    });
+
+    // Cacher les suggestions quand on clique ailleurs
+    document.addEventListener('click', function(e) {
+        if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
 });
 
+
+                // Ajouter un bouton pour réinitialiser la recherche
+                const resetButton = document.createElement('button');
+                resetButton.type = 'button';
+                resetButton.className = 'btn btn-sm btn-outline-secondary mt-2';
+                resetButton.textContent = 'Nouvelle recherche';
+                resetButton.style.display = 'none';
+                searchInput.parentNode.appendChild(resetButton);
+
+                // Fonction pour réinitialiser le champ de recherche
+                function resetSearch() {
+                    searchInput.value = '';
+                    searchInput.disabled = false;
+                    searchInput.style.backgroundColor = '';
+                    searchInput.style.cursor = '';
+                    resetButton.style.display = 'none';
+                    nomInput.value = '';
+                    prenomInput.value = '';
+                }
+
+                resetButton.addEventListener('click', resetSearch);
+
+                // Modifier l'événement click des suggestions
+                item.addEventListener('click', () => {
+                    nomInput.value = agriculteur.nom;
+                    prenomInput.value = agriculteur.prenom;
+                    searchInput.value = `${agriculteur.nom} ${agriculteur.prenom}`;
+                    searchInput.disabled = true;
+                    searchInput.style.backgroundColor = '#e9ecef';
+                    searchInput.style.cursor = 'not-allowed';
+                    suggestionsDiv.style.display = 'none';
+                    resetButton.style.display = 'block';
+                });
 </script>
