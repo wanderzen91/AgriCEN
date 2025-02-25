@@ -64,20 +64,19 @@
                                             <div class="position-relative">
                                                 <input type="text" class="form-control" id="search_agriculteur" 
                                                     placeholder="Rechercher un exploitant existant...">
-                                                <div id="agriculteur_suggestions" class="position-absolute w-100 mt-1" 
+                                                <div id="agriculteur_suggestions" class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
                                                     style="z-index: 1000; display: none;">
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Champs existants pour le nom et prénom -->
                                         <div class="mb-3">
-                                            <label for="nom_agri" class="form-label">Nom de l'exploitant</label>
-                                            {{ form.nom_agri(class="form-control", id="nom_agri") }}
+                                            {{ form.nom_agri.label }}
+                                            {{ form.nom_agri(class="form-control", disabled=True) }}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.prenom_agri.label }}
-                                            {{ form.prenom_agri(class="form-control") }}
+                                            {{ form.prenom_agri(class="form-control", disabled=True) }}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.date_naissance.label }}
@@ -180,6 +179,17 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
+                                    <!-- Nouveau champ de recherche avec autocomplétion -->
+                                    <div class="mb-3">
+                                        <label for="search_referent" class="form-label">Rechercher un(e) référent(e)</label>
+                                        <div class="position-relative">
+                                            <input type="text" class="form-control" id="search_referent" 
+                                                    placeholder="Rechercher un(e) référent(e) existant(e)...">
+                                            <div id="referent_suggestions" class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                                                style="z-index: 1000; display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="mb-3">
                                         {{ form.nom_referent.label }}
                                         {{ form.nom_referent(class="form-control") }}
@@ -546,10 +556,31 @@
     const prenomInput = document.getElementById('prenom_agri');
     let debounceTimer;
 
-    // Style pour la liste des suggestions
-    const suggestionsList = document.createElement('div');
-    suggestionsList.className = 'list-group shadow';
-    suggestionsDiv.appendChild(suggestionsList);
+    // Fonction pour activer/désactiver les champs agriculteur
+    function enableAgriFields(enable) {
+        nomInput.disabled = !enable;
+        prenomInput.disabled = !enable;
+        if (enable) {
+            nomInput.value = '';
+            prenomInput.value = '';
+            nomInput.focus();
+        }
+    }
+
+    // Fonction pour séparer un terme de recherche en nom et prénom
+    function splitSearchTerm(searchTerm) {
+        // Nettoyer et diviser le terme de recherche
+        const parts = searchTerm.trim().split(/\s+/);
+        
+        if (parts.length === 0) return { nom: '', prenom: '' };
+        if (parts.length === 1) return { nom: parts[0], prenom: '' };
+        
+        // Le premier mot va dans le nom, le reste dans le prénom
+        const nom = parts[0];
+        const prenom = parts.slice(1).join(' ');
+        
+        return { nom, prenom };
+    }
 
     searchInput.addEventListener('input', function() {
         clearTimeout(debounceTimer);
@@ -571,48 +602,48 @@
                 });
 
                 const data = await response.json();
-                suggestionsList.innerHTML = '';
+                suggestionsDiv.innerHTML = '';
 
                 if (data.length === 0) {
-                    Swal.fire({
-                        icon: "info",
-                        title: "Aucun résultat",
-                        text: "Aucun exploitant trouvé avec ce nom. Veuillez remplir les champs nom et prénom pour créer une nouvelle entrée."
-                    }).then(() => {
-                        // Désactiver et griser le champ de recherche
+                    // Ajouter la suggestion pour créer un nouvel exploitant
+                    const newAgriItem = document.createElement('div');
+                    newAgriItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                    newAgriItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel exploitant(e)';
+                    newAgriItem.addEventListener('click', () => {
+                        // Pré-remplir les champs avec le terme de recherche séparé
+                        const { nom, prenom } = splitSearchTerm(searchTerm);
+                        enableAgriFields(true);
+                        nomInput.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                        prenomInput.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
                         searchInput.value = '';
-                        searchInput.disabled = true;
-                        searchInput.style.backgroundColor = '#e9ecef';
-                        searchInput.style.cursor = 'not-allowed';
-                    });
-                    suggestionsDiv.style.display = 'none';
-                    return;
-                }
-
-                data.forEach(agriculteur => {
-                    const item = document.createElement('button');
-                    item.type = 'button';
-                    item.className = 'list-group-item list-group-item-action';
-                    item.textContent = `${agriculteur.nom} ${agriculteur.prenom}`;
-                    
-                    item.addEventListener('click', () => {
-                        nomInput.value = agriculteur.nom;
-                        prenomInput.value = agriculteur.prenom;
-                        searchInput.value = `${agriculteur.nom} ${agriculteur.prenom}`;
                         suggestionsDiv.style.display = 'none';
                     });
-                    
-                    suggestionsList.appendChild(item);
-                });
-
-                suggestionsDiv.style.display = 'block';
+                    suggestionsDiv.appendChild(newAgriItem);
+                    suggestionsDiv.style.display = 'block';
+                } else {
+                    data.forEach(agriculteur => {
+                        const div = document.createElement('div');
+                        div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                        div.textContent = `${agriculteur.nom} ${agriculteur.prenom}`;
+                        div.addEventListener('click', () => {
+                            nomInput.value = agriculteur.nom;
+                            prenomInput.value = agriculteur.prenom;
+                            enableAgriFields(false);
+                            searchInput.value = `${agriculteur.nom} ${agriculteur.prenom}`;
+                            suggestionsDiv.style.display = 'none';
+                        });
+                        suggestionsDiv.appendChild(div);
+                    });
+                    suggestionsDiv.style.display = 'block';
+                }
             } catch (error) {
                 console.error('Erreur lors de la recherche:', error);
+                suggestionsDiv.style.display = 'none';
             }
         }, 300);
     });
 
-    // Cacher les suggestions quand on clique ailleurs
+    // Fermer les suggestions si on clique ailleurs
     document.addEventListener('click', function(e) {
         if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) {
             suggestionsDiv.style.display = 'none';
@@ -621,36 +652,93 @@
 });
 
 
-                // Ajouter un bouton pour réinitialiser la recherche
-                const resetButton = document.createElement('button');
-                resetButton.type = 'button';
-                resetButton.className = 'btn btn-sm btn-outline-secondary mt-2';
-                resetButton.textContent = 'Nouvelle recherche';
-                resetButton.style.display = 'none';
-                searchInput.parentNode.appendChild(resetButton);
+    // Fonction pour activer/désactiver les champs référent
+    function enableReferentFields(enable) {
+        const nomInput = document.getElementById('nom_referent');
+        const prenomInput = document.getElementById('prenom_referent');
+        
+        nomInput.disabled = !enable;
+        prenomInput.disabled = !enable;
+        if (enable) {
+            nomInput.value = '';
+            prenomInput.value = '';
+            nomInput.focus();
+        }
+    }
 
-                // Fonction pour réinitialiser le champ de recherche
-                function resetSearch() {
-                    searchInput.value = '';
-                    searchInput.disabled = false;
-                    searchInput.style.backgroundColor = '';
-                    searchInput.style.cursor = '';
-                    resetButton.style.display = 'none';
-                    nomInput.value = '';
-                    prenomInput.value = '';
+    // Configuration de l'autocomplétion pour le référent
+    const searchReferentInput = document.getElementById('search_referent');
+    const referentSuggestionsDiv = document.getElementById('referent_suggestions');
+    let referentDebounceTimer;
+
+    if (searchReferentInput) {
+        searchReferentInput.addEventListener('input', function() {
+            clearTimeout(referentDebounceTimer);
+            const searchTerm = this.value.trim();
+
+            if (searchTerm.length < 2) {
+                referentSuggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            referentDebounceTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/search_referent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ search_term: searchTerm })
+                    });
+
+                    const data = await response.json();
+                    referentSuggestionsDiv.innerHTML = '';
+
+                    if (data.length === 0) {
+                        // Ajouter la suggestion pour créer un nouveau référent
+                        const newReferentItem = document.createElement('div');
+                        newReferentItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                        newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouveau(elle) référent(e)';
+                        newReferentItem.addEventListener('click', () => {
+                            // Pré-remplir les champs avec le terme de recherche séparé
+                            const { nom, prenom } = splitSearchTerm(searchTerm);
+                            enableReferentFields(true);
+                            document.getElementById('nom_referent').value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                            document.getElementById('prenom_referent').value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                            searchReferentInput.value = '';
+                            referentSuggestionsDiv.style.display = 'none';
+                        });
+                        referentSuggestionsDiv.appendChild(newReferentItem);
+                        referentSuggestionsDiv.style.display = 'block';
+                    } else {
+                        data.forEach(referent => {
+                            const div = document.createElement('div');
+                            div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                            div.textContent = `${referent.nom} ${referent.prenom}`;
+                            div.addEventListener('click', () => {
+                                document.getElementById('nom_referent').value = referent.nom;
+                                document.getElementById('prenom_referent').value = referent.prenom;
+                                enableReferentFields(false);
+                                searchReferentInput.value = `${referent.nom} ${referent.prenom}`;
+                                referentSuggestionsDiv.style.display = 'none';
+                            });
+                            referentSuggestionsDiv.appendChild(div);
+                        });
+                        referentSuggestionsDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la recherche:', error);
+                    referentSuggestionsDiv.style.display = 'none';
                 }
+            }, 300);
+        });
 
-                resetButton.addEventListener('click', resetSearch);
+        // Fermer les suggestions si on clique ailleurs
+        document.addEventListener('click', function(e) {
+            if (!referentSuggestionsDiv.contains(e.target) && e.target !== searchReferentInput) {
+                referentSuggestionsDiv.style.display = 'none';
+            }
+        });
+    }
 
-                // Modifier l'événement click des suggestions
-                item.addEventListener('click', () => {
-                    nomInput.value = agriculteur.nom;
-                    prenomInput.value = agriculteur.prenom;
-                    searchInput.value = `${agriculteur.nom} ${agriculteur.prenom}`;
-                    searchInput.disabled = true;
-                    searchInput.style.backgroundColor = '#e9ecef';
-                    searchInput.style.cursor = 'not-allowed';
-                    suggestionsDiv.style.display = 'none';
-                    resetButton.style.display = 'block';
-                });
 </script>
