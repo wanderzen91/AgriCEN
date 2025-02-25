@@ -72,11 +72,11 @@
 
                                         <div class="mb-3">
                                             {{ form.nom_agri.label }}
-                                            {{ form.nom_agri(class="form-control", disabled=True) }}
+                                            {{ form.nom_agri(class="form-control", id="modal_nom_agri") }}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.prenom_agri.label }}
-                                            {{ form.prenom_agri(class="form-control", disabled=True) }}
+                                            {{ form.prenom_agri(class="form-control", id="modal_prenom_agri") }}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.date_naissance.label }}
@@ -192,11 +192,11 @@
                                     </div>
                                     <div class="mb-3">
                                         {{ form.nom_referent.label }}
-                                        {{ form.nom_referent(class="form-control", disabled=True) }}
+                                        {{ form.nom_referent(class="form-control", id="modal_nom_referent") }}
                                     </div>
                                     <div class="mb-3">
                                         {{ form.prenom_referent.label }}
-                                        {{ form.prenom_referent(class="form-control", disabled=True) }}
+                                        {{ form.prenom_referent(class="form-control", id="modal_prenom_referent") }}
                                     </div>
                                     <div class="mb-3">
                                         {{ form.surf_contractualisee.label }}
@@ -224,6 +224,15 @@
         </div>
     </div>
 </div>
+
+<style>
+    .form-control[readonly].disabled-look {
+        background-color: #e9ecef;
+        opacity: 1;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+</style>
 
 <script>
     // Fonction pour créer des choix avec des emojis
@@ -552,18 +561,23 @@
     // Ajouter le code JavaScript pour l'autocomplétion
     const searchInput = document.getElementById('search_agriculteur');
     const suggestionsDiv = document.getElementById('agriculteur_suggestions');
-    const nomInput = document.getElementById('nom_agri');
-    const prenomInput = document.getElementById('prenom_agri');
+    const nomInput = document.getElementById('modal_nom_agri');
+    const prenomInput = document.getElementById('modal_prenom_agri');
     let debounceTimer;
 
     // Fonction pour activer/désactiver les champs agriculteur
     function enableAgriFields(enable) {
-        nomInput.disabled = !enable;
-        prenomInput.disabled = !enable;
+        if (nomInput) nomInput.readOnly = !enable;
+        if (prenomInput) prenomInput.readOnly = !enable;
         if (enable) {
             nomInput.value = '';
             prenomInput.value = '';
             nomInput.focus();
+            nomInput.classList.remove('disabled-look');
+            prenomInput.classList.remove('disabled-look');
+        } else {
+            nomInput.classList.add('disabled-look');
+            prenomInput.classList.add('disabled-look');
         }
     }
 
@@ -608,13 +622,18 @@
                     // Ajouter la suggestion pour créer un nouvel exploitant
                     const newAgriItem = document.createElement('div');
                     newAgriItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                    newAgriItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel exploitant(e)';
+                    newAgriItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) exploitant(e) : ' + searchTerm;
                     newAgriItem.addEventListener('click', () => {
                         // Pré-remplir les champs avec le terme de recherche séparé
                         const { nom, prenom } = splitSearchTerm(searchTerm);
-                        enableAgriFields(true);
-                        nomInput.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
-                        prenomInput.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                        const nomInput = document.getElementById('modal_nom_agri');
+                        const prenomInput = document.getElementById('modal_prenom_agri');
+                        if (nomInput && prenomInput) {
+                            nomInput.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                            prenomInput.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                            // Désactiver les champs après les avoir remplis
+                            enableAgriFields(false);
+                        }
                         searchInput.value = '';
                         suggestionsDiv.style.display = 'none';
                     });
@@ -652,15 +671,23 @@
 
     // Fonction pour activer/désactiver les champs référent
     function enableReferentFields(enable) {
-        const nomInput = document.getElementById('nom_referent');
-        const prenomInput = document.getElementById('prenom_referent');
+        const nomReferent = document.getElementById('modal_nom_referent');
+        const prenomReferent = document.getElementById('modal_prenom_referent');
         
-        nomInput.disabled = !enable;
-        prenomInput.disabled = !enable;
-        if (enable) {
-            nomInput.value = '';
-            prenomInput.value = '';
-            nomInput.focus();
+        if (nomReferent && prenomReferent) {
+            if (enable) {
+                nomReferent.readOnly = false;
+                prenomReferent.readOnly = false;
+                nomReferent.classList.remove('disabled-look');
+                prenomReferent.classList.remove('disabled-look');
+                nomReferent.value = '';
+                prenomReferent.value = '';
+            } else {
+                nomReferent.readOnly = true;
+                prenomReferent.readOnly = true;
+                nomReferent.classList.add('disabled-look');
+                prenomReferent.classList.add('disabled-look');
+            }
         }
     }
 
@@ -696,13 +723,18 @@
                         // Ajouter la suggestion pour créer un nouveau référent
                         const newReferentItem = document.createElement('div');
                         newReferentItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                        newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouveau(elle) référent(e)';
+                        newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) référent(e) : ' + searchTerm;
                         newReferentItem.addEventListener('click', () => {
                             // Pré-remplir les champs avec le terme de recherche séparé
                             const { nom, prenom } = splitSearchTerm(searchTerm);
-                            enableReferentFields(true);
-                            document.getElementById('nom_referent').value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
-                            document.getElementById('prenom_referent').value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                            const nomReferent = document.getElementById('modal_nom_referent');
+                            const prenomReferent = document.getElementById('modal_prenom_referent');
+                            if (nomReferent && prenomReferent) {
+                                nomReferent.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                                prenomReferent.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                                // Désactiver les champs après les avoir remplis
+                                enableReferentFields(false);
+                            }
                             searchReferentInput.value = '';
                             referentSuggestionsDiv.style.display = 'none';
                         });
@@ -714,8 +746,12 @@
                             div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
                             div.textContent = `${referent.nom} ${referent.prenom}`;
                             div.addEventListener('click', () => {
-                                document.getElementById('nom_referent').value = referent.nom;
-                                document.getElementById('prenom_referent').value = referent.prenom;
+                                const nomReferent = document.getElementById('modal_nom_referent');
+                                const prenomReferent = document.getElementById('modal_prenom_referent');
+                                if (nomReferent && prenomReferent) {
+                                    nomReferent.value = referent.nom;
+                                    prenomReferent.value = referent.prenom;
+                                }
                                 enableReferentFields(false);
                                 searchReferentInput.value = `${referent.nom} ${referent.prenom}`;
                                 referentSuggestionsDiv.style.display = 'none';
