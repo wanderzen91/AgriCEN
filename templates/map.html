@@ -132,8 +132,8 @@ function hideProgressBar() {
 }
 
 function loadSites() {
-    showProgressBar(); // 🟢 Afficher la barre de chargement dès le début
-    updateProgressBar(5); // 🚀 Commencer à 5% pour éviter l'effet figé
+    showProgressBar(); // Afficher la barre de chargement dès le début
+    updateProgressBar(5); // Commencer à 5% pour éviter l'effet figé
 
     fetch('/sites_cen_geojson')
         .then(response => {
@@ -141,18 +141,18 @@ function loadSites() {
                 throw new Error(`Erreur ${response.status}: ${response.statusText}`);
             }
 
-            return response.body.getReader();  // 📡 Lecture en streaming
+            return response.body.getReader();  // Lecture en streaming
         })
         .then(reader => {
             const decoder = new TextDecoder();
             let jsonString = "";
-            let receivedLength = 0;  // 📊 Nombre total de bytes reçus
-            let estimatedTotalSize = 500000; // 🔥 Estimation initiale (500 Ko)
+            let receivedLength = 0;  // Nombre total de bytes reçus
+            let estimatedTotalSize = 500000; // Estimation initiale (500 Ko)
             let featureCollection = { type: "FeatureCollection", features: [] };
             
-            let fakeProgress = 5; // 📊 Simuler une progression douce au début
+            let fakeProgress = 5; // Simuler une progression douce au début
             let fakeProgressInterval = setInterval(() => {
-                if (fakeProgress < 40) {  // 🔄 Augmente lentement jusqu'à 40%
+                if (fakeProgress < 40) {  // Augmente lentement jusqu'à 40%
                     fakeProgress += 2;
                     updateProgressBar(fakeProgress);
                 }
@@ -160,9 +160,9 @@ function loadSites() {
 
             function processChunk({ done, value }) {
                 if (done) {
-                    console.log("✅ Données chargées complètement.");
-                    clearInterval(fakeProgressInterval); // 🛑 Arrêter la fausse progression
-                    updateProgressBar(100); // 🔵 Passer à 100% immédiatement
+                    console.log("Données chargées complètement.");
+                    clearInterval(fakeProgressInterval); // Arrêter la fausse progression
+                    updateProgressBar(100); // Passer à 100% immédiatement
                     hideProgressBar();
 
                     if (featureCollection.features.length > 0) {
@@ -171,8 +171,8 @@ function loadSites() {
                     return;
                 }
 
-                clearInterval(fakeProgressInterval); // 🛑 Dès qu'on reçoit un vrai chunk, stop fake progression
-                receivedLength += value.length; // 📊 Mise à jour de la quantité reçue
+                clearInterval(fakeProgressInterval); // Dès qu'on reçoit un vrai chunk, stop fake progression
+                receivedLength += value.length; // Mise à jour de la quantité reçue
                 jsonString += decoder.decode(value, { stream: true });
 
                 try {
@@ -184,11 +184,11 @@ function loadSites() {
                     // JSON incomplet, on attend la suite
                 }
 
-                // 🔄 Mise à jour de la progression (estimation si pas de totalSize)
+                // Mise à jour de la progression (estimation si pas de totalSize)
                 let progressPercent = Math.min((receivedLength / estimatedTotalSize) * 100, 95);
                 updateProgressBar(progressPercent.toFixed(2));
 
-                // 🔧 Ajuster estimation si on reçoit plus que prévu
+                // Ajuster estimation si on reçoit plus que prévu
                 if (receivedLength > estimatedTotalSize) {
                     estimatedTotalSize = receivedLength * 1.5;
                 }
@@ -212,9 +212,9 @@ function loadSites() {
 
 
 
-// 🗺️ Fonction pour afficher les sites sur la carte progressivement
+// Fonction pour afficher les sites sur la carte progressivement
 function addGeoJSONToMap(geojsonData) {
-    console.log("🗺️ Ajout des données sur la carte...", geojsonData);
+    console.log("Ajout des données sur la carte...", geojsonData);
 
     let geoLayer = L.geoJSON(geojsonData, {
         onEachFeature: function (feature, layer) {
@@ -229,7 +229,7 @@ function addGeoJSONToMap(geojsonData) {
             };
             layer.setStyle(defaultStyle);
 
-            // 🏷️ Ajouter un tooltip avec les infos du site
+            // Ajouter un tooltip avec les infos du site
             layer.bindTooltip(`
                 <strong>Nom :</strong> ${props.nom_site}<br>
                 <strong>Code :</strong> ${props.codesite}
@@ -240,17 +240,17 @@ function addGeoJSONToMap(geojsonData) {
             });
 
             layer.on('click', function (e) {
-                console.log(`✅ Site sélectionné : ${props.nom_site}, ${props.codesite}`);
+                console.log(`Site sélectionné : ${props.nom_site}, ${props.codesite}`);
                 
                 const point = e.latlng; // Récupérer la position du clic
             
-                siteClicked = true; // 🟢 Le site a bien été cliqué !
+                siteClicked = true; // Le site a bien été cliqué !
             
                 handleSiteClick(props.nom_site, props.codesite, point.lat, point.lng);
             });
             
         
-            // 🔴 Effet hover (changement de couleur)
+            // Effet hover (changement de couleur)
             layer.on('mouseover', function () {
                 layer.setStyle({ color: 'red', weight: 2 });
             });
@@ -261,7 +261,7 @@ function addGeoJSONToMap(geojsonData) {
         }
     }).addTo(map);
 
-    console.log("✅ Sites ajoutés sur la carte !");
+    console.log("Sites ajoutés sur la carte !");
 }
 
 
@@ -612,6 +612,18 @@ function debounce(func, delay) {
     };
 }
 
+function splitSearchTerm(searchTerm) {
+    const parts = searchTerm.trim().split(/\s+/);
+    
+    if (parts.length === 0) return { nom: '', prenom: '' };
+    if (parts.length === 1) return { nom: parts[0], prenom: '' };
+    
+    const nom = parts[0];
+    const prenom = parts.slice(1).join(' ');
+    
+    return { nom, prenom };
+}
+
 function autocomplete(input, suggestionsList, data) {
     input.addEventListener("input", debounce(function () {
         const value = this.value.toLowerCase().trim();
@@ -620,6 +632,34 @@ function autocomplete(input, suggestionsList, data) {
         if (!value) return;
 
         const matches = data.filter(item => item.toLowerCase().includes(value)).slice(0, 10); // Max 10 résultats
+
+        if (matches.length === 0 && input.id === "searchNom") {
+            const listItem = document.createElement("li");
+            listItem.className = "list-group-item list-group-item-action";
+            const { nom, prenom } = splitSearchTerm(value);
+            listItem.innerHTML = `<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel exploitant(e)`;
+            listItem.addEventListener("click", function () {
+                const addModal = new bootstrap.Modal(document.getElementById('addModal'));
+                addModal.show();
+                
+                // Pré-remplir les champs avec le terme de recherche séparé
+                const searchInput = document.getElementById('search_agriculteur');
+                const nomInput = document.getElementById('nom_agri');
+                const prenomInput = document.getElementById('prenom_agri');
+                
+                if (searchInput && nomInput && prenomInput) {
+                    searchInput.value = '';
+                    nomInput.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                    prenomInput.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                    nomInput.disabled = false;
+                    prenomInput.disabled = false;
+                }
+                
+                suggestionsList.innerHTML = "";
+            });
+            suggestionsList.appendChild(listItem);
+        }
+
         matches.forEach(match => {
             const listItem = document.createElement("li");
             listItem.className = "list-group-item list-group-item-action";
@@ -627,12 +667,13 @@ function autocomplete(input, suggestionsList, data) {
             listItem.addEventListener("click", function () {
                 input.value = match;
                 suggestionsList.innerHTML = "";
+                input.dispatchEvent(new Event('change')); // Trigger change event for filtering
             });
 
             listItem.innerHTML = match.replace(new RegExp(value, "gi"), (m) => `<strong>${m}</strong>`);
             suggestionsList.appendChild(listItem);
         });
-    }, 300)); // Retarde l’exécution de 300ms
+    }, 300)); // Retarde l'exécution de 300ms
 
     document.addEventListener("click", function (e) {
         if (e.target !== input) suggestionsList.innerHTML = "";
@@ -748,7 +789,7 @@ autocomplete(
             closeModal('searchModal'); // Fermer la modale après application
     
             hideLoader(); 
-        }, 500); // ⏳ Délai de 500ms avant d'afficher les résultats
+        }, 500); // Délai de 500ms avant d'afficher les résultats
     }
 
     function showLoader() {
