@@ -192,11 +192,11 @@
                                     </div>
                                     <div class="mb-3">
                                         {{ form.nom_referent.label }}
-                                        {{ form.nom_referent(class="form-control") }}
+                                        {{ form.nom_referent(class="form-control", disabled=True) }}
                                     </div>
                                     <div class="mb-3">
                                         {{ form.prenom_referent.label }}
-                                        {{ form.prenom_referent(class="form-control") }}
+                                        {{ form.prenom_referent(class="form-control", disabled=True) }}
                                     </div>
                                     <div class="mb-3">
                                         {{ form.surf_contractualisee.label }}
@@ -649,8 +649,6 @@
             suggestionsDiv.style.display = 'none';
         }
     });
-});
-
 
     // Fonction pour activer/désactiver les champs référent
     function enableReferentFields(enable) {
@@ -740,5 +738,5 @@
             }
         });
     }
-
+    });
 </script>

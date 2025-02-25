@@ -756,5 +756,33 @@ def search_agriculteur():
     return jsonify(results), 200
 
 
+@app.route('/api/search_referent', methods=['POST'])
+def search_referent():
+    search_term = request.json.get("search_term", "").strip().lower()
+    if not search_term:
+        return jsonify([]), 200
+
+    # Rechercher les référents dont le nom ou le prénom contient le terme de recherche
+    referents = Referent.query.filter(
+        db.or_(
+            db.func.lower(Referent.nom_referent).contains(search_term),
+            db.func.lower(Referent.prenom_referent).contains(search_term),
+            db.func.lower(db.func.concat(Referent.nom_referent, ' ', Referent.prenom_referent)).contains(search_term)
+        )
+    ).all()
+
+    # Formater les résultats
+    results = [
+        {
+            'nom': referent.nom_referent,
+            'prenom': referent.prenom_referent,
+            'display': f"{referent.nom_referent} {referent.prenom_referent}"
+        }
+        for referent in referents
+    ]
+
+    return jsonify(results), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
