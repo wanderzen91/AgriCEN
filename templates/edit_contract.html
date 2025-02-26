@@ -49,7 +49,14 @@
                                 </div>
                                 <div class="mb-3">
                                     {{ form.nom_agri.label }}
-                                    {{ form.nom_agri(class="form-control") }}
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="search_agriculteur" 
+                                            placeholder="Rechercher un exploitant existant...">
+                                        <div id="agriculteur_suggestions" class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                                            style="z-index: 1000; display: none;">
+                                        </div>
+                                    </div>
+                                    {{ form.nom_agri(class="form-control mt-2", id="modal_nom_agri") }}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.date_naissance.label }}
@@ -63,7 +70,7 @@
                                 </div>
                                 <div class="mb-3">
                                     {{ form.prenom_agri.label }}
-                                    {{ form.prenom_agri(class="form-control") }}
+                                    {{ form.prenom_agri(class="form-control", id="modal_prenom_agri") }}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.contact.label }}
@@ -136,18 +143,16 @@
                                                 <input class="form-control type-production" placeholder="Ajouter des types de production">
                                                 <select class="type-production-select" name="type_production[]" multiple hidden>
                                                     {% for value, label in form.type_production.choices %}
-                                                        <option value="{{ value }}" {% if value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
+                                                        <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
                                             <div class="col-md-5">
                                                 <label class="form-label">Mode de Production</label>
-                                                <select class="form-select mode-production" name="mode_production[]">
+                                                <select class="form-select mode-production" name="mode_production">
                                                     <option value="">Sélectionnez un mode de production</option>
                                                     {% for value, label in form.mode_production.choices %}
-                                                        <option value="{{ value }}" {% if value == form.mode_production.data %}selected{% endif %}>
-                                                            {{ label }}
-                                                        </option>
+                                                        <option value="{{ value }}" {% if form.mode_production.data and form.mode_production.data == value %}selected{% endif %}>{{ label }}</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -172,7 +177,7 @@
                                             <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
                                             <select id="produit_fini" name="produit_fini" multiple hidden>
                                                 {% for value, label in form.produit_fini.choices %}
-                                                    <option value="{{ value }}" {% if value in form.produit_fini.data %}selected{% endif %}>{{ label }}</option>
+                                                    <option value="{{ value }}" {% if form.produit_fini.data and value in form.produit_fini.data %}selected{% endif %}>{{ label }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
@@ -206,11 +211,18 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     {{ form.nom_referent.label }}
-                                    {{ form.nom_referent(class="form-control") }}
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" id="search_referent" 
+                                            placeholder="Rechercher un référent existant...">
+                                        <div id="referent_suggestions" class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                                            style="z-index: 1000; display: none;">
+                                        </div>
+                                    </div>
+                                    {{ form.nom_referent(class="form-control mt-2", id="modal_nom_referent") }}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.prenom_referent.label }}
-                                    {{ form.prenom_referent(class="form-control") }}
+                                    {{ form.prenom_referent(class="form-control", id="modal_prenom_referent") }}
                                 </div>
                                 <div class="mb-3">
                                     {{ form.surf_contractualisee.label }}
@@ -221,7 +233,7 @@
                                     <input id="type_milieu_tagify" class="form-control" name="type_milieu_display" placeholder="Ajouter des types de milieu">
                                     <select id="type_milieu" name="type_milieu" multiple hidden>
                                         {% for value, label in form.type_milieu.choices %}
-                                            <option value="{{ value }}" {% if value in form.type_milieu.data %}selected{% endif %}>{{ label }}</option>
+                                            <option value="{{ value }}" {% if form.type_milieu.data and value in form.type_milieu.data %}selected{% endif %}>{{ label }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -243,9 +255,27 @@
     </div>
 </div>
 
+<style>
+    #small_map {
+        height: 500px;
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+    // Utiliser les mappings d'émojis définis dans base.html
+    const emojiTypeProductionMapping = window.emojiTypeProductionMapping || {};
+    const emojiProduitFiniMapping = window.emojiProduitFiniMapping || {};
+    const emojiTypeMilieuMapping = window.emojiTypeMilieuMapping || {};
+    
+    // Debugging
+    console.log("emojiTypeProductionMapping:", emojiTypeProductionMapping);
+    console.log("emojiProduitFiniMapping:", emojiProduitFiniMapping);
+    console.log("emojiTypeMilieuMapping:", emojiTypeMilieuMapping);
 
     // Add event listener for the back button
     document.getElementById('backButton').addEventListener('click', goBackOrRedirect);
@@ -276,19 +306,19 @@ document.addEventListener('DOMContentLoaded', function () {
             whitelist: choices.map(choice => ({
                 value: choice.value,
                 label: choice.label,
-                emoji: emojiMapping[choice.label] || "❓"
+                emoji: emojiMapping[choice.label.toLowerCase()] || "❓"
             })),
             enforceWhitelist: true,
             dropdown: { enabled: 0 },
             templates: {
                 tag: tagData => `
                     <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
-                        <span class="tagify__tag-text">${tagData.emoji} ${tagData.label}</span>
+                        <span class="tagify__tag-text">${tagData.emoji || "❓"} ${tagData.label}</span>
                         <x class="tagify__tag__removeBtn"></x>
                     </tag>`,
                 dropdownItem: suggestion => `
                     <div class="tagify__dropdown__item">
-                        ${suggestion.emoji} ${suggestion.label}
+                        ${suggestion.emoji || "❓"} ${suggestion.label}
                     </div>`
             }
         });
@@ -310,31 +340,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 🏷️ Initialisation des champs Tagify
     const tagifyInstances = {
-        typeProduction: initializeTagify("#type_production_tagify", 
-            [{% for value, label in form.type_production.choices %}
-                { value: "{{ value }}", label: "{{ label }}" },
-            {% endfor %}],
-            emojiTypeProductionMapping
-        ),
         produitFini: initializeTagify("#produit_fini_tagify", 
             [{% for value, label in form.produit_fini.choices %}
-                { value: "{{ value }}", label: "{{ label }}" },
+                {value: "{{ value }}", label: "{{ label }}"},
             {% endfor %}],
             emojiProduitFiniMapping
         ),
         typeMilieu: initializeTagify("#type_milieu_tagify", 
             [{% for value, label in form.type_milieu.choices %}
-                { value: "{{ value }}", label: "{{ label }}" },
+                {value: "{{ value }}", label: "{{ label }}"},
             {% endfor %}],
             emojiTypeMilieuMapping
-        )
+        ),
     };
+
+    // Ajouter des logs pour déboguer
+    console.log("Tagify instances:", tagifyInstances);
+    console.log("Produits finis element:", document.querySelector("#produit_fini_tagify"));
+    console.log("Type milieu element:", document.querySelector("#type_milieu_tagify"));
 
     // 🔄 Synchronisation des champs cachés avec Tagify
     Object.entries(tagifyInstances).forEach(([key, instance]) => {
         if (instance) {
-            const selector = key === 'typeProduction' ? '#type_production' :
-                           key === 'produitFini' ? '#produit_fini' :
+            const selector = key === 'produitFini' ? '#produit_fini' :
                            key === 'typeMilieu' ? '#type_milieu' : null;
             if (selector) {
                 syncTagifyWithHidden(instance, selector);
@@ -343,43 +371,38 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 🔄 Ajout des valeurs déjà sélectionnées aux champs Tagify
-    if (tagifyInstances.typeProduction) {
-        const selectedTypeProduction = [
-            {% for value in form.type_production.data %}
-                {
-                    value: "{{ value }}",
-                    label: "{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
-                    emoji: emojiTypeProductionMapping["{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}"] || "❓"
-                },
-            {% endfor %}
-        ];
-        tagifyInstances.typeProduction.addTags(selectedTypeProduction);
-    }
-
     if (tagifyInstances.produitFini) {
         const selectedProduitFini = [
+            {% if form.produit_fini.data %}
             {% for value in form.produit_fini.data %}
                 {
                     value: "{{ value }}",
                     label: "{{ form.produit_fini.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
-                    emoji: emojiProduitFiniMapping["{{ form.produit_fini.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}"] || "❓"
+                    emoji: emojiProduitFiniMapping["{{ form.produit_fini.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first | lower }}"] || "❓"
                 },
             {% endfor %}
+            {% endif %}
         ];
-        tagifyInstances.produitFini.addTags(selectedProduitFini);
+        if (selectedProduitFini.length > 0) {
+            tagifyInstances.produitFini.addTags(selectedProduitFini);
+        }
     }
 
     if (tagifyInstances.typeMilieu) {
         const selectedTypeMilieu = [
+            {% if form.type_milieu.data %}
             {% for value in form.type_milieu.data %}
                 {
                     value: "{{ value }}",
                     label: "{{ form.type_milieu.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
-                    emoji: emojiTypeMilieuMapping["{{ form.type_milieu.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}"] || "❓"
+                    emoji: emojiTypeMilieuMapping["{{ form.type_milieu.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first | lower }}"] || "❓"
                 },
             {% endfor %}
+            {% endif %}
         ];
-        tagifyInstances.typeMilieu.addTags(selectedTypeMilieu);
+        if (selectedTypeMilieu.length > 0) {
+            tagifyInstances.typeMilieu.addTags(selectedTypeMilieu);
+        }
     }
 
     // 📌 Gestion du retour à la carte
@@ -407,16 +430,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     <input class="form-control type-production" placeholder="Ajouter des types de production">
                     <select class="type-production-select" name="type_production[]" multiple hidden>
                         {% for value, label in form.type_production.choices %}
-                            <option value="{{ value }}">{{ label }}</option>
+                            <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-5">
                     <label class="form-label">Mode de Production</label>
-                    <select class="form-select mode-production" name="mode_production[]">
+                    <select class="form-select mode-production" name="mode_production">
                         <option value="">Sélectionnez un mode de production</option>
                         {% for value, label in form.mode_production.choices %}
-                            <option value="{{ value }}">{{ label }}</option>
+                            <option value="{{ value }}" {% if form.mode_production.data and form.mode_production.data == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -433,7 +456,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const typeProductionInput = div.querySelector('.type-production');
         const tagifyInstance = new Tagify(typeProductionInput, {
             whitelist: [{% for value, label in form.type_production.choices %}
-                { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
+                {
+                    value: "{{ value }}",
+                    label: "{{ label }}",
+                    emoji: emojiTypeProductionMapping["{{ label | lower }}"] || "❓"
+                },
             {% endfor %}],
             enforceWhitelist: true,
             dropdown: { enabled: 0 },
@@ -503,7 +530,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const div = input.closest('.production-entry');
         const tagifyInstance = new Tagify(input, {
             whitelist: [{% for value, label in form.type_production.choices %}
-                { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
+                {
+                    value: "{{ value }}",
+                    label: "{{ label }}",
+                    emoji: emojiTypeProductionMapping["{{ label | lower }}"] || "❓"
+                },
             {% endfor %}],
             enforceWhitelist: true,
             dropdown: { enabled: 0 },
@@ -529,6 +560,18 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             updateAllProductionsData();
         });
+        
+        // Ajouter les tags initiaux
+        const hiddenSelect = div.querySelector('.type-production-select');
+        const selectedOptions = Array.from(hiddenSelect.options).filter(option => option.selected);
+        if (selectedOptions.length > 0) {
+            const tags = selectedOptions.map(option => ({
+                value: option.value,
+                label: option.text,
+                emoji: emojiTypeProductionMapping[option.text.toLowerCase()] || "❓"
+            }));
+            tagifyInstance.addTags(tags);
+        }
     });
 
     // Initialiser les écouteurs d'événements pour les modes de production existants
@@ -551,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function () {
     addProductionButton.addEventListener('click', addNewProductionEntry);
 
     // Initialiser les productions existantes
-    const initialProductions = {{ initial_productions | safe }};
+    const initialProductions = {{ initial_productions | safe if initial_productions else '[]' }};
     if (initialProductions && initialProductions.length > 0) {
         // Supprimer l'entrée par défaut vide
         productionContainer.innerHTML = '';
@@ -567,16 +610,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         <input class="form-control type-production" placeholder="Ajouter des types de production">
                         <select class="type-production-select" name="type_production[]" multiple hidden>
                             {% for value, label in form.type_production.choices %}
-                                <option value="{{ value }}">{{ label }}</option>
+                                <option value="{{ value }}" {% if value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-5">
                         <label class="form-label">Mode de Production</label>
-                        <select class="form-select mode-production" name="mode_production[]">
+                        <select class="form-select mode-production" name="mode_production">
                             <option value="">Sélectionnez un mode de production</option>
                             {% for value, label in form.mode_production.choices %}
-                                <option value="{{ value }}">{{ label }}</option>
+                                <option value="{{ value }}" {% if form.mode_production.data and form.mode_production.data == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -593,7 +636,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const typeProductionInput = div.querySelector('.type-production');
             const tagifyInstance = new Tagify(typeProductionInput, {
                 whitelist: [{% for value, label in form.type_production.choices %}
-                    { value: "{{ value }}", label: "{{ label }}", emoji: emojiTypeProductionMapping["{{ label }}"] || "❓" },
+                    { 
+                        value: "{{ value }}", 
+                        label: "{{ label }}", 
+                        emoji: emojiTypeProductionMapping["{{ label | lower }}"] || "❓" 
+                    },
                 {% endfor %}],
                 enforceWhitelist: true,
                 dropdown: { enabled: 0 },
@@ -625,7 +672,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return {
                         value: option.value,
                         label: option.text,
-                        emoji: emojiTypeProductionMapping[option.text] || "❓"
+                        emoji: emojiTypeProductionMapping[option.text.toLowerCase()] || "❓"
                     };
                 }
                 return null;
@@ -678,16 +725,248 @@ document.addEventListener('DOMContentLoaded', function () {
             Swal.fire({ icon: "error", title: "Erreur serveur", text: "Une erreur s'est produite lors de la récupération des données." });
         }
     });
-});
 
-        
-</script>
+    // Ajout du style pour les éléments d'autocomplétion
+    document.head.insertAdjacentHTML('beforeend', `
+        <style>
+            .hover-bg-light:hover {
+                background-color: #f8f9fa;
+            }
+            .cursor-pointer {
+                cursor: pointer;
+            }
+            .disabled-look {
+                background-color: #e9ecef;
+                opacity: 1;
+            }
+        </style>
+    `);
 
-<style>
-    #small_map {
-        border: 1px solid #ddd;
-        border-radius: 8px;
+    // Fonction pour séparer un terme de recherche en nom et prénom
+    function splitSearchTerm(searchTerm) {
+        const parts = searchTerm.trim().split(/\s+/);
+        if (parts.length >= 2) {
+            const prenom = parts.pop(); // Dernier élément comme prénom
+            const nom = parts.join(' '); // Reste comme nom
+            return { nom, prenom };
+        }
+        return { nom: searchTerm, prenom: '' };
     }
-</style>
+
+    // Fonction pour activer/désactiver les champs agriculteur
+    function enableAgriFields(enable) {
+        const nomAgri = document.getElementById('modal_nom_agri');
+        const prenomAgri = document.getElementById('modal_prenom_agri');
+        
+        if (nomAgri && prenomAgri) {
+            if (enable) {
+                nomAgri.readOnly = false;
+                prenomAgri.readOnly = false;
+                nomAgri.classList.remove('disabled-look');
+                prenomAgri.classList.remove('disabled-look');
+            } else {
+                nomAgri.readOnly = true;
+                prenomAgri.readOnly = true;
+                nomAgri.classList.add('disabled-look');
+                prenomAgri.classList.add('disabled-look');
+            }
+        }
+    }
+
+    // Configuration de l'autocomplétion pour l'agriculteur
+    const searchInput = document.getElementById('search_agriculteur');
+    const suggestionsDiv = document.getElementById('agriculteur_suggestions');
+    const nomInput = document.getElementById('modal_nom_agri');
+    const prenomInput = document.getElementById('modal_prenom_agri');
+    let debounceTimer;
+
+    if (searchInput && suggestionsDiv) {
+        // Initialiser avec les valeurs actuelles
+        if (nomInput && prenomInput && nomInput.value && prenomInput.value) {
+            searchInput.value = `${nomInput.value} ${prenomInput.value}`;
+            enableAgriFields(false);
+        }
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const searchTerm = this.value.trim();
+
+            if (searchTerm.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/search_agriculteur', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ search_term: searchTerm })
+                    });
+
+                    const data = await response.json();
+                    suggestionsDiv.innerHTML = '';
+
+                    if (data.length === 0) {
+                        // Ajouter la suggestion pour créer un nouvel exploitant
+                        const newAgriItem = document.createElement('div');
+                        newAgriItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                        newAgriItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) exploitant(e) : ' + searchTerm;
+                        newAgriItem.addEventListener('click', () => {
+                            // Pré-remplir les champs avec le terme de recherche séparé
+                            const { nom, prenom } = splitSearchTerm(searchTerm);
+                            if (nomInput && prenomInput) {
+                                nomInput.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                                prenomInput.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                                // Activer les champs après les avoir remplis
+                                enableAgriFields(true);
+                            }
+                            searchInput.value = '';
+                            suggestionsDiv.style.display = 'none';
+                        });
+                        suggestionsDiv.appendChild(newAgriItem);
+                        suggestionsDiv.style.display = 'block';
+                    } else {
+                        data.forEach(agriculteur => {
+                            const div = document.createElement('div');
+                            div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                            div.textContent = `${agriculteur.nom} ${agriculteur.prenom}`;
+                            div.addEventListener('click', () => {
+                                nomInput.value = agriculteur.nom;
+                                prenomInput.value = agriculteur.prenom;
+                                enableAgriFields(false);
+                                searchInput.value = `${agriculteur.nom} ${agriculteur.prenom}`;
+                                suggestionsDiv.style.display = 'none';
+                            });
+                            suggestionsDiv.appendChild(div);
+                        });
+                        suggestionsDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la recherche:', error);
+                    suggestionsDiv.style.display = 'none';
+                }
+            }, 300);
+        });
+
+        // Fermer les suggestions si on clique ailleurs
+        document.addEventListener('click', function(e) {
+            if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+    }
+
+    // Fonction pour activer/désactiver les champs référent
+    function enableReferentFields(enable) {
+        const nomReferent = document.getElementById('modal_nom_referent');
+        const prenomReferent = document.getElementById('modal_prenom_referent');
+        
+        if (nomReferent && prenomReferent) {
+            if (enable) {
+                nomReferent.readOnly = false;
+                prenomReferent.readOnly = false;
+                nomReferent.classList.remove('disabled-look');
+                prenomReferent.classList.remove('disabled-look');
+            } else {
+                nomReferent.readOnly = true;
+                prenomReferent.readOnly = true;
+                nomReferent.classList.add('disabled-look');
+                prenomReferent.classList.add('disabled-look');
+            }
+        }
+    }
+
+    // Configuration de l'autocomplétion pour le référent
+    const searchReferentInput = document.getElementById('search_referent');
+    const referentSuggestionsDiv = document.getElementById('referent_suggestions');
+    let referentDebounceTimer;
+
+    if (searchReferentInput && referentSuggestionsDiv) {
+        // Initialiser avec les valeurs actuelles
+        const nomReferent = document.getElementById('modal_nom_referent');
+        const prenomReferent = document.getElementById('modal_prenom_referent');
+        if (nomReferent && prenomReferent && nomReferent.value && prenomReferent.value) {
+            searchReferentInput.value = `${nomReferent.value} ${prenomReferent.value}`;
+            enableReferentFields(false);
+        }
+
+        searchReferentInput.addEventListener('input', function() {
+            clearTimeout(referentDebounceTimer);
+            const searchTerm = this.value.trim();
+
+            if (searchTerm.length < 2) {
+                referentSuggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            referentDebounceTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/search_referent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ search_term: searchTerm })
+                    });
+
+                    const data = await response.json();
+                    referentSuggestionsDiv.innerHTML = '';
+
+                    if (data.length === 0) {
+                        // Ajouter la suggestion pour créer un nouveau référent
+                        const newReferentItem = document.createElement('div');
+                        newReferentItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                        newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) référent(e) : ' + searchTerm;
+                        newReferentItem.addEventListener('click', () => {
+                            // Pré-remplir les champs avec le terme de recherche séparé
+                            const { nom, prenom } = splitSearchTerm(searchTerm);
+                            if (nomReferent && prenomReferent) {
+                                nomReferent.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                                prenomReferent.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                                // Activer les champs après les avoir remplis
+                                enableReferentFields(true);
+                            }
+                            searchReferentInput.value = '';
+                            referentSuggestionsDiv.style.display = 'none';
+                        });
+                        referentSuggestionsDiv.appendChild(newReferentItem);
+                        referentSuggestionsDiv.style.display = 'block';
+                    } else {
+                        data.forEach(referent => {
+                            const div = document.createElement('div');
+                            div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                            div.textContent = `${referent.nom} ${referent.prenom}`;
+                            div.addEventListener('click', () => {
+                                if (nomReferent && prenomReferent) {
+                                    nomReferent.value = referent.nom;
+                                    prenomReferent.value = referent.prenom;
+                                }
+                                enableReferentFields(false);
+                                searchReferentInput.value = `${referent.nom} ${referent.prenom}`;
+                                referentSuggestionsDiv.style.display = 'none';
+                            });
+                            referentSuggestionsDiv.appendChild(div);
+                        });
+                        referentSuggestionsDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de la recherche:', error);
+                    referentSuggestionsDiv.style.display = 'none';
+                }
+            }, 300);
+        });
+
+        // Fermer les suggestions si on clique ailleurs
+        document.addEventListener('click', function(e) {
+            if (!referentSuggestionsDiv.contains(e.target) && e.target !== searchReferentInput) {
+                referentSuggestionsDiv.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
 
 {% endblock %}
