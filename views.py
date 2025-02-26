@@ -503,8 +503,13 @@ def edit_contract(contract_id):
 
     # 🟢 Pré-remplissage du formulaire en mode GET
     if request.method == 'GET':
-        form.nom_site.data = contrat.sites_cen[0].site_cen.nom_site if contrat.sites_cen else ""
-        form.code_site.data = contrat.sites_cen[0].site_cen.code_site if contrat.sites_cen else ""
+        # Vérifier que sites_cen existe, qu'il contient au moins un élément et que site_cen n'est pas None
+        if contrat.sites_cen and contrat.sites_cen[0].site_cen:
+            form.nom_site.data = contrat.sites_cen[0].site_cen.nom_site
+            form.code_site.data = contrat.sites_cen[0].site_cen.code_site
+        else:
+            form.nom_site.data = ""
+            form.code_site.data = ""
 
         # Société
         if contrat.societe:
