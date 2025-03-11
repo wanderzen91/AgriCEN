@@ -185,11 +185,127 @@ def fetch_siret_data(siret, flash_messages = False):
         return {"error": f"Erreur serveur : {str(e)}"}, 500
     
     
+def check_siret_in_database(siret):
+    """
+    Vérifie si un SIRET existe déjà dans la base de données et retourne les données associées.
+    """
+    if not siret or len(siret) != 14 or not siret.isdigit():
+        return None
+    
+    try:
+        # Recherche de la société par SIRET
+        societe = Societe.query.filter_by(siret=siret).first()
+        
+        if societe:
+            # Récupération des données de la société
+            societe_data = {
+                "id_societe": societe.id_societe,
+                "nom_societe": societe.nom_societe,
+                "contact": societe.contact,
+                "siret": societe.siret,
+                "categorie_juridique": societe.categorie_juridique,
+                "activite_principale": societe.activite_principale,
+                "tranche_effectif": societe.tranche_effectif,
+                "adresse_etablissement": societe.adresse_etablissement,
+                "commune_etablissement": societe.commune_etablissement,
+                "nom_etablissement": societe.nom_etablissement,
+                "exists_in_db": True
+            }
+            
+            # Récupération des agriculteurs associés
+            agriculteurs = []
+            for rel in societe.agriculteurs_intermediaires:
+                agriculteur = rel.agriculteur
+                agriculteurs.append({
+                    "id_agriculteur": agriculteur.id_agriculteur,
+                    "nom_agri": agriculteur.nom_agri,
+                    "prenom_agri": agriculteur.prenom_agri,
+                    "date_naissance": agriculteur.date_naissance.strftime('%Y-%m-%d') if agriculteur.date_naissance else None
+                })
+            
+            # Récupération des types de production associés
+            productions = []
+            for rel in societe.types_production_societe:
+                productions.append({
+                    "id_type_production": rel.id_type_production,
+                    "id_mode_production": rel.id_mode_production
+                })
+            
+            # Récupération des contrats associés
+            contrats = []
+            for contrat in societe.contrats:
+                contrat_data = {
+                    "id_contrat": contrat.id_contrat,
+                    "surf_contractualisee": float(contrat.surf_contractualisee) if contrat.surf_contractualisee else None,
+                    "date_signature": contrat.date_signature.strftime('%Y-%m-%d'),
+                    "date_fin": contrat.date_fin.strftime('%Y-%m-%d'),
+                    "date_prise_effet": contrat.date_prise_effet.strftime('%Y-%m-%d'),
+                    "latitude": float(contrat.latitude) if contrat.latitude else None,
+                    "longitude": float(contrat.longitude) if contrat.longitude else None,
+                    "numero_contrat": contrat.numero_contrat,
+                    "remarques": contrat.remarques,
+                    "id_type_contrat": contrat.id_type_contrat,
+                    "id_referent": contrat.id_referent,
+                    "referent": {
+                        "nom_referent": contrat.referent.nom_referent,
+                        "prenom_referent": contrat.referent.prenom_referent
+                    }
+                }
+                
+                # Récupération des types de milieu associés au contrat
+                milieux = []
+                for rel in contrat.types_milieu:
+                    milieux.append(rel.id_type_milieu)
+                contrat_data["types_milieu"] = milieux
+                
+                # Récupération des produits finis associés au contrat
+                produits = []
+                for rel in contrat.produits_finis:
+                    produits.append(rel.id_type_produit_fini)
+                contrat_data["produits_finis"] = produits
+                
+                # Récupération des sites CEN associés au contrat
+                sites = []
+                for rel in contrat.sites_cen:
+                    site = rel.site_cen
+                    sites.append({
+                        "id_site": site.id_site,
+                        "code_site": site.code_site,
+                        "nom_site": site.nom_site
+                    })
+                contrat_data["sites_cen"] = sites
+                
+                contrats.append(contrat_data)
+            
+            societe_data["agriculteurs"] = agriculteurs
+            societe_data["productions"] = productions
+            societe_data["contrats"] = contrats
+            
+            return societe_data
+        
+        return None
+    
+    except Exception as e:
+        print(f"Erreur lors de la recherche du SIRET dans la base de données : {str(e)}")
+        return None
+
 @app.route('/api/siret', methods=['POST'])
 def siret_lookup():
     siret = request.json.get("siret")
-    result, status_code = fetch_siret_data(siret, flash_messages=False)  
-    return jsonify(result), status_code
+    
+    # Vérifier d'abord si le SIRET existe dans la base de données
+    db_result = check_siret_in_database(siret)
+    if db_result:
+        return jsonify(db_result), 200
+    
+    # Si le SIRET n'existe pas dans la base de données, interroger l'API SIRENE
+    api_result, status_code = fetch_siret_data(siret, flash_messages=False)
+    
+    # Ajouter un indicateur pour signaler que les données proviennent de l'API
+    if status_code == 200:
+        api_result["exists_in_db"] = False
+    
+    return jsonify(api_result), status_code
     
 
 @app.route('/', methods=['GET', 'POST'])
@@ -787,6 +903,92 @@ def search_referent():
     ]
 
     return jsonify(results), 200
+
+
+@app.route('/add_data', methods=['POST'])
+def add_data():
+    try:
+        # Récupérer les données du formulaire
+        nom_societe = request.form.get('nom_societe')
+        siret = request.form.get('siret')
+        adresse_etablissement = request.form.get('adresse_etablissement')
+        activite_principale = request.form.get('activite_principale')
+        categorie_juridique = request.form.get('categorie_juridique')
+        tranche_effectif = request.form.get('tranche_effectif')
+        contact = request.form.get('contact')
+        
+        # Récupérer les coordonnées géographiques
+        latitude = request.form.get('latitude')
+        longitude = request.form.get('longitude')
+        
+        # Récupérer les productions (format JSON)
+        productions_json = request.form.get('productions')
+        productions = json.loads(productions_json) if productions_json else []
+        
+        # Insérer l'établissement dans la base de données
+        cursor = db.session.cursor()
+        
+        # Vérifier si l'établissement existe déjà
+        cursor.execute("SELECT id FROM etablissement WHERE siret = %s", (siret,))
+        etablissement_existant = cursor.fetchone()
+        
+        if etablissement_existant:
+            # Mettre à jour l'établissement existant
+            etablissement_id = etablissement_existant[0]
+            cursor.execute("""
+                UPDATE etablissement 
+                SET nom_societe = %s, adresse_etablissement = %s, 
+                    activite_principale = %s, categorie_juridique = %s, 
+                    tranche_effectif = %s, contact = %s,
+                    latitude = %s, longitude = %s
+                WHERE id = %s
+            """, (
+                nom_societe, adresse_etablissement, 
+                activite_principale, categorie_juridique, 
+                tranche_effectif, contact,
+                latitude, longitude, 
+                etablissement_id
+            ))
+            
+            # Supprimer les productions existantes
+            cursor.execute("DELETE FROM production WHERE id_etablissement = %s", (etablissement_id,))
+        else:
+            # Insérer un nouvel établissement
+            cursor.execute("""
+                INSERT INTO etablissement (
+                    siret, nom_societe, adresse_etablissement, 
+                    activite_principale, categorie_juridique, 
+                    tranche_effectif, contact,
+                    latitude, longitude
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                siret, nom_societe, adresse_etablissement, 
+                activite_principale, categorie_juridique, 
+                tranche_effectif, contact,
+                latitude, longitude
+            ))
+            etablissement_id = cursor.lastrowid
+        
+        # Insérer les productions
+        for production in productions:
+            cursor.execute("""
+                INSERT INTO production (
+                    id_etablissement, id_mode_production, id_type_production
+                ) VALUES (%s, %s, %s)
+            """, (
+                etablissement_id, 
+                production['mode_production'], 
+                production['type_production']
+            ))
+        
+        db.session.commit()
+        cursor.close()
+        
+        return jsonify({"success": True, "message": "Données ajoutées avec succès"})
+    
+    except Exception as e:
+        print(f"Erreur lors de l'ajout des données: {str(e)}")
+        return jsonify({"success": False, "message": f"Erreur: {str(e)}"})
 
 
 if __name__ == "__main__":
