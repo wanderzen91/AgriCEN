@@ -219,6 +219,7 @@
                 <div class="modal-footer">
                     {{ form.submit(class="btn btn-primary") }}
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" id="reset-form-button" class="btn btn-warning" style="display: none;" onclick="resetForm()">Réinitialiser le formulaire</button>
                 </div>
             </form>
         </div>
@@ -231,6 +232,18 @@
         opacity: 1;
         cursor: not-allowed;
         pointer-events: none;
+    }
+    
+    /* Style pour les champs désactivés */
+    input:disabled, select:disabled, textarea:disabled, .tagify--readonly {
+        background-color: #e9ecef;
+        opacity: 1;
+        cursor: not-allowed;
+    }
+    
+    /* Style pour les tags en lecture seule */
+    .tagify--readonly .tagify__tag {
+        opacity: 0.7;
     }
 </style>
 
@@ -248,42 +261,43 @@
     }
 
     // Fonction pour initialiser Tagify avec un template personnalisé incluant des émojis
-    function initTagifyWithIcons(inputId, choices) {
-        const input = document.getElementById(inputId);
+    function initializeTagify(selector, choices, emojiMapping) {
+        const input = typeof selector === 'string' ? document.querySelector(selector) : selector;
         if (!input) return null;
+        
+        // Vérifier si Tagify est déjà initialisé
+        if (input._tagify) {
+            return input._tagify;
+        }
 
-        return new Tagify(input, {
-            whitelist: choices,
-            dropdown: {
-                maxItems: 50,
-                classname: "tags-look",
-                enabled: 0,
-                closeOnSelect: false
-            },
-            templates: {
-                tag: function(tagData) {
-                    return `
-                        <tag title="${tagData.text || tagData.label}"
-                            contenteditable='false'
-                            spellcheck='false'
-                            class='tagify__tag ${tagData.class ? tagData.class : ""}'
-                            ${this.getAttributes(tagData)}>
-                            <x title='' class='tagify__tag__removeBtn' role='button' aria-label='remove tag'></x>
-                            <div>
-                                <span class='tagify__tag-text'>${tagData.emoji} ${tagData.text || tagData.label}</span>
-                            </div>
-                        </tag>
-                    `;
-                },
-                dropdownItem: function(tagData) {
-                    return `
-                        <div class='tagify__dropdown__item ${tagData.class ? tagData.class : ""}'>
-                            <span>${tagData.emoji} ${tagData.text || tagData.label}</span>
-                        </div>
-                    `;
+        try {
+            const tagify = new Tagify(input, {
+                whitelist: choices.map(choice => ({
+                    value: choice.value,
+                    label: choice.label,
+                    emoji: emojiMapping[choice.label] || emojiMapping[choice.label.toLowerCase()] || "❓"
+                })),
+                enforceWhitelist: true,
+                dropdown: { enabled: 0 },
+                templates: {
+                    tag: tagData => `
+                        <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
+                            <span class="tagify__tag-text">${tagData.emoji} ${tagData.label}</span>
+                            <x class="tagify__tag__removeBtn"></x>
+                        </tag>`,
+                    dropdownItem: suggestion => `
+                        <div class="tagify__dropdown__item">
+                            ${suggestion.emoji} ${suggestion.label}
+                        </div>`
                 }
-            }
-        });
+            });
+            
+            console.log("Tagify initialized for:", input);
+            return tagify;
+        } catch (error) {
+            console.error("Error initializing Tagify:", error);
+            return null;
+        }
     }
 
     // Fonction pour synchroniser Tagify avec un champ caché
@@ -307,27 +321,40 @@
     function initializeTagify(selector, choices, emojiMapping) {
         const input = typeof selector === 'string' ? document.querySelector(selector) : selector;
         if (!input) return null;
+        
+        // Vérifier si Tagify est déjà initialisé
+        if (input._tagify) {
+            return input._tagify;
+        }
 
-        return new Tagify(input, {
-            whitelist: choices.map(choice => ({
-                value: choice.value,
-                label: choice.label,
-                emoji: emojiMapping[choice.label] || "❓"
-            })),
-            enforceWhitelist: true,
-            dropdown: { enabled: 0 },
-            templates: {
-                tag: tagData => `
-                    <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
-                        <span class="tagify__tag-text">${tagData.emoji} ${tagData.label}</span>
-                        <x class="tagify__tag__removeBtn"></x>
-                    </tag>`,
-                dropdownItem: suggestion => `
-                    <div class="tagify__dropdown__item">
-                        ${suggestion.emoji} ${suggestion.label}
-                    </div>`
-            }
-        });
+        try {
+            const tagify = new Tagify(input, {
+                whitelist: choices.map(choice => ({
+                    value: choice.value,
+                    label: choice.label,
+                    emoji: emojiMapping[choice.label] || emojiMapping[choice.label.toLowerCase()] || "❓"
+                })),
+                enforceWhitelist: true,
+                dropdown: { enabled: 0 },
+                templates: {
+                    tag: tagData => `
+                        <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
+                            <span class="tagify__tag-text">${tagData.emoji} ${tagData.label}</span>
+                            <x class="tagify__tag__removeBtn"></x>
+                        </tag>`,
+                    dropdownItem: suggestion => `
+                        <div class="tagify__dropdown__item">
+                            ${suggestion.emoji} ${suggestion.label}
+                        </div>`
+                }
+            });
+            
+            console.log("Tagify initialized for:", input);
+            return tagify;
+        } catch (error) {
+            console.error("Error initializing Tagify:", error);
+            return null;
+        }
     }
 
     // Fonction pour synchroniser Tagify avec un champ caché
@@ -338,11 +365,10 @@
         if (!hiddenInput) return;
 
         tagifyInstance.on('change', function() {
-            const values = tagifyInstance.value.map(tag => tag.value);
             hiddenInput.innerHTML = '';
-            values.forEach(value => {
+            tagifyInstance.value.forEach(tag => {
                 const option = document.createElement('option');
-                option.value = value;
+                option.value = tag.value;
                 option.selected = true;
                 hiddenInput.appendChild(option);
             });
@@ -375,21 +401,15 @@
     ];
 
         // Initialisation de Tagify pour les appellations de contrat
-        const typeContratTagify = initializeTagify('#appellation_contrat_tagify', typeContratChoices, {
-        'non renseigné': '❌',
-        'bail rural environnemental': '📜',
-        'convention de gestion': '📜',
-        'convention de mise à disposition safer': '📜',
-        'prêt à usage': '📜'
-    });
+        const typeContratTagify = initializeTagify('#appellation_contrat_tagify', typeContratChoices, window.emojiTypeContratMapping);
     syncTagifyWithHidden(typeContratTagify, '#appellation_contrat');
 
     // Initialisation de Tagify pour les produits finis
-    const produitFiniTagify = initializeTagify('#produit_fini_tagify', produitFiniChoices, emojiProduitFiniMapping);
+    const produitFiniTagify = initializeTagify('#produit_fini_tagify', produitFiniChoices, window.emojiProduitFiniMapping);
     syncTagifyWithHidden(produitFiniTagify, '#produit_fini');
 
     // Initialisation de Tagify pour les types de milieu
-    const typeMilieuTagify = initializeTagify('#type_milieu_tagify', typeMilieuChoices, emojiTypeMilieuMapping);
+    const typeMilieuTagify = initializeTagify('#type_milieu_tagify', typeMilieuChoices, window.emojiTypeMilieuMapping);
     syncTagifyWithHidden(typeMilieuTagify, '#type_milieu');
 
     // Gestion des types de production dynamiques
@@ -433,19 +453,21 @@
 
         // Initialisation de Tagify pour la nouvelle entrée
         const typeProductionInput = div.querySelector('.type-production-tagify');
-        const tagifyInstance = initializeTagify(typeProductionInput, typeProductionChoices, emojiTypeProductionMapping);
+        const tagifyInstance = initializeTagify(typeProductionInput, typeProductionChoices, window.emojiTypeProductionMapping);
         
         // Synchronisation avec le select caché
         const hiddenSelect = div.querySelector('.type-production-select');
-        tagifyInstance.on('change', function() {
-            hiddenSelect.innerHTML = '';
-            tagifyInstance.value.forEach(tag => {
-                const option = document.createElement('option');
-                option.value = tag.value;
-                option.selected = true;
-                hiddenSelect.appendChild(option);
+        if (tagifyInstance) {
+            tagifyInstance.on('change', function() {
+                hiddenSelect.innerHTML = '';
+                tagifyInstance.value.forEach(tag => {
+                    const option = document.createElement('option');
+                    option.value = tag.value;
+                    option.selected = true;
+                    hiddenSelect.appendChild(option);
+                });
             });
-        });
+        }
 
         // Gestion de la suppression
         div.querySelector('.remove-production').addEventListener('click', function() {
@@ -453,13 +475,16 @@
         });
 
         productionCount++;
+        
+        // Retourner l'instance Tagify pour une utilisation ultérieure
+        return tagifyInstance;
     }
 
     // Initialiser la première entrée de production
     const firstEntry = document.querySelector('.production-entry');
     if (firstEntry) {
         const typeProductionInput = firstEntry.querySelector('.type-production-tagify');
-        const tagifyInstance = initializeTagify(typeProductionInput, typeProductionChoices, emojiTypeProductionMapping);
+        const tagifyInstance = initializeTagify(typeProductionInput, typeProductionChoices, window.emojiTypeProductionMapping);
         
         // Synchronisation avec le select caché
         const hiddenSelect = firstEntry.querySelector('.type-production-select');
@@ -535,13 +560,301 @@
                     title: "Erreur",
                     text: data.error
                 });
-            } else {
-                document.querySelector('[name="nom_societe"]').value = data.denomination || "Non renseigné";
-                document.querySelector('[name="adresse_etablissement"]').value = data.adresse_etablissement || "Non renseigné";
-                document.querySelector('[name="tranche_effectif"]').value = data.tranche_effectif || "Non renseigné";
-                document.querySelector('[name="categorie_juridique"]').value = data.categorie_juridique || "Non renseigné";
-                document.querySelector('[name="activite_principale"]').value = data.activite_principale || "Non renseigné";
+                return;
+            }
+            
+            // Remplir les champs de base de la société
+            document.querySelector('[name="nom_societe"]').value = data.nom_societe || data.denomination || "Non renseigné";
+            document.querySelector('[name="adresse_etablissement"]').value = data.adresse_etablissement || "Non renseigné";
+            document.querySelector('[name="tranche_effectif"]').value = data.tranche_effectif || "Non renseigné";
+            document.querySelector('[name="categorie_juridique"]').value = data.categorie_juridique || "Non renseigné";
+            document.querySelector('[name="activite_principale"]').value = data.activite_principale || "Non renseigné";
+            
+            // Remplir le champ contact si disponible
+            if (data.contact) {
+                document.querySelector('[name="contact"]').value = data.contact;
+            }
 
+            // Si les données proviennent de la base de données (SIRET existant)
+            if (data.exists_in_db) {
+                // Afficher un message pour informer que la société existe déjà
+                Swal.fire({
+                    icon: "info",
+                    title: "Société existante",
+                    html: `Cette société existe déjà dans la base de données.<br>Les informations ont été automatiquement remplies.`,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Compris'
+                });
+
+                // Stocker l'ID de la société pour référence
+                const idSocieteInput = document.createElement('input');
+                idSocieteInput.type = 'hidden';
+                idSocieteInput.name = 'id_societe';
+                idSocieteInput.value = data.id_societe;
+                document.getElementById('addForm').appendChild(idSocieteInput);
+                
+                // Désactiver tous les champs du formulaire
+                disableAllFields();
+                
+                // Si des contrats sont disponibles, utiliser les informations du premier contrat
+                if (data.contrats && data.contrats.length > 0) {
+                    const contrat = data.contrats[0]; // Prendre le premier contrat
+                    
+                    // Remplir les dates du contrat
+                    if (contrat.date_signature) {
+                        document.querySelector('[name="date_signature"]').value = contrat.date_signature;
+                    }
+                    if (contrat.date_prise_effet) {
+                        document.querySelector('[name="date_prise_effet"]').value = contrat.date_prise_effet;
+                    }
+                    if (contrat.date_fin) {
+                        document.querySelector('[name="date_fin"]').value = contrat.date_fin;
+                    }
+                    
+                    // Remplir la surface contractualisée
+                    if (contrat.surf_contractualisee !== null && contrat.surf_contractualisee !== undefined) {
+                        document.querySelector('[name="surf_contractualisee"]').value = contrat.surf_contractualisee;
+                    }
+                    
+                    // Remplir les informations du référent
+                    if (contrat.referent) {
+                        document.getElementById('modal_nom_referent').value = contrat.referent.nom_referent;
+                        document.getElementById('modal_prenom_referent').value = contrat.referent.prenom_referent;
+                        
+                        // Mettre à jour le champ de recherche du référent
+                        const searchReferentInput = document.getElementById('search_referent');
+                        if (searchReferentInput) {
+                            searchReferentInput.value = `${contrat.referent.nom_referent} ${contrat.referent.prenom_referent}`;
+                        }
+                        
+                        // Désactiver les champs du référent
+                        enableReferentFields(false);
+                    }
+                    
+                    // Remplir les produits finis
+                    if (contrat.produits_finis && contrat.produits_finis.length > 0) {
+                        // Récupérer l'élément select caché
+                        const produitFiniSelect = document.getElementById('produit_fini');
+                        
+                        // Désélectionner toutes les options d'abord
+                        for (let option of produitFiniSelect.options) {
+                            option.selected = false;
+                        }
+                        
+                        // Sélectionner les options correspondantes
+                        contrat.produits_finis.forEach(idProduit => {
+                            for (let option of produitFiniSelect.options) {
+                                if (option.value == idProduit) {
+                                    option.selected = true;
+                                    break;
+                                }
+                            }
+                        });
+                        
+                        // Mettre à jour Tagify
+                        // Trouver les labels correspondants aux IDs sélectionnés
+                        const selectedProducts = Array.from(produitFiniSelect.options)
+                            .filter(option => option.selected)
+                            .map(option => {
+                                // Trouver l'emoji correspondant au label
+                                const label = option.textContent;
+                                const emoji = window.emojiProduitFiniMapping[label] || window.emojiProduitFiniMapping[label.toLowerCase()] || '❓';
+                                return {
+                                    value: option.value,
+                                    label: label,
+                                    emoji: emoji
+                                };
+                            });
+                        
+                        // Mettre à jour Tagify avec les valeurs sélectionnées
+                        produitFiniTagify.removeAllTags();
+                        produitFiniTagify.addTags(selectedProducts);
+                    }
+                    
+                    // Remplir les types de milieu
+                    if (contrat.types_milieu && contrat.types_milieu.length > 0) {
+                        // Récupérer l'élément select caché
+                        const typeMilieuSelect = document.getElementById('type_milieu');
+                        
+                        // Désélectionner toutes les options d'abord
+                        for (let option of typeMilieuSelect.options) {
+                            option.selected = false;
+                        }
+                        
+                        // Sélectionner les options correspondantes
+                        contrat.types_milieu.forEach(idMilieu => {
+                            for (let option of typeMilieuSelect.options) {
+                                if (option.value == idMilieu) {
+                                    option.selected = true;
+                                    break;
+                                }
+                            }
+                        });
+                        
+                        // Mettre à jour Tagify
+                        // Trouver les labels correspondants aux IDs sélectionnés
+                        const selectedMilieux = Array.from(typeMilieuSelect.options)
+                            .filter(option => option.selected)
+                            .map(option => {
+                                // Trouver l'emoji correspondant au label
+                                const label = option.textContent;
+                                const emoji = window.emojiTypeMilieuMapping[label] || window.emojiTypeMilieuMapping[label.toLowerCase()] || '❓';
+                                return {
+                                    value: option.value,
+                                    label: label,
+                                    emoji: emoji
+                                };
+                            });
+                        
+                        // Mettre à jour Tagify avec les valeurs sélectionnées
+                        typeMilieuTagify.removeAllTags();
+                        typeMilieuTagify.addTags(selectedMilieux);
+                    }
+                }
+
+                // Remplir les champs de l'agriculteur si disponible
+                if (data.agriculteurs && data.agriculteurs.length > 0) {
+                    const agriculteur = data.agriculteurs[0]; // Prendre le premier agriculteur
+                    document.getElementById('modal_nom_agri').value = agriculteur.nom_agri;
+                    document.getElementById('modal_prenom_agri').value = agriculteur.prenom_agri;
+                    if (agriculteur.date_naissance) {
+                        document.querySelector('[name="date_naissance"]').value = agriculteur.date_naissance;
+                    }
+                    enableAgriFields(false);
+                    document.getElementById('search_agriculteur').value = `${agriculteur.nom_agri} ${agriculteur.prenom_agri}`;
+                }
+
+                // Remplir les types de production si disponibles
+                if (data.productions && data.productions.length > 0) {
+                    // Supprimer toutes les entrées de production existantes sauf la première
+                    const productionContainer = document.getElementById('production-container');
+                    while (productionContainer.children.length > 1) {
+                        productionContainer.removeChild(productionContainer.lastChild);
+                    }
+
+                    // Regrouper les productions par mode de production
+                    const productionsByMode = {};
+                    data.productions.forEach(production => {
+                        if (!productionsByMode[production.id_mode_production]) {
+                            productionsByMode[production.id_mode_production] = [];
+                        }
+                        productionsByMode[production.id_mode_production].push(production);
+                    });
+
+                    console.log("Productions regroupées par mode:", productionsByMode);
+
+                    // Pour chaque mode de production, créer une entrée
+                    let index = 0;
+                    for (const modeId in productionsByMode) {
+                        if (index > 0) {
+                            // Ajouter une nouvelle entrée pour les modes supplémentaires
+                            addNewProductionEntry();
+                        }
+
+                        // Récupérer immédiatement l'entrée
+                        const entries = document.querySelectorAll('.production-entry');
+                        const entry = entries[index];
+                        
+                        // Sélectionner le mode de production
+                        const modeSelect = entry.querySelector('.mode-production');
+                        modeSelect.value = modeId;
+                        
+                        // Si les données proviennent de la base de données, désactiver le select
+                        if (data.exists_in_db) {
+                            modeSelect.disabled = true;
+                        }
+
+                        // Pour les types de production, mettre à jour Tagify
+                        const typeProductionSelect = entry.querySelector('.type-production-select');
+                        const typeProductionInput = entry.querySelector('.type-production-tagify');
+                        
+                        if (typeProductionSelect && typeProductionInput) {
+                            // Désélectionner toutes les options d'abord
+                            for (let option of typeProductionSelect.options) {
+                                option.selected = false;
+                            }
+                            
+                            // Sélectionner toutes les options correspondantes et collecter les tags
+                            const tagData = [];
+                            productionsByMode[modeId].forEach(production => {
+                                // Chercher l'option dans le select
+                                for (let option of typeProductionSelect.options) {
+                                    if (option.value == production.id_type_production) {
+                                        option.selected = true;
+                                        
+                                        // Créer un tag avec le label et l'emoji
+                                        const label = option.textContent;
+                                        const emoji = window.emojiTypeProductionMapping ? 
+                                            (window.emojiTypeProductionMapping[label.toLowerCase()] || '❓') : '❓';
+                                        tagData.push({
+                                            value: option.value,
+                                            label: label,
+                                            emoji: emoji
+                                        });
+                                        
+                                        console.log("Ajout du tag:", {
+                                            value: option.value,
+                                            label: label,
+                                            emoji: emoji
+                                        });
+                                        break;
+                                    }
+                                }
+                            });
+                            
+                            // Initialiser ou mettre à jour Tagify
+                            console.log("Tags à ajouter pour le mode", modeId, ":", tagData);
+                            
+                            // Forcer la suppression de l'ancien input et en créer un nouveau
+                            const parent = typeProductionInput.parentNode;
+                            const newInput = document.createElement('input');
+                            newInput.className = 'form-control type-production-tagify';
+                            newInput.name = 'type_production_display';
+                            newInput.placeholder = 'Ajouter des types de production';
+                            parent.replaceChild(newInput, typeProductionInput);
+                            
+                            // Initialiser Tagify sur le nouvel input
+                            const tagify = initializeTagify(newInput, typeProductionChoices, window.emojiTypeProductionMapping || {});
+                            if (tagify) {
+                                // Ajouter les tags avec un délai pour s'assurer que Tagify est initialisé
+                                setTimeout(() => {
+                                    tagify.addTags(tagData);
+                                    console.log("Tags ajoutés:", tagData);
+                                    
+                                    // Si les données proviennent de la base de données, mettre Tagify en lecture seule
+                                    if (data.exists_in_db) {
+                                        tagify.setReadonly(true);
+                                    }
+                                }, 100);
+                                
+                                // Synchroniser avec le select caché
+                                tagify.on('change', function() {
+                                    typeProductionSelect.innerHTML = '';
+                                    tagify.value.forEach(tag => {
+                                        const option = document.createElement('option');
+                                        option.value = tag.value;
+                                        option.selected = true;
+                                        typeProductionSelect.appendChild(option);
+                                    });
+                                });
+                            }
+                        }
+                        
+                        index++;
+                    }
+                    
+                    // Si les données proviennent de la base de données, désactiver le bouton d'ajout de production
+                    if (data.exists_in_db) {
+                        document.getElementById('add-production').disabled = true;
+                        
+                        // Désactiver tous les boutons de suppression de production
+                        document.querySelectorAll('.remove-production').forEach(button => {
+                            button.disabled = true;
+                        });
+                    }
+                }
+            } else {
+                // Données provenant de l'API SIRENE
                 Swal.fire({
                     icon: "success",
                     title: "Succès",
@@ -553,7 +866,7 @@
             Swal.fire({
                 icon: "error",
                 title: "Erreur serveur",
-                text: "Une erreur s'est produite lors de la récupération des données depuis l'API Sirene."
+                text: "Une erreur s'est produite lors de la récupération des données."
             });
         }
     });
@@ -680,8 +993,6 @@
                 prenomReferent.readOnly = false;
                 nomReferent.classList.remove('disabled-look');
                 prenomReferent.classList.remove('disabled-look');
-                nomReferent.value = '';
-                prenomReferent.value = '';
             } else {
                 nomReferent.readOnly = true;
                 prenomReferent.readOnly = true;
@@ -772,6 +1083,158 @@
             if (!referentSuggestionsDiv.contains(e.target) && e.target !== searchReferentInput) {
                 referentSuggestionsDiv.style.display = 'none';
             }
+        });
+    }
+
+    // Fonction pour désactiver tous les champs du formulaire
+    function disableAllFields() {
+        // Désactiver les champs de base
+        document.querySelector('[name="date_signature"]').disabled = true;
+        document.querySelector('[name="date_prise_effet"]').disabled = true;
+        document.querySelector('[name="date_fin"]').disabled = true;
+        document.querySelector('[name="surf_contractualisee"]').disabled = true;
+        document.querySelector('[name="contact"]').disabled = true;
+        
+        // Désactiver les champs du référent
+        document.getElementById('modal_nom_referent').disabled = true;
+        document.getElementById('modal_prenom_referent').disabled = true;
+        
+        // Désactiver les champs de l'agriculteur
+        document.getElementById('modal_nom_agri').disabled = true;
+        document.getElementById('modal_prenom_agri').disabled = true;
+        document.querySelector('[name="date_naissance"]').disabled = true;
+        
+        // Désactiver le champ SIRET
+        document.getElementById('siret').disabled = true;
+        
+        // Désactiver les sélecteurs Tagify
+        if (produitFiniTagify) produitFiniTagify.setReadonly(true);
+        if (typeMilieuTagify) typeMilieuTagify.setReadonly(true);
+        if (typeContratTagify) typeContratTagify.setReadonly(true);
+        
+        // Désactiver les entrées de production
+        const productionEntries = document.querySelectorAll('.production-entry');
+        productionEntries.forEach(entry => {
+            const modeSelect = entry.querySelector('.mode-production');
+            if (modeSelect) modeSelect.disabled = true;
+            
+            // Désactiver Tagify pour les types de production
+            const typeProductionInput = entry.querySelector('.type-production-tagify');
+            if (typeProductionInput && typeProductionInput._tagify) {
+                typeProductionInput._tagify.setReadonly(true);
+            }
+            
+            // Désactiver le bouton de suppression
+            const removeButton = entry.querySelector('.remove-production');
+            if (removeButton) removeButton.disabled = true;
+        });
+        
+        // Désactiver le bouton d'ajout de production
+        document.getElementById('add-production').disabled = true;
+        
+        // Désactiver la recherche d'agriculteur et de référent
+        document.getElementById('search_agriculteur').disabled = true;
+        document.getElementById('search_referent').disabled = true;
+        
+        // Afficher le bouton de réinitialisation
+        document.getElementById('reset-form-button').style.display = 'inline-block';
+    }
+
+    // Fonction pour réinitialiser le formulaire
+    function resetForm() {
+        // Réinitialiser le formulaire
+        document.getElementById('addForm').reset();
+        
+        // Supprimer l'input caché id_societe s'il existe
+        const idSocieteInput = document.querySelector('[name="id_societe"]');
+        if (idSocieteInput) idSocieteInput.remove();
+        
+        // Réactiver tous les champs
+        document.querySelector('[name="date_signature"]').disabled = false;
+        document.querySelector('[name="date_prise_effet"]').disabled = false;
+        document.querySelector('[name="date_fin"]').disabled = false;
+        document.querySelector('[name="surf_contractualisee"]').disabled = false;
+        document.querySelector('[name="contact"]').disabled = false;
+        
+        // Réactiver les champs du référent
+        document.getElementById('modal_nom_referent').disabled = false;
+        document.getElementById('modal_prenom_referent').disabled = false;
+        
+        // Réactiver les champs de l'agriculteur
+        document.getElementById('modal_nom_agri').disabled = false;
+        document.getElementById('modal_prenom_agri').disabled = false;
+        document.querySelector('[name="date_naissance"]').disabled = false;
+        
+        // Réactiver le champ SIRET
+        document.getElementById('siret').disabled = false;
+        
+        // Réactiver les sélecteurs Tagify
+        if (produitFiniTagify) {
+            produitFiniTagify.setReadonly(false);
+            produitFiniTagify.removeAllTags();
+        }
+        if (typeMilieuTagify) {
+            typeMilieuTagify.setReadonly(false);
+            typeMilieuTagify.removeAllTags();
+        }
+        if (typeContratTagify) {
+            typeContratTagify.setReadonly(false);
+            typeContratTagify.removeAllTags();
+        }
+        
+        // Supprimer toutes les entrées de production sauf la première
+        const productionContainer = document.getElementById('production-container');
+        while (productionContainer.children.length > 1) {
+            productionContainer.removeChild(productionContainer.lastChild);
+        }
+        
+        // Réinitialiser et réactiver la première entrée de production
+        const firstEntry = productionContainer.firstElementChild;
+        if (firstEntry) {
+            const modeSelect = firstEntry.querySelector('.mode-production');
+            if (modeSelect) {
+                modeSelect.disabled = false;
+                modeSelect.selectedIndex = 0;
+            }
+            
+            // Réinitialiser et réactiver Tagify pour les types de production
+            const typeProductionInput = firstEntry.querySelector('.type-production-tagify');
+            if (typeProductionInput && typeProductionInput._tagify) {
+                typeProductionInput._tagify.setReadonly(false);
+                typeProductionInput._tagify.removeAllTags();
+            }
+            
+            // Réactiver le bouton de suppression
+            const removeButton = firstEntry.querySelector('.remove-production');
+            if (removeButton) removeButton.disabled = false;
+        }
+        
+        // Réactiver le bouton d'ajout de production
+        document.getElementById('add-production').disabled = false;
+        
+        // Réactiver la recherche d'agriculteur et de référent
+        document.getElementById('search_agriculteur').disabled = false;
+        document.getElementById('search_referent').disabled = false;
+        
+        // Masquer le bouton de réinitialisation
+        document.getElementById('reset-form-button').style.display = 'none';
+        
+        // Vider les champs de recherche
+        document.getElementById('search_agriculteur').value = '';
+        document.getElementById('search_referent').value = '';
+        document.getElementById('siret').value = '';
+        
+        // Réinitialiser les champs cachés
+        document.getElementById('id_agriculteur').value = '';
+        document.getElementById('id_referent').value = '';
+        
+        // Afficher un message de confirmation
+        Swal.fire({
+            icon: "success",
+            title: "Formulaire réinitialisé",
+            text: "Vous pouvez maintenant saisir de nouvelles données.",
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
         });
     }
     });

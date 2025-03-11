@@ -309,7 +309,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 emoji: emojiMapping[choice.label.toLowerCase()] || "❓"
             })),
             enforceWhitelist: true,
-            dropdown: { enabled: 0 },
+            dropdown: {
+                maxItems: 50,
+                classname: "tags-look",
+                enabled: 0,
+                closeOnSelect: false
+            },
             templates: {
                 tag: tagData => `
                     <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
@@ -463,7 +468,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
             {% endfor %}],
             enforceWhitelist: true,
-            dropdown: { enabled: 0 },
+            dropdown: {
+                maxItems: 50,
+                classname: "tags-look",
+                enabled: 0,
+                closeOnSelect: false
+            },
             templates: {
                 tag: tagData => `
                     <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
@@ -537,7 +547,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
             {% endfor %}],
             enforceWhitelist: true,
-            dropdown: { enabled: 0 },
+            dropdown: {
+                maxItems: 50,
+                classname: "tags-look",
+                enabled: 0,
+                closeOnSelect: false
+            },
             templates: {
                 tag: tagData => `
                     <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
@@ -643,7 +658,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                 {% endfor %}],
                 enforceWhitelist: true,
-                dropdown: { enabled: 0 },
+                dropdown: {
+                    maxItems: 50,
+                    classname: "tags-look",
+                    enabled: 0,
+                    closeOnSelect: false
+                },
                 templates: {
                     tag: tagData => `
                         <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
