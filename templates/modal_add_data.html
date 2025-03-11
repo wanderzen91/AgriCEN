@@ -316,6 +316,113 @@
         });
     }
 
+    // Fonction globale pour réinitialiser le formulaire
+    function resetForm() {
+        // Stocker les valeurs des champs de l'onglet "Informations générales"
+        const nomSite = document.getElementById('modal_nom_site').value;
+        const codeSite = document.getElementById('modal_code_site').value;
+        
+        // Supprimer l'input caché id_societe s'il existe
+        const idSocieteInput = document.querySelector('[name="id_societe"]');
+        if (idSocieteInput) idSocieteInput.remove();
+        
+        // Réactiver tous les champs avant de les réinitialiser
+        // Champs de base
+        document.querySelector('[name="date_signature"]').disabled = false;
+        document.querySelector('[name="date_prise_effet"]').disabled = false;
+        document.querySelector('[name="date_fin"]').disabled = false;
+        document.querySelector('[name="surf_contractualisee"]').disabled = false;
+        document.querySelector('[name="contact"]').disabled = false;
+        
+        // Champs du référent
+        document.getElementById('modal_nom_referent').disabled = false;
+        document.getElementById('modal_prenom_referent').disabled = false;
+        
+        // Champs de l'agriculteur
+        document.getElementById('modal_nom_agri').disabled = false;
+        document.getElementById('modal_prenom_agri').disabled = false;
+        document.querySelector('[name="date_naissance"]').disabled = false;
+        
+        // Champ SIRET
+        document.getElementById('siret').disabled = false;
+        
+        // Réinitialiser le formulaire
+        document.getElementById('addForm').reset();
+        
+        // Restaurer les valeurs des champs de l'onglet "Informations générales"
+        document.getElementById('modal_nom_site').value = nomSite;
+        document.getElementById('modal_code_site').value = codeSite;
+        
+        // Réinitialiser les sélecteurs Tagify
+        if (produitFiniTagify) {
+            produitFiniTagify.setReadonly(false);
+            produitFiniTagify.removeAllTags();
+        }
+        if (typeMilieuTagify) {
+            typeMilieuTagify.setReadonly(false);
+            typeMilieuTagify.removeAllTags();
+        }
+        if (typeContratTagify) {
+            typeContratTagify.setReadonly(false);
+            typeContratTagify.removeAllTags();
+        }
+        
+        // Supprimer toutes les entrées de production sauf la première
+        const productionContainer = document.getElementById('production-container');
+        while (productionContainer.children.length > 1) {
+            productionContainer.removeChild(productionContainer.lastChild);
+        }
+        
+        // Réinitialiser et réactiver la première entrée de production
+        const firstEntry = productionContainer.firstElementChild;
+        if (firstEntry) {
+            const modeSelect = firstEntry.querySelector('.mode-production');
+            if (modeSelect) {
+                modeSelect.disabled = false;
+                modeSelect.selectedIndex = 0;
+            }
+            
+            // Réinitialiser et réactiver Tagify pour les types de production
+            const typeProductionInput = firstEntry.querySelector('.type-production-tagify');
+            if (typeProductionInput && typeProductionInput._tagify) {
+                typeProductionInput._tagify.setReadonly(false);
+                typeProductionInput._tagify.removeAllTags();
+            }
+            
+            // Réactiver le bouton de suppression
+            const removeButton = firstEntry.querySelector('.remove-production');
+            if (removeButton) removeButton.disabled = false;
+        }
+        
+        // Réactiver le bouton d'ajout de production
+        document.getElementById('add-production').disabled = false;
+        
+        // Réactiver la recherche d'agriculteur et de référent
+        document.getElementById('search_agriculteur').disabled = false;
+        document.getElementById('search_referent').disabled = false;
+        
+        // Masquer le bouton de réinitialisation
+        document.getElementById('reset-form-button').style.display = 'none';
+        
+        // Vider les champs de recherche
+        document.getElementById('search_agriculteur').value = '';
+        document.getElementById('search_referent').value = '';
+        document.getElementById('siret').value = '';
+        
+        // Réinitialiser les champs cachés
+        document.getElementById('id_agriculteur').value = '';
+        document.getElementById('id_referent').value = '';
+        
+        // Afficher un message de confirmation
+        Swal.fire({
+            icon: "success",
+            title: "Formulaire réinitialisé",
+            text: "Vous pouvez maintenant saisir de nouvelles données.",
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
     // Fonction pour initialiser Tagify avec un template personnalisé incluant des émojis
     function initializeTagify(selector, choices, emojiMapping) {
@@ -1138,104 +1245,6 @@
         
         // Afficher le bouton de réinitialisation
         document.getElementById('reset-form-button').style.display = 'inline-block';
-    }
-
-    // Fonction pour réinitialiser le formulaire
-    function resetForm() {
-        // Réinitialiser le formulaire
-        document.getElementById('addForm').reset();
-        
-        // Supprimer l'input caché id_societe s'il existe
-        const idSocieteInput = document.querySelector('[name="id_societe"]');
-        if (idSocieteInput) idSocieteInput.remove();
-        
-        // Réactiver tous les champs
-        document.querySelector('[name="date_signature"]').disabled = false;
-        document.querySelector('[name="date_prise_effet"]').disabled = false;
-        document.querySelector('[name="date_fin"]').disabled = false;
-        document.querySelector('[name="surf_contractualisee"]').disabled = false;
-        document.querySelector('[name="contact"]').disabled = false;
-        
-        // Réactiver les champs du référent
-        document.getElementById('modal_nom_referent').disabled = false;
-        document.getElementById('modal_prenom_referent').disabled = false;
-        
-        // Réactiver les champs de l'agriculteur
-        document.getElementById('modal_nom_agri').disabled = false;
-        document.getElementById('modal_prenom_agri').disabled = false;
-        document.querySelector('[name="date_naissance"]').disabled = false;
-        
-        // Réactiver le champ SIRET
-        document.getElementById('siret').disabled = false;
-        
-        // Réactiver les sélecteurs Tagify
-        if (produitFiniTagify) {
-            produitFiniTagify.setReadonly(false);
-            produitFiniTagify.removeAllTags();
-        }
-        if (typeMilieuTagify) {
-            typeMilieuTagify.setReadonly(false);
-            typeMilieuTagify.removeAllTags();
-        }
-        if (typeContratTagify) {
-            typeContratTagify.setReadonly(false);
-            typeContratTagify.removeAllTags();
-        }
-        
-        // Supprimer toutes les entrées de production sauf la première
-        const productionContainer = document.getElementById('production-container');
-        while (productionContainer.children.length > 1) {
-            productionContainer.removeChild(productionContainer.lastChild);
-        }
-        
-        // Réinitialiser et réactiver la première entrée de production
-        const firstEntry = productionContainer.firstElementChild;
-        if (firstEntry) {
-            const modeSelect = firstEntry.querySelector('.mode-production');
-            if (modeSelect) {
-                modeSelect.disabled = false;
-                modeSelect.selectedIndex = 0;
-            }
-            
-            // Réinitialiser et réactiver Tagify pour les types de production
-            const typeProductionInput = firstEntry.querySelector('.type-production-tagify');
-            if (typeProductionInput && typeProductionInput._tagify) {
-                typeProductionInput._tagify.setReadonly(false);
-                typeProductionInput._tagify.removeAllTags();
-            }
-            
-            // Réactiver le bouton de suppression
-            const removeButton = firstEntry.querySelector('.remove-production');
-            if (removeButton) removeButton.disabled = false;
-        }
-        
-        // Réactiver le bouton d'ajout de production
-        document.getElementById('add-production').disabled = false;
-        
-        // Réactiver la recherche d'agriculteur et de référent
-        document.getElementById('search_agriculteur').disabled = false;
-        document.getElementById('search_referent').disabled = false;
-        
-        // Masquer le bouton de réinitialisation
-        document.getElementById('reset-form-button').style.display = 'none';
-        
-        // Vider les champs de recherche
-        document.getElementById('search_agriculteur').value = '';
-        document.getElementById('search_referent').value = '';
-        document.getElementById('siret').value = '';
-        
-        // Réinitialiser les champs cachés
-        document.getElementById('id_agriculteur').value = '';
-        document.getElementById('id_referent').value = '';
-        
-        // Afficher un message de confirmation
-        Swal.fire({
-            icon: "success",
-            title: "Formulaire réinitialisé",
-            text: "Vous pouvez maintenant saisir de nouvelles données.",
-            confirmButtonColor: '#3085d6',
-            confirmButtonText: 'OK'
-        });
     }
     });
 </script>
