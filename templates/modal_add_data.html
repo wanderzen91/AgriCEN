@@ -603,10 +603,21 @@
 
     // Initialiser Tagify pour les types de milieu
     function initializeTypeMilieuTagify(contractIndex) {
-        const typeMilieuInput = document.querySelector(`.contract-entry:nth-child(${contractIndex}) .type-milieu-tagify`);
-        const typeMilieuSelect = document.querySelector(`.contract-entry:nth-child(${contractIndex}) .type-milieu-select`);
+        // Utiliser querySelectorAll pour trouver tous les éléments et sélectionner le bon par index
+        const contractEntries = document.querySelectorAll('.contract-entry');
+        const currentEntry = contractEntries[contractIndex - 1]; // -1 car les indices commencent à 0
+        
+        if (!currentEntry) {
+            console.error(`Contract entry #${contractIndex} not found`);
+            return;
+        }
+        
+        const typeMilieuInput = currentEntry.querySelector('.type-milieu-tagify');
+        const typeMilieuSelect = currentEntry.querySelector('.type-milieu-select');
         
         if (typeMilieuInput && typeMilieuSelect) {
+            console.log(`Initializing Tagify for contract #${contractIndex}`);
+            
             const typeMilieuChoices = Array.from(typeMilieuSelect.options).map(option => ({
                 value: option.value,
                 label: option.textContent
@@ -615,6 +626,10 @@
             // Utiliser le mapping global défini dans base.html
             const tagify = initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
             syncTagifyWithHidden(tagify, `select[name="type_milieu_${contractIndex}"]`);
+        } else {
+            console.error(`Tagify elements not found for contract #${contractIndex}`);
+            console.log('typeMilieuInput:', typeMilieuInput);
+            console.log('typeMilieuSelect:', typeMilieuSelect);
         }
     }
 
@@ -624,41 +639,87 @@
     function addNewContractEntry() {
         contractCounter++;
         
+        // Créer un nouveau contrat à partir de zéro plutôt que de cloner
         const contractsContainer = document.getElementById('contracts-container');
-        const newContractEntry = document.createElement('div');
-        newContractEntry.className = 'contract-entry mb-4 border-bottom pb-3';
+        const firstContract = document.querySelector('.contract-entry');
         
-        // Créer un bouton de suppression pour ce contrat
-        const deleteButton = `
+        // Créer un nouveau conteneur pour le contrat
+        const newContract = document.createElement('div');
+        newContract.className = 'contract-entry mb-4 border-bottom pb-3';
+        
+        // Créer le contenu HTML du nouveau contrat
+        newContract.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5>Contrat #${contractCounter}</h5>
                 <button type="button" class="btn btn-danger btn-sm delete-contract">
                     <i class="fas fa-trash me-1"></i>Supprimer
                 </button>
             </div>
+            <div class="row gx-4 gy-3">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Appellation du contrat</label>
+                        <input type="text" class="form-control appellation-contrat" name="appellation_contrat">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de signature</label>
+                        <input type="date" class="form-control date-signature" name="date_signature">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de prise d'effet</label>
+                        <input type="date" class="form-control date-prise-effet" name="date_prise_effet">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date de fin</label>
+                        <input type="date" class="form-control date-fin" name="date_fin">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="search_referent_${contractCounter}" class="form-label">Rechercher un(e) référent(e)</label>
+                        <div class="position-relative">
+                            <input type="text" class="form-control search-referent" id="search_referent_${contractCounter}" 
+                                    placeholder="Rechercher un(e) référent(e) existant(e)...">
+                            <div class="referent-suggestions position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                                style="z-index: 1000; display: none;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nom du/de la référent(e)</label>
+                        <input type="text" class="form-control nom-referent" id="modal_nom_referent_${contractCounter}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prénom du/de la référent(e)</label>
+                        <input type="text" class="form-control prenom-referent" id="modal_prenom_referent_${contractCounter}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Surface contractualisée (ha)</label>
+                        <input type="number" step="0.01" class="form-control surf-contractualisee" name="surf_contractualisee">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type de milieu</label>
+                        <input class="form-control type-milieu-tagify" name="type_milieu_display_${contractCounter}" placeholder="Ajouter des types de milieu">
+                        <select class="type-milieu-select" name="type_milieu_${contractCounter}" multiple hidden>
+                        </select>
+                    </div>
+                </div>
+            </div>
         `;
         
-        // Cloner la structure du premier contrat
-        const firstContract = document.querySelector('.contract-entry');
-        const clonedContent = firstContract.innerHTML.replace(/<h5[^>]*>.*?<\/h5>/g, deleteButton);
+        // Ajouter le nouveau contrat au conteneur
+        contractsContainer.appendChild(newContract);
         
-        // Mettre à jour les IDs et noms des champs
-        newContractEntry.innerHTML = clonedContent
-            .replace(/id="search_referent_1"/g, `id="search_referent_${contractCounter}"`)
-            .replace(/id="modal_nom_referent_1"/g, `id="modal_nom_referent_${contractCounter}"`)
-            .replace(/id="modal_prenom_referent_1"/g, `id="modal_prenom_referent_${contractCounter}"`)
-            .replace(/name="type_milieu_display_1"/g, `name="type_milieu_display_${contractCounter}"`)
-            .replace(/name="type_milieu_1"/g, `name="type_milieu_${contractCounter}"`);
+        // Copier les options du select type_milieu du premier contrat
+        const firstTypeOptions = firstContract.querySelector('.type-milieu-select').options;
+        const newTypeSelect = newContract.querySelector('.type-milieu-select');
         
-        contractsContainer.appendChild(newContractEntry);
-        
-        // Réinitialiser les champs du nouveau contrat
-        const newContractFields = newContractEntry.querySelectorAll('input, select');
-        newContractFields.forEach(field => {
-            if (field.type !== 'hidden' && !field.classList.contains('type-milieu-select')) {
-                field.value = '';
-            }
-        });
+        for (let i = 0; i < firstTypeOptions.length; i++) {
+            const option = document.createElement('option');
+            option.value = firstTypeOptions[i].value;
+            option.textContent = firstTypeOptions[i].textContent;
+            newTypeSelect.appendChild(option);
+        }
         
         // Initialiser l'autocomplétion pour le référent
         setupReferentAutocomplete(contractCounter);
@@ -667,12 +728,20 @@
         initializeTypeMilieuTagify(contractCounter);
         
         // Ajouter un gestionnaire d'événements pour le bouton de suppression
-        const deleteBtn = newContractEntry.querySelector('.delete-contract');
+        const deleteBtn = newContract.querySelector('.delete-contract');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
-                newContractEntry.remove();
+                newContract.remove();
                 updateContractsData();
             });
+        }
+    }
+    
+    // Fonction utilitaire pour mettre à jour les attributs d'un élément
+    function updateElementAttributes(container, oldId, newId) {
+        const element = container.querySelector(`#${oldId}`);
+        if (element) {
+            element.id = newId;
         }
     }
 
