@@ -897,10 +897,100 @@
         
     // Initialiser Tagify pour le premier type de milieu
     initializeTypeMilieuTagify(1);
+    
+    // Initialiser Tagify pour les produits finis
+    const produitFiniInput = document.getElementById('produit_fini_tagify');
+    const produitFiniSelect = document.getElementById('produit_fini');
+    
+    if (produitFiniInput && produitFiniSelect) {
+        console.log("Initializing Tagify for produit_fini");
+        
+        const produitFiniChoices = Array.from(produitFiniSelect.options).map(option => ({
+            value: option.value,
+            label: option.textContent
+        }));
+        
+        // Utiliser le mapping global défini dans base.html
+        window.produitFiniTagify = initializeTagify(produitFiniInput, produitFiniChoices, window.emojiProduitFiniMapping);
+        syncTagifyWithHidden(window.produitFiniTagify, '#produit_fini');
+    } else {
+        console.error("Produit fini Tagify elements not found");
+        console.log('produitFiniInput:', produitFiniInput);
+        console.log('produitFiniSelect:', produitFiniSelect);
+    }
         
     // Mettre à jour les données des contrats avant la soumission du formulaire
     document.getElementById('addForm').addEventListener('submit', function(e) {
         updateContractsData();
     });
+
+        // Gestion de l'API SIRENE
+        const fetchSireneButton = document.querySelector('button[name="fetch_sirene"]');
+        const siretInput = document.getElementById('siret');
+
+        if (fetchSireneButton && siretInput) {
+            console.log("Initializing fetch_sirene button event listener");
+            
+            fetchSireneButton.addEventListener("click", async function (event) {
+                event.preventDefault();
+                console.log("Fetch SIRENE button clicked");
+
+                const siret = siretInput.value.trim();
+                if (!siret) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Attention",
+                        text: "Veuillez saisir un numéro SIRET valide"
+                    });
+                    return;
+                }
+
+                try {
+                    console.log("Fetching SIRET data for:", siret);
+                    const response = await fetch("/api/siret", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ siret })
+                    });
+
+                    const data = await response.json();
+                    console.log("SIRET API response:", data);
+
+                    if (data.error) {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Erreur",
+                            text: data.error
+                        });
+                        return;
+                    }
+                    
+                    // Remplir les champs de base de la société
+                    document.querySelector('[name="nom_societe"]').value = data.nom_societe || data.denomination || "Non renseigné";
+                    document.querySelector('[name="adresse_etablissement"]').value = data.adresse_etablissement || "Non renseigné";
+                    document.querySelector('[name="tranche_effectif"]').value = data.tranche_effectif || "Non renseigné";
+                    document.querySelector('[name="categorie_juridique"]').value = data.categorie_juridique || "Non renseigné";
+                    document.querySelector('[name="activite_principale"]').value = data.activite_principale || "Non renseigné";
+                    
+                    // Afficher un message de succès
+                    Swal.fire({
+                        icon: "success",
+                        title: "Succès",
+                        text: "Les informations de l'entreprise ont été récupérées avec succès."
+                    });
+                    
+                } catch (error) {
+                    console.error("Error fetching SIRET data:", error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Erreur",
+                        text: "Une erreur est survenue lors de la récupération des données SIRENE."
+                    });
+                }
+            });
+        } else {
+            console.error("Fetch SIRENE button or SIRET input not found");
+        }
     });
+
 </script>
