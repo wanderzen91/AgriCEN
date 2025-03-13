@@ -258,6 +258,48 @@
     .tagify--readonly .tagify__tag {
         opacity: 0.7;
     }
+    
+    .tagify__dropdown {
+        max-height: 300px !important;
+        overflow-y: auto !important;
+    }
+    
+    .tagify__dropdown__wrapper {
+        max-height: 300px !important;
+        overflow-y: auto !important;
+    }
+    
+    .tagify__dropdown .tagify__dropdown__item {
+        padding: 5px;
+        border-radius: 3px;
+        margin: 2px;
+    }
+    
+    /* Styles pour les boutons d'ajout */
+    .add-button {
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 10px;
+    }
+    
+    /* Style pour les suggestions */
+    .referent-suggestions {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .suggestion-item {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+    
+    .suggestion-item:hover {
+        background-color: #f8f9fa;
+    }
 </style>
 
 <script>
@@ -291,7 +333,10 @@
                     emoji: emojiMapping[choice.label] || emojiMapping[choice.label.toLowerCase()] || "❓"
                 })),
                 enforceWhitelist: true,
-                dropdown: { enabled: 0 },
+                dropdown: { 
+                    enabled: 0,
+                    maxItems: 1000
+                },
                 templates: {
                     tag: tagData => `
                         <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
@@ -303,6 +348,11 @@
                             ${suggestion.emoji} ${suggestion.label}
                         </div>`
                 }
+            });
+            
+            // Ajouter un gestionnaire d'événements pour afficher tous les tags au clic
+            input.addEventListener('click', function() {
+                tagify.dropdown.show.call(tagify);
             });
             
             console.log("Tagify initialized for:", input);
@@ -455,7 +505,10 @@
                     emoji: emojiMapping[choice.label] || emojiMapping[choice.label.toLowerCase()] || "❓"
                 })),
                 enforceWhitelist: true,
-                dropdown: { enabled: 0 },
+                dropdown: { 
+                    enabled: 0,
+                    maxItems: 1000
+                },
                 templates: {
                     tag: tagData => `
                         <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
@@ -467,6 +520,11 @@
                             ${suggestion.emoji} ${suggestion.label}
                         </div>`
                 }
+            });
+            
+            // Ajouter un gestionnaire d'événements pour afficher tous les tags au clic
+            input.addEventListener('click', function() {
+                tagify.dropdown.show.call(tagify);
             });
             
             console.log("Tagify initialized for:", input);
@@ -724,8 +782,57 @@
         // Initialiser l'autocomplétion pour le référent
         setupReferentAutocomplete(contractCounter);
         
-        // Initialiser Tagify pour les types de milieu
-        initializeTypeMilieuTagify(contractCounter);
+        // Initialiser Tagify pour les types de milieu en utilisant directement les options du mapping global
+        setTimeout(() => {
+            const typeMilieuInput = newContract.querySelector('.type-milieu-tagify');
+            const typeMilieuSelect = newContract.querySelector('.type-milieu-select');
+            
+            if (typeMilieuInput && typeMilieuSelect) {
+                console.log(`Initializing Tagify for contract #${contractCounter}`);
+                
+                // Créer des choix à partir du mapping global d'emojis
+                const typeMilieuChoices = [];
+                
+                // D'abord, ajouter toutes les options du select
+                Array.from(typeMilieuSelect.options).forEach(option => {
+                    typeMilieuChoices.push({
+                        value: option.value,
+                        label: option.textContent
+                    });
+                });
+                
+                // Ensuite, s'assurer que toutes les options du mapping global sont incluses
+                for (const [label, emoji] of Object.entries(window.emojiTypeMilieuMapping)) {
+                    // Vérifier si cette option existe déjà dans les choix
+                    const exists = typeMilieuChoices.some(choice => 
+                        choice.label.toLowerCase() === label.toLowerCase());
+                    
+                    // Si elle n'existe pas, l'ajouter
+                    if (!exists) {
+                        typeMilieuChoices.push({
+                            value: label,
+                            label: label
+                        });
+                        
+                        // Ajouter aussi l'option au select
+                        const option = document.createElement('option');
+                        option.value = label;
+                        option.textContent = label;
+                        newTypeSelect.appendChild(option);
+                    }
+                }
+                
+                const tagify = initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
+                
+                // Synchroniser avec le select caché
+                syncTagifyWithHidden(tagify, `select[name="type_milieu_${contractCounter}"]`);
+                
+                // Ajouter un gestionnaire pour ouvrir le dropdown au clic
+                typeMilieuInput.addEventListener('click', function() {
+                    tagify.dropdown.show();
+                });
+            }
+        }, 100);
         
         // Ajouter un gestionnaire d'événements pour le bouton de suppression
         const deleteBtn = newContract.querySelector('.delete-contract');
