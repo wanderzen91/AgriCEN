@@ -612,19 +612,8 @@
                 label: option.textContent
             }));
             
-            const typeMilieuEmojiMapping = {
-                "prairie": "🌿",
-                "forêt": "🌳",
-                "zone humide": "💧",
-                "pelouse sèche": "🏜️",
-                "lande": "🌱",
-                "tourbière": "🌊",
-                "milieu aquatique": "🐟",
-                "milieu rocheux": "🏔️",
-                "autre": "❓"
-            };
-            
-            const tagify = initializeTagify(typeMilieuInput, typeMilieuChoices, typeMilieuEmojiMapping);
+            // Utiliser le mapping global défini dans base.html
+            const tagify = initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
             syncTagifyWithHidden(tagify, `select[name="type_milieu_${contractIndex}"]`);
         }
     }
