@@ -158,61 +158,74 @@
 
                         <!-- Onglet Partenariat CEN -->
                         <div class="tab-pane fade" id="contrat" role="tabpanel" aria-labelledby="contrat-tab">
-                            <div class="row gx-4 gy-3">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        {{ form.appellation_contrat.label }}
-                                        {{ form.appellation_contrat(class="form-control") }}
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.date_signature.label }}
-                                        {{ form.date_signature(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.date_prise_effet.label }}
-                                        {{ form.date_prise_effet(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.date_fin.label }}
-                                        {{ form.date_fin(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <!-- Nouveau champ de recherche avec autocomplétion -->
-                                    <div class="mb-3">
-                                        <label for="search_referent" class="form-label">Rechercher un(e) référent(e)</label>
-                                        <div class="position-relative">
-                                            <input type="text" class="form-control" id="search_referent" 
-                                                    placeholder="Rechercher un(e) référent(e) existant(e)...">
-                                            <div id="referent_suggestions" class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
-                                                style="z-index: 1000; display: none;">
+                            <div id="contracts-container">
+                                <div class="contract-entry mb-4 border-bottom pb-3">
+                                    <h5 class="mb-3">Contrat #1</h5>
+                                    <div class="row gx-4 gy-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                {{ form.appellation_contrat.label }}
+                                                {{ form.appellation_contrat(class="form-control appellation-contrat") }}
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.date_signature.label }}
+                                                {{ form.date_signature(class="form-control date-signature") }}
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.date_prise_effet.label }}
+                                                {{ form.date_prise_effet(class="form-control date-prise-effet") }}
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.date_fin.label }}
+                                                {{ form.date_fin(class="form-control date-fin") }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <!-- Nouveau champ de recherche avec autocomplétion -->
+                                            <div class="mb-3">
+                                                <label for="search_referent_1" class="form-label">Rechercher un(e) référent(e)</label>
+                                                <div class="position-relative">
+                                                    <input type="text" class="form-control search-referent" id="search_referent_1" 
+                                                            placeholder="Rechercher un(e) référent(e) existant(e)...">
+                                                    <div class="referent-suggestions position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                                                        style="z-index: 1000; display: none;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.nom_referent.label }}
+                                                {{ form.nom_referent(class="form-control nom-referent", id="modal_nom_referent_1") }}
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.prenom_referent.label }}
+                                                {{ form.prenom_referent(class="form-control prenom-referent", id="modal_prenom_referent_1") }}
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.surf_contractualisee.label }}
+                                                {{ form.surf_contractualisee(class="form-control surf-contractualisee") }}
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.type_milieu.label }}
+                                                <input class="form-control type-milieu-tagify" name="type_milieu_display_1" placeholder="Ajouter des types de milieu">
+                                                <select class="type-milieu-select" name="type_milieu_1" multiple hidden>
+                                                    {% for value, label in form.type_milieu.choices %}
+                                                        <option value="{{ value }}">{{ label }}</option>
+                                                    {% endfor %}
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        {{ form.nom_referent.label }}
-                                        {{ form.nom_referent(class="form-control", id="modal_nom_referent") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.prenom_referent.label }}
-                                        {{ form.prenom_referent(class="form-control", id="modal_prenom_referent") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.surf_contractualisee.label }}
-                                        {{ form.surf_contractualisee(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.type_milieu.label }}
-                                        <input id="type_milieu_tagify" class="form-control" name="type_milieu_display" placeholder="Ajouter des types de milieu">
-                                        <select id="type_milieu" name="type_milieu" multiple hidden>
-                                            {% for value, label in form.type_milieu.choices %}
-                                                <option value="{{ value }}">{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
                                 </div>
                             </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button type="button" id="add-contract" class="btn btn-success">
+                                        <i class="fas fa-plus-circle me-2"></i>Ajouter un contrat
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Champ caché pour stocker les données des contrats -->
+                            <input type="hidden" id="contracts-data" name="contracts_data" value="[]">
                         </div>
                     </div>
                 </div>
@@ -482,617 +495,10 @@
         });
     }
 
-    // Initialisation des données pour Tagify
-    const typeProductionChoices = [
-        {% for value, label in form.type_production.choices %}
-            { value: "{{ value }}", label: "{{ label }}" },
-        {% endfor %}
-    ];
-
-    const produitFiniChoices = [
-        {% for value, label in form.produit_fini.choices %}
-            { value: "{{ value }}", label: "{{ label }}" },
-        {% endfor %}
-    ];
-
-    const typeMilieuChoices = [
-        {% for value, label in form.type_milieu.choices %}
-            { value: "{{ value }}", label: "{{ label }}" },
-        {% endfor %}
-    ];
-
-    const typeContratChoices = [
-        {% for value, label in form.appellation_contrat.choices %}
-            { value: "{{ value }}", label: "{{ label }}" },
-        {% endfor %}
-    ];
-
-        // Initialisation de Tagify pour les appellations de contrat
-        const typeContratTagify = initializeTagify('#appellation_contrat_tagify', typeContratChoices, window.emojiTypeContratMapping);
-    syncTagifyWithHidden(typeContratTagify, '#appellation_contrat');
-
-    // Initialisation de Tagify pour les produits finis
-    const produitFiniTagify = initializeTagify('#produit_fini_tagify', produitFiniChoices, window.emojiProduitFiniMapping);
-    syncTagifyWithHidden(produitFiniTagify, '#produit_fini');
-
-    // Initialisation de Tagify pour les types de milieu
-    const typeMilieuTagify = initializeTagify('#type_milieu_tagify', typeMilieuChoices, window.emojiTypeMilieuMapping);
-    syncTagifyWithHidden(typeMilieuTagify, '#type_milieu');
-
-    // Gestion des types de production dynamiques
-    const productionContainer = document.getElementById('production-container');
-    const addProductionButton = document.getElementById('add-production');
-    let productionCount = 1;
-
-    function addNewProductionEntry() {
-        const div = document.createElement('div');
-        div.className = 'production-entry mb-3';
-        div.innerHTML = `
-            <div class="row gx-4 gy-3">
-                <div class="col-12">
-                    <div class="mb-3">
-                        <label class="form-label">Types de Production</label>
-                        <input class="form-control type-production-tagify" name="type_production_display" placeholder="Ajouter des types de production">
-                        <select class="type-production-select" name="type_production" multiple hidden>
-                            {% for value, label in form.type_production.choices %}
-                                <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Mode de Production</label>
-                        <select class="form-select mode-production" name="mode_production">
-                            {% for value, label in form.mode_production.choices %}
-                                <option value="{{ value }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-danger btn-sm remove-production">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        productionContainer.appendChild(div);
-
-        // Initialisation de Tagify pour la nouvelle entrée
-        const typeProductionInput = div.querySelector('.type-production-tagify');
-        const tagifyInstance = initializeTagify(typeProductionInput, typeProductionChoices, window.emojiTypeProductionMapping);
-        
-        // Synchronisation avec le select caché
-        const hiddenSelect = div.querySelector('.type-production-select');
-        if (tagifyInstance) {
-            tagifyInstance.on('change', function() {
-                hiddenSelect.innerHTML = '';
-                tagifyInstance.value.forEach(tag => {
-                    const option = document.createElement('option');
-                    option.value = tag.value;
-                    option.selected = true;
-                    hiddenSelect.appendChild(option);
-                });
-            });
-        }
-
-        // Gestion de la suppression
-        div.querySelector('.remove-production').addEventListener('click', function() {
-            div.remove();
-        });
-
-        productionCount++;
-        
-        // Retourner l'instance Tagify pour une utilisation ultérieure
-        return tagifyInstance;
-    }
-
-    // Initialiser la première entrée de production
-    const firstEntry = document.querySelector('.production-entry');
-    if (firstEntry) {
-        const typeProductionInput = firstEntry.querySelector('.type-production-tagify');
-        const tagifyInstance = initializeTagify(typeProductionInput, typeProductionChoices, window.emojiTypeProductionMapping);
-        
-        // Synchronisation avec le select caché
-        const hiddenSelect = firstEntry.querySelector('.type-production-select');
-        tagifyInstance.on('change', function() {
-            hiddenSelect.innerHTML = '';
-            tagifyInstance.value.forEach(tag => {
-                const option = document.createElement('option');
-                option.value = tag.value;
-                option.selected = true;
-                hiddenSelect.appendChild(option);
-            });
-        });
-    }
-
-    // Ajout d'un nouveau type de production
-    addProductionButton.addEventListener('click', addNewProductionEntry);
-
-    // Validation du formulaire
-    document.getElementById("addForm").addEventListener("submit", function(event) {
-        // Liste des champs à valider
-        const fieldsToValidate = [
-            { selector: '.type-production-select', message: "Veuillez sélectionner au moins un type de production." },
-            { selector: '#produit_fini', message: "Veuillez sélectionner au moins un produit fini." }
-        ];
-    
-        // Boucle sur les champs pour valider
-        for (let field of fieldsToValidate) {
-            const elements = document.querySelectorAll(field.selector);
-            let isValid = false;
-            
-            elements.forEach(element => {
-                if (element.selectedOptions.length > 0) {
-                    isValid = true;
-                }
-            });
-
-            if (!isValid) {
-                event.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erreur',
-                    html: field.message,
-                    confirmButtonColor: '#3085d6',
-                    confirmButtonText: 'Compris'
-                });
-                return;
-            }
-        }
-    });
-
-    // Gestion de l'API SIRENE
-    const fetchSireneButton = document.querySelector('[name="fetch_sirene"]');
-    const siretInput = document.querySelector('[name="siret"]');
-
-    fetchSireneButton.addEventListener("click", async function (event) {
-        event.preventDefault();
-
-        const siret = siretInput.value.trim();
-        if (!siret) return;
-
-        try {
-            const response = await fetch("/api/siret", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ siret })
-            });
-
-            const data = await response.json();
-
-            if (data.error) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Erreur",
-                    text: data.error
-                });
-                return;
-            }
-            
-            // Remplir les champs de base de la société
-            document.querySelector('[name="nom_societe"]').value = data.nom_societe || data.denomination || "Non renseigné";
-            document.querySelector('[name="adresse_etablissement"]').value = data.adresse_etablissement || "Non renseigné";
-            document.querySelector('[name="tranche_effectif"]').value = data.tranche_effectif || "Non renseigné";
-            document.querySelector('[name="categorie_juridique"]').value = data.categorie_juridique || "Non renseigné";
-            document.querySelector('[name="activite_principale"]').value = data.activite_principale || "Non renseigné";
-            
-            // Remplir le champ contact si disponible
-            if (data.contact) {
-                document.querySelector('[name="contact"]').value = data.contact;
-            }
-
-            // Si les données proviennent de la base de données (SIRET existant)
-            if (data.exists_in_db) {
-                // Afficher un message pour informer que la société existe déjà
-                Swal.fire({
-                    icon: "info",
-                    title: "Société existante",
-                    html: `Cette société existe déjà dans la base de données.<br>Les informations ont été automatiquement remplies.`,
-                    confirmButtonColor: '#3085d6',
-                    confirmButtonText: 'Compris'
-                });
-
-                // Stocker l'ID de la société pour référence
-                const idSocieteInput = document.createElement('input');
-                idSocieteInput.type = 'hidden';
-                idSocieteInput.name = 'id_societe';
-                idSocieteInput.value = data.id_societe;
-                document.getElementById('addForm').appendChild(idSocieteInput);
-                
-                // Désactiver tous les champs du formulaire
-                disableAllFields();
-                
-                // Si des contrats sont disponibles, utiliser les informations du premier contrat
-                if (data.contrats && data.contrats.length > 0) {
-                    const contrat = data.contrats[0]; // Prendre le premier contrat
-                    
-                    // Remplir les dates du contrat
-                    if (contrat.date_signature) {
-                        document.querySelector('[name="date_signature"]').value = contrat.date_signature;
-                    }
-                    if (contrat.date_prise_effet) {
-                        document.querySelector('[name="date_prise_effet"]').value = contrat.date_prise_effet;
-                    }
-                    if (contrat.date_fin) {
-                        document.querySelector('[name="date_fin"]').value = contrat.date_fin;
-                    }
-                    
-                    // Remplir la surface contractualisée
-                    if (contrat.surf_contractualisee !== null && contrat.surf_contractualisee !== undefined) {
-                        document.querySelector('[name="surf_contractualisee"]').value = contrat.surf_contractualisee;
-                    }
-                    
-                    // Remplir les informations du référent
-                    if (contrat.referent) {
-                        document.getElementById('modal_nom_referent').value = contrat.referent.nom_referent;
-                        document.getElementById('modal_prenom_referent').value = contrat.referent.prenom_referent;
-                        
-                        // Mettre à jour le champ de recherche du référent
-                        const searchReferentInput = document.getElementById('search_referent');
-                        if (searchReferentInput) {
-                            searchReferentInput.value = `${contrat.referent.nom_referent} ${contrat.referent.prenom_referent}`;
-                        }
-                        
-                        // Désactiver les champs du référent
-                        enableReferentFields(false);
-                    }
-                    
-                    // Remplir les produits finis
-                    if (contrat.produits_finis && contrat.produits_finis.length > 0) {
-                        // Récupérer l'élément select caché
-                        const produitFiniSelect = document.getElementById('produit_fini');
-                        
-                        // Désélectionner toutes les options d'abord
-                        for (let option of produitFiniSelect.options) {
-                            option.selected = false;
-                        }
-                        
-                        // Sélectionner les options correspondantes
-                        contrat.produits_finis.forEach(idProduit => {
-                            for (let option of produitFiniSelect.options) {
-                                if (option.value == idProduit) {
-                                    option.selected = true;
-                                    break;
-                                }
-                            }
-                        });
-                        
-                        // Mettre à jour Tagify
-                        // Trouver les labels correspondants aux IDs sélectionnés
-                        const selectedProducts = Array.from(produitFiniSelect.options)
-                            .filter(option => option.selected)
-                            .map(option => {
-                                // Trouver l'emoji correspondant au label
-                                const label = option.textContent;
-                                const emoji = window.emojiProduitFiniMapping[label] || window.emojiProduitFiniMapping[label.toLowerCase()] || '❓';
-                                return {
-                                    value: option.value,
-                                    label: label,
-                                    emoji: emoji
-                                };
-                            });
-                        
-                        // Mettre à jour Tagify avec les valeurs sélectionnées
-                        produitFiniTagify.removeAllTags();
-                        produitFiniTagify.addTags(selectedProducts);
-                    }
-                    
-                    // Remplir les types de milieu
-                    if (contrat.types_milieu && contrat.types_milieu.length > 0) {
-                        // Récupérer l'élément select caché
-                        const typeMilieuSelect = document.getElementById('type_milieu');
-                        
-                        // Désélectionner toutes les options d'abord
-                        for (let option of typeMilieuSelect.options) {
-                            option.selected = false;
-                        }
-                        
-                        // Sélectionner les options correspondantes
-                        contrat.types_milieu.forEach(idMilieu => {
-                            for (let option of typeMilieuSelect.options) {
-                                if (option.value == idMilieu) {
-                                    option.selected = true;
-                                    break;
-                                }
-                            }
-                        });
-                        
-                        // Mettre à jour Tagify
-                        // Trouver les labels correspondants aux IDs sélectionnés
-                        const selectedMilieux = Array.from(typeMilieuSelect.options)
-                            .filter(option => option.selected)
-                            .map(option => {
-                                // Trouver l'emoji correspondant au label
-                                const label = option.textContent;
-                                const emoji = window.emojiTypeMilieuMapping[label] || window.emojiTypeMilieuMapping[label.toLowerCase()] || '❓';
-                                return {
-                                    value: option.value,
-                                    label: label,
-                                    emoji: emoji
-                                };
-                            });
-                        
-                        // Mettre à jour Tagify avec les valeurs sélectionnées
-                        typeMilieuTagify.removeAllTags();
-                        typeMilieuTagify.addTags(selectedMilieux);
-                    }
-                }
-
-                // Remplir les champs de l'agriculteur si disponible
-                if (data.agriculteurs && data.agriculteurs.length > 0) {
-                    const agriculteur = data.agriculteurs[0]; // Prendre le premier agriculteur
-                    document.getElementById('modal_nom_agri').value = agriculteur.nom_agri;
-                    document.getElementById('modal_prenom_agri').value = agriculteur.prenom_agri;
-                    if (agriculteur.date_naissance) {
-                        document.querySelector('[name="date_naissance"]').value = agriculteur.date_naissance;
-                    }
-                    enableAgriFields(false);
-                    document.getElementById('search_agriculteur').value = `${agriculteur.nom_agri} ${agriculteur.prenom_agri}`;
-                }
-
-                // Remplir les types de production si disponibles
-                if (data.productions && data.productions.length > 0) {
-                    // Supprimer toutes les entrées de production existantes sauf la première
-                    const productionContainer = document.getElementById('production-container');
-                    while (productionContainer.children.length > 1) {
-                        productionContainer.removeChild(productionContainer.lastChild);
-                    }
-
-                    // Regrouper les productions par mode de production
-                    const productionsByMode = {};
-                    data.productions.forEach(production => {
-                        if (!productionsByMode[production.id_mode_production]) {
-                            productionsByMode[production.id_mode_production] = [];
-                        }
-                        productionsByMode[production.id_mode_production].push(production);
-                    });
-
-                    console.log("Productions regroupées par mode:", productionsByMode);
-
-                    // Pour chaque mode de production, créer une entrée
-                    let index = 0;
-                    for (const modeId in productionsByMode) {
-                        if (index > 0) {
-                            // Ajouter une nouvelle entrée pour les modes supplémentaires
-                            addNewProductionEntry();
-                        }
-
-                        // Récupérer immédiatement l'entrée
-                        const entries = document.querySelectorAll('.production-entry');
-                        const entry = entries[index];
-                        
-                        // Sélectionner le mode de production
-                        const modeSelect = entry.querySelector('.mode-production');
-                        modeSelect.value = modeId;
-                        
-                        // Si les données proviennent de la base de données, désactiver le select
-                        if (data.exists_in_db) {
-                            modeSelect.disabled = true;
-                        }
-
-                        // Pour les types de production, mettre à jour Tagify
-                        const typeProductionSelect = entry.querySelector('.type-production-select');
-                        const typeProductionInput = entry.querySelector('.type-production-tagify');
-                        
-                        if (typeProductionSelect && typeProductionInput) {
-                            // Désélectionner toutes les options d'abord
-                            for (let option of typeProductionSelect.options) {
-                                option.selected = false;
-                            }
-                            
-                            // Sélectionner toutes les options correspondantes et collecter les tags
-                            const tagData = [];
-                            productionsByMode[modeId].forEach(production => {
-                                // Chercher l'option dans le select
-                                for (let option of typeProductionSelect.options) {
-                                    if (option.value == production.id_type_production) {
-                                        option.selected = true;
-                                        
-                                        // Créer un tag avec le label et l'emoji
-                                        const label = option.textContent;
-                                        const emoji = window.emojiTypeProductionMapping ? 
-                                            (window.emojiTypeProductionMapping[label.toLowerCase()] || '❓') : '❓';
-                                        tagData.push({
-                                            value: option.value,
-                                            label: label,
-                                            emoji: emoji
-                                        });
-                                        
-                                        console.log("Ajout du tag:", {
-                                            value: option.value,
-                                            label: label,
-                                            emoji: emoji
-                                        });
-                                        break;
-                                    }
-                                }
-                            });
-                            
-                            // Initialiser ou mettre à jour Tagify
-                            console.log("Tags à ajouter pour le mode", modeId, ":", tagData);
-                            
-                            // Forcer la suppression de l'ancien input et en créer un nouveau
-                            const parent = typeProductionInput.parentNode;
-                            const newInput = document.createElement('input');
-                            newInput.className = 'form-control type-production-tagify';
-                            newInput.name = 'type_production_display';
-                            newInput.placeholder = 'Ajouter des types de production';
-                            parent.replaceChild(newInput, typeProductionInput);
-                            
-                            // Initialiser Tagify sur le nouvel input
-                            const tagify = initializeTagify(newInput, typeProductionChoices, window.emojiTypeProductionMapping || {});
-                            if (tagify) {
-                                // Ajouter les tags avec un délai pour s'assurer que Tagify est initialisé
-                                setTimeout(() => {
-                                    tagify.addTags(tagData);
-                                    console.log("Tags ajoutés:", tagData);
-                                    
-                                    // Si les données proviennent de la base de données, mettre Tagify en lecture seule
-                                    if (data.exists_in_db) {
-                                        tagify.setReadonly(true);
-                                    }
-                                }, 100);
-                                
-                                // Synchroniser avec le select caché
-                                tagify.on('change', function() {
-                                    typeProductionSelect.innerHTML = '';
-                                    tagify.value.forEach(tag => {
-                                        const option = document.createElement('option');
-                                        option.value = tag.value;
-                                        option.selected = true;
-                                        typeProductionSelect.appendChild(option);
-                                    });
-                                });
-                            }
-                        }
-                        
-                        index++;
-                    }
-                    
-                    // Si les données proviennent de la base de données, désactiver le bouton d'ajout de production
-                    if (data.exists_in_db) {
-                        document.getElementById('add-production').disabled = true;
-                        
-                        // Désactiver tous les boutons de suppression de production
-                        document.querySelectorAll('.remove-production').forEach(button => {
-                            button.disabled = true;
-                        });
-                    }
-                }
-            } else {
-                // Données provenant de l'API SIRENE
-                Swal.fire({
-                    icon: "success",
-                    title: "Succès",
-                    text: "Les données ont été récupérées avec succès depuis l'API Sirene."
-                });
-            }
-        } catch (error) {
-            console.error("Erreur :", error);
-            Swal.fire({
-                icon: "error",
-                title: "Erreur serveur",
-                text: "Une erreur s'est produite lors de la récupération des données."
-            });
-        }
-    });
-
-    // Ajouter le code JavaScript pour l'autocomplétion
-    const searchInput = document.getElementById('search_agriculteur');
-    const suggestionsDiv = document.getElementById('agriculteur_suggestions');
-    const nomInput = document.getElementById('modal_nom_agri');
-    const prenomInput = document.getElementById('modal_prenom_agri');
-    let debounceTimer;
-
-    // Fonction pour activer/désactiver les champs agriculteur
-    function enableAgriFields(enable) {
-        if (nomInput) nomInput.readOnly = !enable;
-        if (prenomInput) prenomInput.readOnly = !enable;
-        if (enable) {
-            nomInput.value = '';
-            prenomInput.value = '';
-            nomInput.focus();
-            nomInput.classList.remove('disabled-look');
-            prenomInput.classList.remove('disabled-look');
-        } else {
-            nomInput.classList.add('disabled-look');
-            prenomInput.classList.add('disabled-look');
-        }
-    }
-
-    // Fonction pour séparer un terme de recherche en nom et prénom
-    function splitSearchTerm(searchTerm) {
-        // Nettoyer et diviser le terme de recherche
-        const parts = searchTerm.trim().split(/\s+/);
-        
-        if (parts.length === 0) return { nom: '', prenom: '' };
-        if (parts.length === 1) return { nom: parts[0], prenom: '' };
-        
-        // Le premier mot va dans le nom, le reste dans le prénom
-        const nom = parts[0];
-        const prenom = parts.slice(1).join(' ');
-        
-        return { nom, prenom };
-    }
-
-    searchInput.addEventListener('input', function() {
-        clearTimeout(debounceTimer);
-        const searchTerm = this.value.trim();
-
-        if (searchTerm.length < 2) {
-            suggestionsDiv.style.display = 'none';
-            return;
-        }
-
-        debounceTimer = setTimeout(async () => {
-            try {
-                const response = await fetch('/api/search_agriculteur', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ search_term: searchTerm })
-                });
-
-                const data = await response.json();
-                suggestionsDiv.innerHTML = '';
-
-                if (data.length === 0) {
-                    // Ajouter la suggestion pour créer un nouvel exploitant
-                    const newAgriItem = document.createElement('div');
-                    newAgriItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                    newAgriItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) exploitant(e) : ' + searchTerm;
-                    newAgriItem.addEventListener('click', () => {
-                        // Pré-remplir les champs avec le terme de recherche séparé
-                        const { nom, prenom } = splitSearchTerm(searchTerm);
-                        const nomInput = document.getElementById('modal_nom_agri');
-                        const prenomInput = document.getElementById('modal_prenom_agri');
-                        if (nomInput && prenomInput) {
-                            nomInput.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
-                            prenomInput.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
-                            // Désactiver les champs après les avoir remplis
-                            enableAgriFields(false);
-                        }
-                        searchInput.value = '';
-                        suggestionsDiv.style.display = 'none';
-                    });
-                    suggestionsDiv.appendChild(newAgriItem);
-                    suggestionsDiv.style.display = 'block';
-                } else {
-                    data.forEach(agriculteur => {
-                        const div = document.createElement('div');
-                        div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                        div.textContent = `${agriculteur.nom} ${agriculteur.prenom}`;
-                        div.addEventListener('click', () => {
-                            nomInput.value = agriculteur.nom;
-                            prenomInput.value = agriculteur.prenom;
-                            enableAgriFields(false);
-                            searchInput.value = `${agriculteur.nom} ${agriculteur.prenom}`;
-                            suggestionsDiv.style.display = 'none';
-                        });
-                        suggestionsDiv.appendChild(div);
-                    });
-                    suggestionsDiv.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Erreur lors de la recherche:', error);
-                suggestionsDiv.style.display = 'none';
-            }
-        }, 300);
-    });
-
-    // Fermer les suggestions si on clique ailleurs
-    document.addEventListener('click', function(e) {
-        if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) {
-            suggestionsDiv.style.display = 'none';
-        }
-    });
-
     // Fonction pour activer/désactiver les champs référent
-    function enableReferentFields(enable) {
-        const nomReferent = document.getElementById('modal_nom_referent');
-        const prenomReferent = document.getElementById('modal_prenom_referent');
+    function enableReferentFields(contractIndex, enable) {
+        const nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
+        const prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
         
         if (nomReferent && prenomReferent) {
             if (enable) {
@@ -1110,141 +516,226 @@
     }
 
     // Configuration de l'autocomplétion pour le référent
-    const searchReferentInput = document.getElementById('search_referent');
-    const referentSuggestionsDiv = document.getElementById('referent_suggestions');
-    let referentDebounceTimer;
+    function setupReferentAutocomplete(contractIndex) {
+        const searchReferentInput = document.getElementById(`search_referent_${contractIndex}`);
+        const referentSuggestionsDiv = searchReferentInput.nextElementSibling;
+        let referentDebounceTimer;
 
-    if (searchReferentInput) {
-        searchReferentInput.addEventListener('input', function() {
-            clearTimeout(referentDebounceTimer);
-            const searchTerm = this.value.trim();
+        if (searchReferentInput) {
+            searchReferentInput.addEventListener('input', function() {
+                clearTimeout(referentDebounceTimer);
+                const searchTerm = this.value.trim();
 
-            if (searchTerm.length < 2) {
-                referentSuggestionsDiv.style.display = 'none';
-                return;
-            }
+                if (searchTerm.length < 2) {
+                    referentSuggestionsDiv.style.display = 'none';
+                    return;
+                }
 
-            referentDebounceTimer = setTimeout(async () => {
-                try {
-                    const response = await fetch('/api/search_referent', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ search_term: searchTerm })
-                    });
-
-                    const data = await response.json();
-                    referentSuggestionsDiv.innerHTML = '';
-
-                    if (data.length === 0) {
-                        // Ajouter la suggestion pour créer un nouveau référent
-                        const newReferentItem = document.createElement('div');
-                        newReferentItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                        newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) référent(e) : ' + searchTerm;
-                        newReferentItem.addEventListener('click', () => {
-                            // Pré-remplir les champs avec le terme de recherche séparé
-                            const { nom, prenom } = splitSearchTerm(searchTerm);
-                            const nomReferent = document.getElementById('modal_nom_referent');
-                            const prenomReferent = document.getElementById('modal_prenom_referent');
-                            if (nomReferent && prenomReferent) {
-                                nomReferent.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
-                                prenomReferent.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
-                                // Désactiver les champs après les avoir remplis
-                                enableReferentFields(false);
-                            }
-                            searchReferentInput.value = '';
-                            referentSuggestionsDiv.style.display = 'none';
+                referentDebounceTimer = setTimeout(async () => {
+                    try {
+                        const response = await fetch('/api/search_referent', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ search_term: searchTerm })
                         });
-                        referentSuggestionsDiv.appendChild(newReferentItem);
-                        referentSuggestionsDiv.style.display = 'block';
-                    } else {
-                        data.forEach(referent => {
-                            const div = document.createElement('div');
-                            div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                            div.textContent = `${referent.nom} ${referent.prenom}`;
-                            div.addEventListener('click', () => {
-                                const nomReferent = document.getElementById('modal_nom_referent');
-                                const prenomReferent = document.getElementById('modal_prenom_referent');
+
+                        const data = await response.json();
+                        referentSuggestionsDiv.innerHTML = '';
+
+                        if (data.length === 0) {
+                            // Ajouter la suggestion pour créer un nouveau référent
+                            const newReferentItem = document.createElement('div');
+                            newReferentItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                            newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) référent(e) : ' + searchTerm;
+                            newReferentItem.addEventListener('click', () => {
+                                // Pré-remplir les champs avec le terme de recherche séparé
+                                const { nom, prenom } = splitSearchTerm(searchTerm);
+                                const nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
+                                const prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
                                 if (nomReferent && prenomReferent) {
-                                    nomReferent.value = referent.nom;
-                                    prenomReferent.value = referent.prenom;
+                                    nomReferent.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+                                    prenomReferent.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
+                                    // Désactiver les champs après les avoir remplis
+                                    enableReferentFields(contractIndex, false);
                                 }
-                                enableReferentFields(false);
-                                searchReferentInput.value = `${referent.nom} ${referent.prenom}`;
+                                searchReferentInput.value = '';
                                 referentSuggestionsDiv.style.display = 'none';
                             });
-                            referentSuggestionsDiv.appendChild(div);
-                        });
-                        referentSuggestionsDiv.style.display = 'block';
+                            referentSuggestionsDiv.appendChild(newReferentItem);
+                            referentSuggestionsDiv.style.display = 'block';
+                        } else {
+                            data.forEach(referent => {
+                                const div = document.createElement('div');
+                                div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
+                                div.textContent = `${referent.nom} ${referent.prenom}`;
+                                div.addEventListener('click', () => {
+                                    const nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
+                                    const prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
+                                    if (nomReferent && prenomReferent) {
+                                        nomReferent.value = referent.nom;
+                                        prenomReferent.value = referent.prenom;
+                                    }
+                                    enableReferentFields(contractIndex, false);
+                                    searchReferentInput.value = `${referent.nom} ${referent.prenom}`;
+                                    referentSuggestionsDiv.style.display = 'none';
+                                });
+                                referentSuggestionsDiv.appendChild(div);
+                            });
+                            referentSuggestionsDiv.style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Erreur lors de la recherche:', error);
+                        referentSuggestionsDiv.style.display = 'none';
                     }
-                } catch (error) {
-                    console.error('Erreur lors de la recherche:', error);
+                }, 300);
+            });
+
+            // Fermer les suggestions si on clique ailleurs
+            document.addEventListener('click', function(e) {
+                if (!referentSuggestionsDiv.contains(e.target) && e.target !== searchReferentInput) {
                     referentSuggestionsDiv.style.display = 'none';
                 }
-            }, 300);
-        });
-
-        // Fermer les suggestions si on clique ailleurs
-        document.addEventListener('click', function(e) {
-            if (!referentSuggestionsDiv.contains(e.target) && e.target !== searchReferentInput) {
-                referentSuggestionsDiv.style.display = 'none';
-            }
-        });
+            });
+        }
     }
 
-    // Fonction pour désactiver tous les champs du formulaire
-    function disableAllFields() {
-        // Désactiver les champs de base
-        document.querySelector('[name="date_signature"]').disabled = true;
-        document.querySelector('[name="date_prise_effet"]').disabled = true;
-        document.querySelector('[name="date_fin"]').disabled = true;
-        document.querySelector('[name="surf_contractualisee"]').disabled = true;
-        document.querySelector('[name="contact"]').disabled = true;
+    // Initialiser Tagify pour les types de milieu
+    function initializeTypeMilieuTagify(contractIndex) {
+        const typeMilieuInput = document.querySelector(`.contract-entry:nth-child(${contractIndex}) .type-milieu-tagify`);
+        const typeMilieuSelect = document.querySelector(`.contract-entry:nth-child(${contractIndex}) .type-milieu-select`);
         
-        // Désactiver les champs du référent
-        document.getElementById('modal_nom_referent').disabled = true;
-        document.getElementById('modal_prenom_referent').disabled = true;
-        
-        // Désactiver les champs de l'agriculteur
-        document.getElementById('modal_nom_agri').disabled = true;
-        document.getElementById('modal_prenom_agri').disabled = true;
-        document.querySelector('[name="date_naissance"]').disabled = true;
-        
-        // Désactiver le champ SIRET
-        document.getElementById('siret').disabled = true;
-        
-        // Désactiver les sélecteurs Tagify
-        if (produitFiniTagify) produitFiniTagify.setReadonly(true);
-        if (typeMilieuTagify) typeMilieuTagify.setReadonly(true);
-        if (typeContratTagify) typeContratTagify.setReadonly(true);
-        
-        // Désactiver les entrées de production
-        const productionEntries = document.querySelectorAll('.production-entry');
-        productionEntries.forEach(entry => {
-            const modeSelect = entry.querySelector('.mode-production');
-            if (modeSelect) modeSelect.disabled = true;
+        if (typeMilieuInput && typeMilieuSelect) {
+            const typeMilieuChoices = Array.from(typeMilieuSelect.options).map(option => ({
+                value: option.value,
+                label: option.textContent
+            }));
             
-            // Désactiver Tagify pour les types de production
-            const typeProductionInput = entry.querySelector('.type-production-tagify');
-            if (typeProductionInput && typeProductionInput._tagify) {
-                typeProductionInput._tagify.setReadonly(true);
+            const typeMilieuEmojiMapping = {
+                "prairie": "🌿",
+                "forêt": "🌳",
+                "zone humide": "💧",
+                "pelouse sèche": "🏜️",
+                "lande": "🌱",
+                "tourbière": "🌊",
+                "milieu aquatique": "🐟",
+                "milieu rocheux": "🏔️",
+                "autre": "❓"
+            };
+            
+            const tagify = initializeTagify(typeMilieuInput, typeMilieuChoices, typeMilieuEmojiMapping);
+            syncTagifyWithHidden(tagify, `select[name="type_milieu_${contractIndex}"]`);
+        }
+    }
+
+    // Fonction pour ajouter un nouveau contrat
+    let contractCounter = 1;
+    
+    function addNewContractEntry() {
+        contractCounter++;
+        
+        const contractsContainer = document.getElementById('contracts-container');
+        const newContractEntry = document.createElement('div');
+        newContractEntry.className = 'contract-entry mb-4 border-bottom pb-3';
+        
+        // Créer un bouton de suppression pour ce contrat
+        const deleteButton = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>Contrat #${contractCounter}</h5>
+                <button type="button" class="btn btn-danger btn-sm delete-contract">
+                    <i class="fas fa-trash me-1"></i>Supprimer
+                </button>
+            </div>
+        `;
+        
+        // Cloner la structure du premier contrat
+        const firstContract = document.querySelector('.contract-entry');
+        const clonedContent = firstContract.innerHTML.replace(/<h5[^>]*>.*?<\/h5>/g, deleteButton);
+        
+        // Mettre à jour les IDs et noms des champs
+        newContractEntry.innerHTML = clonedContent
+            .replace(/id="search_referent_1"/g, `id="search_referent_${contractCounter}"`)
+            .replace(/id="modal_nom_referent_1"/g, `id="modal_nom_referent_${contractCounter}"`)
+            .replace(/id="modal_prenom_referent_1"/g, `id="modal_prenom_referent_${contractCounter}"`)
+            .replace(/name="type_milieu_display_1"/g, `name="type_milieu_display_${contractCounter}"`)
+            .replace(/name="type_milieu_1"/g, `name="type_milieu_${contractCounter}"`);
+        
+        contractsContainer.appendChild(newContractEntry);
+        
+        // Réinitialiser les champs du nouveau contrat
+        const newContractFields = newContractEntry.querySelectorAll('input, select');
+        newContractFields.forEach(field => {
+            if (field.type !== 'hidden' && !field.classList.contains('type-milieu-select')) {
+                field.value = '';
             }
-            
-            // Désactiver le bouton de suppression
-            const removeButton = entry.querySelector('.remove-production');
-            if (removeButton) removeButton.disabled = true;
         });
         
-        // Désactiver le bouton d'ajout de production
-        document.getElementById('add-production').disabled = true;
+        // Initialiser l'autocomplétion pour le référent
+        setupReferentAutocomplete(contractCounter);
         
-        // Désactiver la recherche d'agriculteur et de référent
-        document.getElementById('search_agriculteur').disabled = true;
-        document.getElementById('search_referent').disabled = true;
+        // Initialiser Tagify pour les types de milieu
+        initializeTypeMilieuTagify(contractCounter);
         
-        // Afficher le bouton de réinitialisation
-        document.getElementById('reset-form-button').style.display = 'inline-block';
+        // Ajouter un gestionnaire d'événements pour le bouton de suppression
+        const deleteBtn = newContractEntry.querySelector('.delete-contract');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                newContractEntry.remove();
+                updateContractsData();
+            });
+        }
     }
+
+    // Fonction pour collecter les données des contrats
+    function updateContractsData() {
+        const contractEntries = document.querySelectorAll('.contract-entry');
+        const contractsData = [];
+        
+        contractEntries.forEach((entry, index) => {
+            const contractIndex = index + 1;
+            const appellationContrat = entry.querySelector('.appellation-contrat').value;
+            const dateSignature = entry.querySelector('.date-signature').value;
+            const datePriseEffet = entry.querySelector('.date-prise-effet').value;
+            const dateFin = entry.querySelector('.date-fin').value;
+            const nomReferent = entry.querySelector('.nom-referent').value;
+            const prenomReferent = entry.querySelector('.prenom-referent').value;
+            const surfContractualisee = entry.querySelector('.surf-contractualisee').value;
+            
+            // Récupérer les types de milieu sélectionnés
+            const typeMilieuSelect = entry.querySelector('.type-milieu-select');
+            const typesMilieu = Array.from(typeMilieuSelect.options)
+                .filter(option => option.selected)
+                .map(option => option.value);
+            
+            contractsData.push({
+                appellation_contrat: appellationContrat,
+                date_signature: dateSignature,
+                date_prise_effet: datePriseEffet,
+                date_fin: dateFin,
+                nom_referent: nomReferent,
+                prenom_referent: prenomReferent,
+                surf_contractualisee: surfContractualisee,
+                types_milieu: typesMilieu
+            });
+        });
+        
+        // Mettre à jour le champ caché avec les données JSON
+        document.getElementById('contracts-data').value = JSON.stringify(contractsData);
+    }
+
+    // Ajouter un gestionnaire d'événements pour le bouton d'ajout de contrat
+    document.getElementById('add-contract').addEventListener('click', addNewContractEntry);
+
+    // Initialiser l'autocomplétion pour le premier référent
+    setupReferentAutocomplete(1);
+        
+    // Initialiser Tagify pour le premier type de milieu
+    initializeTypeMilieuTagify(1);
+        
+    // Mettre à jour les données des contrats avant la soumission du formulaire
+    document.getElementById('addForm').addEventListener('submit', function(e) {
+        updateContractsData();
+    });
     });
 </script>
