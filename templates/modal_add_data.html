@@ -158,61 +158,81 @@
 
                         <!-- Onglet Partenariat CEN -->
                         <div class="tab-pane fade" id="contrat" role="tabpanel" aria-labelledby="contrat-tab">
-                            <div class="row gx-4 gy-3">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        {{ form.appellation_contrat.label }}
-                                        {{ form.appellation_contrat(class="form-control") }}
-                                        </select>
+                            <!-- Conteneur pour les contrats multiples -->
+                            <div id="contrats-container">
+                                <!-- Premier contrat (toujours présent) -->
+                                <div class="contrat-entry mb-4 card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Contrat #1</h5>
                                     </div>
-                                    <div class="mb-3">
-                                        {{ form.date_signature.label }}
-                                        {{ form.date_signature(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.date_prise_effet.label }}
-                                        {{ form.date_prise_effet(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.date_fin.label }}
-                                        {{ form.date_fin(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <!-- Nouveau champ de recherche avec autocomplétion -->
-                                    <div class="mb-3">
-                                        <label for="search_referent" class="form-label">Rechercher un(e) référent(e)</label>
-                                        <div class="position-relative">
-                                            <input type="text" class="form-control" id="search_referent" 
-                                                    placeholder="Rechercher un(e) référent(e) existant(e)...">
-                                            <div id="referent_suggestions" class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
-                                                style="z-index: 1000; display: none;">
+                                    <div class="card-body">
+                                        <div class="row gx-4 gy-3">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    {{ form.appellation_contrat.label }}
+                                                    {{ form.appellation_contrat(class="form-control") }}
+                                                </div>
+                                                <div class="mb-3">
+                                                    {{ form.date_signature.label }}
+                                                    {{ form.date_signature(class="form-control") }}
+                                                </div>
+                                                <div class="mb-3">
+                                                    {{ form.date_prise_effet.label }}
+                                                    {{ form.date_prise_effet(class="form-control") }}
+                                                </div>
+                                                <div class="mb-3">
+                                                    {{ form.date_fin.label }}
+                                                    {{ form.date_fin(class="form-control") }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <!-- Nouveau champ de recherche avec autocomplétion -->
+                                                <div class="mb-3">
+                                                    <label for="search_referent" class="form-label">Rechercher un(e) référent(e)</label>
+                                                    <div class="position-relative">
+                                                        <input type="text" class="form-control" id="search_referent" 
+                                                                placeholder="Rechercher un(e) référent(e) existant(e)...">
+                                                        <div id="referent_suggestions" class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                                                            style="z-index: 1000; display: none;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    {{ form.nom_referent.label }}
+                                                    {{ form.nom_referent(class="form-control", id="modal_nom_referent") }}
+                                                </div>
+                                                <div class="mb-3">
+                                                    {{ form.prenom_referent.label }}
+                                                    {{ form.prenom_referent(class="form-control", id="modal_prenom_referent") }}
+                                                </div>
+                                                <div class="mb-3">
+                                                    {{ form.surf_contractualisee.label }}
+                                                    {{ form.surf_contractualisee(class="form-control") }}
+                                                </div>
+                                                <div class="mb-3">
+                                                    {{ form.type_milieu.label }}
+                                                    <input id="type_milieu_tagify" class="form-control" name="type_milieu_display" placeholder="Ajouter des types de milieu">
+                                                    <select id="type_milieu" name="type_milieu" multiple hidden>
+                                                        {% for value, label in form.type_milieu.choices %}
+                                                            <option value="{{ value }}">{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        {{ form.nom_referent.label }}
-                                        {{ form.nom_referent(class="form-control", id="modal_nom_referent") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.prenom_referent.label }}
-                                        {{ form.prenom_referent(class="form-control", id="modal_prenom_referent") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.surf_contractualisee.label }}
-                                        {{ form.surf_contractualisee(class="form-control") }}
-                                    </div>
-                                    <div class="mb-3">
-                                        {{ form.type_milieu.label }}
-                                        <input id="type_milieu_tagify" class="form-control" name="type_milieu_display" placeholder="Ajouter des types de milieu">
-                                        <select id="type_milieu" name="type_milieu" multiple hidden>
-                                            {% for value, label in form.type_milieu.choices %}
-                                                <option value="{{ value }}">{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
                                 </div>
+                                
+                                <!-- Les contrats supplémentaires seront ajoutés ici -->
                             </div>
+                            
+                            <!-- Bouton pour ajouter un nouveau contrat -->
+                            <button type="button" class="btn btn-success mt-2" id="add-contrat">
+                                <i class="fas fa-plus"></i> Ajouter un contrat
+                            </button>
+                            
+                            <!-- Champ caché pour stocker les données des contrats -->
+                            <input type="hidden" name="contrats_data" id="contrats-data">
                         </div>
                     </div>
                 </div>
@@ -307,7 +327,6 @@
         const hiddenInput = document.querySelector(hiddenSelector);
         if (!hiddenInput) return;
 
-        // Mettre à jour le champ caché lorsque les tags changent
         tagifyInstance.on('change', function(e) {
             const values = tagifyInstance.value.map(tag => tag.value);
             for (let option of hiddenInput.options) {
@@ -765,7 +784,7 @@
                             .map(option => {
                                 // Trouver l'emoji correspondant au label
                                 const label = option.textContent;
-                                const emoji = window.emojiProduitFiniMapping[label] || window.emojiProduitFiniMapping[label.toLowerCase()] || '❓';
+                                const emoji = window.emojiProduitFiniMapping[label] || window.emojiProduitFiniMapping[label.toLowerCase()] || "❓"
                                 return {
                                     value: option.value,
                                     label: label,
@@ -805,7 +824,7 @@
                             .map(option => {
                                 // Trouver l'emoji correspondant au label
                                 const label = option.textContent;
-                                const emoji = window.emojiTypeMilieuMapping[label] || window.emojiTypeMilieuMapping[label.toLowerCase()] || '❓';
+                                const emoji = window.emojiTypeMilieuMapping[label] || window.emojiTypeMilieuMapping[label.toLowerCase()] || "❓"
                                 return {
                                     value: option.value,
                                     label: label,
@@ -1118,12 +1137,11 @@
         searchReferentInput.addEventListener('input', function() {
             clearTimeout(referentDebounceTimer);
             const searchTerm = this.value.trim();
-
             if (searchTerm.length < 2) {
                 referentSuggestionsDiv.style.display = 'none';
                 return;
             }
-
+            
             referentDebounceTimer = setTimeout(async () => {
                 try {
                     const response = await fetch('/api/search_referent', {
@@ -1246,5 +1264,265 @@
         // Afficher le bouton de réinitialisation
         document.getElementById('reset-form-button').style.display = 'inline-block';
     }
+    
+    // Fonction pour ajouter un nouveau contrat
+    function addNewContrat() {
+        const contratsContainer = document.getElementById('contrats-container');
+        const contratCount = contratsContainer.children.length + 1;
+        
+        // Créer un nouvel élément de contrat
+        const newContrat = document.createElement('div');
+        newContrat.className = 'contrat-entry mb-4 card';
+        newContrat.innerHTML = `
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Contrat #${contratCount}</h5>
+                <button type="button" class="btn btn-danger btn-sm remove-contrat">
+                    <i class="fas fa-times"></i> Supprimer
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row gx-4 gy-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Appellation du contrat</label>
+                            <select class="form-control contrat-appellation" name="contrat_appellation_${contratCount}">
+                                <option value="">Sélectionner...</option>
+                                {% for value, label in form.appellation_contrat.choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date de signature</label>
+                            <input type="date" class="form-control contrat-date-signature" name="contrat_date_signature_${contratCount}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date de prise d'effet</label>
+                            <input type="date" class="form-control contrat-date-effet" name="contrat_date_effet_${contratCount}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date de fin</label>
+                            <input type="date" class="form-control contrat-date-fin" name="contrat_date_fin_${contratCount}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Rechercher un(e) référent(e)</label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control search-referent-${contratCount}" 
+                                        placeholder="Rechercher un(e) référent(e) existant(e)...">
+                                <div class="referent-suggestions-${contratCount} position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
+                                    style="z-index: 1000; display: none;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Référent - Nom</label>
+                            <input type="text" class="form-control contrat-nom-referent" name="contrat_nom_referent_${contratCount}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Référent - Prénom</label>
+                            <input type="text" class="form-control contrat-prenom-referent" name="contrat_prenom_referent_${contratCount}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Surface contractualisée (ha)</label>
+                            <input type="number" step="0.01" class="form-control contrat-surface" name="contrat_surface_${contratCount}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Types de milieu</label>
+                            <input class="form-control contrat-milieu-tagify" name="contrat_milieu_display_${contratCount}" placeholder="Ajouter des types de milieu">
+                            <select class="contrat-milieu-select" name="contrat_milieu_${contratCount}" multiple hidden>
+                                {% for value, label in form.type_milieu.choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        contratsContainer.appendChild(newContrat);
+        
+        // Initialiser Tagify pour les types de milieu
+        const typeMilieuInput = newContrat.querySelector('.contrat-milieu-tagify');
+        const typeMilieuSelect = newContrat.querySelector('.contrat-milieu-select');
+        
+        // Créer une liste de choix pour Tagify
+        const typeMilieuChoices = [];
+        Array.from(typeMilieuSelect.options).forEach(option => {
+            typeMilieuChoices.push({
+                value: option.value,
+                text: option.textContent
+            });
+        });
+        
+        // Initialiser Tagify avec les choix et les emojis
+        const typeMilieuTagify = new Tagify(typeMilieuInput, {
+            whitelist: typeMilieuChoices,
+            enforceWhitelist: true,
+            dropdown: {
+                enabled: 1,
+                maxItems: 20,
+                classname: 'tags-look'
+            },
+            templates: {
+                tag: function(tagData) {
+                    const emoji = window.emojiTypeMilieuMapping && window.emojiTypeMilieuMapping[tagData.value] ? window.emojiTypeMilieuMapping[tagData.value] : '';
+                    return `<tag title="${tagData.text}"
+                                contenteditable='false'
+                                spellcheck='false'
+                                tabIndex="-1"
+                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                ${this.getAttributes(tagData)}>
+                                <x title='' class='tagify__tag__removeBtn' role='button' aria-label='remove tag'></x>
+                                <div>
+                                    <span class='tagify__tag-text'>${emoji} ${tagData.text}</span>
+                                </div>
+                            </tag>`;
+                },
+                dropdownItem: function(tagData) {
+                    const emoji = window.emojiTypeMilieuMapping && window.emojiTypeMilieuMapping[tagData.value] ? window.emojiTypeMilieuMapping[tagData.value] : '';
+                    return `<div class='tagify__dropdown__item ${tagData.class ? tagData.class : ""}' tagifySuggestionIdx="${tagData.tagifySuggestionIdx}">
+                                <span>${emoji} ${tagData.text}</span>
+                            </div>`;
+                }
+            }
+        });
+        
+        // Synchroniser Tagify avec le champ caché
+        typeMilieuTagify.on('change', function() {
+            typeMilieuSelect.innerHTML = '';
+            typeMilieuTagify.value.forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag.value;
+                option.selected = true;
+                typeMilieuSelect.appendChild(option);
+            });
+        });
+        
+        // Configurer l'autocomplétion pour le référent
+        const searchReferentInput = newContrat.querySelector(`.search-referent-${contratCount}`);
+        const referentSuggestions = newContrat.querySelector(`.referent-suggestions-${contratCount}`);
+        const nomReferentInput = newContrat.querySelector('.contrat-nom-referent');
+        const prenomReferentInput = newContrat.querySelector('.contrat-prenom-referent');
+        
+        searchReferentInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            if (searchTerm.length < 2) {
+                referentSuggestions.style.display = 'none';
+                return;
+            }
+            
+            // Faire une requête AJAX pour obtenir les suggestions de référents
+            fetch(`/search_referent?term=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    referentSuggestions.innerHTML = '';
+                    if (data.length === 0) {
+                        referentSuggestions.style.display = 'none';
+                        return;
+                    }
+                    
+                    data.forEach(referent => {
+                        const item = document.createElement('div');
+                        item.className = 'p-2 hover-bg-light cursor-pointer';
+                        item.textContent = `${referent.prenom_referent} ${referent.nom_referent}`;
+                        item.addEventListener('click', function() {
+                            nomReferentInput.value = referent.nom_referent;
+                            prenomReferentInput.value = referent.prenom_referent;
+                            searchReferentInput.value = `${referent.prenom_referent} ${referent.nom_referent}`;
+                            referentSuggestions.style.display = 'none';
+                        });
+                        referentSuggestions.appendChild(item);
+                    });
+                    
+                    referentSuggestions.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la recherche de référents:', error);
+                    referentSuggestions.style.display = 'none';
+                });
+        });
+        
+        // Masquer les suggestions lorsque l'utilisateur clique ailleurs
+        document.addEventListener('click', function(event) {
+            if (!searchReferentInput.contains(event.target) && !referentSuggestions.contains(event.target)) {
+                referentSuggestions.style.display = 'none';
+            }
+        });
+        
+        // Ajouter l'écouteur d'événement pour le bouton de suppression
+        newContrat.querySelector('.remove-contrat').addEventListener('click', function() {
+            contratsContainer.removeChild(newContrat);
+            updateContratNumbers();
+        });
+    }
+    
+    // Fonction pour mettre à jour les numéros des contrats
+    function updateContratNumbers() {
+        const contrats = document.querySelectorAll('.contrat-entry');
+        contrats.forEach((contrat, index) => {
+            contrat.querySelector('h5').textContent = `Contrat #${index + 1}`;
+        });
+    }
+    
+    // Ajouter l'écouteur d'événement pour le bouton d'ajout de contrat
+    document.getElementById('add-contrat').addEventListener('click', addNewContrat);
+    
+    // Modifier la fonction de soumission du formulaire pour collecter les données de tous les contrats
+    document.getElementById('addForm').addEventListener('submit', function(e) {
+        const contrats = [];
+        
+        // Récupérer les données du premier contrat (celui par défaut)
+        const firstContrat = {
+            appellation: document.querySelector('[name="appellation_contrat"]').value,
+            date_signature: document.querySelector('[name="date_signature"]').value,
+            date_effet: document.querySelector('[name="date_prise_effet"]').value,
+            date_fin: document.querySelector('[name="date_fin"]').value,
+            nom_referent: document.querySelector('[name="nom_referent"]').value,
+            prenom_referent: document.querySelector('[name="prenom_referent"]').value,
+            surface: document.querySelector('[name="surf_contractualisee"]').value,
+            milieux: []
+        };
+        
+        // Récupérer les types de milieu sélectionnés pour le premier contrat
+        const typeMilieuSelect = document.getElementById('type_milieu');
+        if (typeMilieuSelect) {
+            Array.from(typeMilieuSelect.selectedOptions).forEach(option => {
+                firstContrat.milieux.push(option.value);
+            });
+        }
+        
+        contrats.push(firstContrat);
+        
+        // Récupérer les données des contrats supplémentaires
+        const contratEntries = document.querySelectorAll('.contrat-entry');
+        for (let i = 1; i < contratEntries.length; i++) {
+            const contrat = contratEntries[i];
+            const contratData = {
+                appellation: contrat.querySelector('.contrat-appellation').value,
+                date_signature: contrat.querySelector('.contrat-date-signature').value,
+                date_effet: contrat.querySelector('.contrat-date-effet').value,
+                date_fin: contrat.querySelector('.contrat-date-fin').value,
+                nom_referent: contrat.querySelector('.contrat-nom-referent').value,
+                prenom_referent: contrat.querySelector('.contrat-prenom-referent').value,
+                surface: contrat.querySelector('.contrat-surface').value,
+                milieux: []
+            };
+            
+            // Récupérer les types de milieu sélectionnés
+            const milieuSelect = contrat.querySelector('.contrat-milieu-select');
+            if (milieuSelect) {
+                Array.from(milieuSelect.selectedOptions).forEach(option => {
+                    contratData.milieux.push(option.value);
+                });
+            }
+            
+            contrats.push(contratData);
+        }
+        
+        // Stocker les données dans le champ caché
+        document.getElementById('contrats-data').value = JSON.stringify(contrats);
     });
 </script>
