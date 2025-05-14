@@ -898,6 +898,115 @@
     // Initialiser Tagify pour le premier type de milieu
     initializeTypeMilieuTagify(1);
     
+    // Initialiser Tagify pour les types de production
+    function initializeTypeProductionTagify(productionIndex = 0) {
+        const typeProductionInput = document.querySelector(`.type-production-tagify[name="type_production_display_${productionIndex}"]`);
+        const typeProductionSelect = document.querySelector(`.type-production-select[name="type_production"]`);
+        
+        if (typeProductionInput && typeProductionSelect) {
+            console.log(`Initializing Tagify for type_production_${productionIndex}`);
+            
+            const typeProductionChoices = Array.from(typeProductionSelect.options).map(option => ({
+                value: option.value,
+                label: option.textContent
+            }));
+            
+            // Utiliser le mapping global défini dans base.html ou un mapping par défaut
+            const emojiMapping = window.emojiTypeProductionMapping || {
+                "céréales": "🌾",
+                "oléagineux": "🌻",
+                "protéagineux": "🌱",
+                "légumes": "🥕",
+                "fruits": "🍎",
+                "viticulture": "🍇",
+                "élevage bovin": "🐄",
+                "élevage ovin": "🐑",
+                "élevage caprin": "🐐",
+                "élevage porcin": "🐖",
+                "élevage avicole": "🐓",
+                "apiculture": "🐝"
+            };
+            
+            const tagify = initializeTagify(typeProductionInput, typeProductionChoices, emojiMapping);
+            syncTagifyWithHidden(tagify, `.type-production-select[name="type_production"]`);
+            return tagify;
+        } else {
+            console.error(`Type production Tagify elements not found for index ${productionIndex}`);
+            console.log('typeProductionInput:', typeProductionInput);
+            console.log('typeProductionSelect:', typeProductionSelect);
+            return null;
+        }
+    }
+    
+    // Initialiser le premier champ de type de production
+    initializeTypeProductionTagify(0);
+    
+    // Gérer l'ajout de nouvelles entrées de production
+    let productionCounter = 0;
+    
+    document.getElementById('add-production').addEventListener('click', function() {
+        productionCounter++;
+        
+        const productionContainer = document.getElementById('production-container');
+        const newProductionEntry = document.createElement('div');
+        newProductionEntry.className = 'production-entry mb-3';
+        
+        // Créer le contenu HTML pour la nouvelle entrée de production
+        newProductionEntry.innerHTML = `
+            <div class="row gx-4 gy-3">
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label class="form-label">Types de Production</label>
+                        <input class="form-control type-production-tagify" name="type_production_display_${productionCounter}" placeholder="Ajouter des types de production">
+                        <select class="type-production-select" name="type_production_${productionCounter}" multiple hidden>
+                            ${Array.from(document.querySelector('.type-production-select').options).map(opt => 
+                                `<option value="${opt.value}">${opt.textContent}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mode de Production</label>
+                        <select class="form-select mode-production" name="mode_production_${productionCounter}">
+                            ${Array.from(document.querySelector('.mode-production').options).map(opt => 
+                                `<option value="${opt.value}">${opt.textContent}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-production">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        productionContainer.appendChild(newProductionEntry);
+        
+        // Initialiser Tagify pour cette nouvelle entrée
+        setTimeout(() => {
+            initializeTypeProductionTagify(productionCounter);
+        }, 100);
+        
+        // Ajouter un gestionnaire d'événements pour le bouton de suppression
+        const removeButton = newProductionEntry.querySelector('.remove-production');
+        if (removeButton) {
+            removeButton.addEventListener('click', function() {
+                newProductionEntry.remove();
+            });
+        }
+    });
+    
+    // Ajouter un gestionnaire d'événements pour les boutons de suppression existants
+    document.querySelectorAll('.remove-production').forEach(button => {
+        button.addEventListener('click', function() {
+            const productionEntry = this.closest('.production-entry');
+            if (productionEntry && document.querySelectorAll('.production-entry').length > 1) {
+                productionEntry.remove();
+            }
+        });
+    });
+    
     // Initialiser Tagify pour les produits finis
     const produitFiniInput = document.getElementById('produit_fini_tagify');
     const produitFiniSelect = document.getElementById('produit_fini');
@@ -924,6 +1033,80 @@
         updateContractsData();
     });
 
+        // Gestion de la recherche d'exploitant
+        const searchAgriculteurInput = document.getElementById('search_agriculteur');
+        const agriculteurSuggestions = document.getElementById('agriculteur_suggestions');
+
+        if (searchAgriculteurInput && agriculteurSuggestions) {
+            console.log("Initializing search_agriculteur event listeners");
+            
+            // Fonction pour effectuer la recherche
+            const searchAgriculteur = async (searchTerm) => {
+                if (!searchTerm || searchTerm.length < 2) {
+                    agriculteurSuggestions.style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    console.log("Searching for agriculteur:", searchTerm);
+                    const response = await fetch("/api/search_agriculteur", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ search_term: searchTerm })
+                    });
+
+                    const results = await response.json();
+                    console.log("Search results:", results);
+                    
+                    // Afficher les résultats
+                    agriculteurSuggestions.innerHTML = '';
+                    
+                    if (results.length === 0) {
+                        agriculteurSuggestions.style.display = 'none';
+                        return;
+                    }
+                    
+                    results.forEach(result => {
+                        const item = document.createElement('div');
+                        item.className = 'p-2 border-bottom suggestion-item';
+                        item.textContent = result.display;
+                        item.style.cursor = 'pointer';
+                        
+                        item.addEventListener('click', () => {
+                            // Remplir les champs avec les données de l'agriculteur sélectionné
+                            document.getElementById('modal_nom_agri').value = result.nom;
+                            document.getElementById('modal_prenom_agri').value = result.prenom;
+                            searchAgriculteurInput.value = result.display;
+                            agriculteurSuggestions.style.display = 'none';
+                        });
+                        
+                        agriculteurSuggestions.appendChild(item);
+                    });
+                    
+                    agriculteurSuggestions.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error("Error searching for agriculteur:", error);
+                    agriculteurSuggestions.style.display = 'none';
+                }
+            };
+            
+            // Événement de saisie dans le champ de recherche
+            searchAgriculteurInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                searchAgriculteur(searchTerm);
+            });
+            
+            // Masquer les suggestions lorsqu'on clique ailleurs
+            document.addEventListener('click', function(event) {
+                if (!searchAgriculteurInput.contains(event.target) && !agriculteurSuggestions.contains(event.target)) {
+                    agriculteurSuggestions.style.display = 'none';
+                }
+            });
+        } else {
+            console.error("Search agriculteur elements not found");
+        }
+        
         // Gestion de l'API SIRENE
         const fetchSireneButton = document.querySelector('button[name="fetch_sirene"]');
         const siretInput = document.getElementById('siret');
