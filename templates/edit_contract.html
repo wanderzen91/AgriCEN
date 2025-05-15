@@ -136,9 +136,37 @@
                             </div>
                             <div class="card-body">
                                 <div id="production-container">
+                                    <div class="production-entry mb-3">
+                                        <div class="row gx-4 gy-3">
+                                            <div class="col-12">
+                                                <h5 class="mb-3">Production Bio</h5>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Types de Production Bio</label>
+                                                    <input class="form-control type-production-tagify" name="type_production_display_bio" placeholder="Ajouter des types de production bio">
+                                                    <select class="type-production-select" name="type_production_bio" multiple hidden>
+                                                        {% for value, label in form.type_production.choices %}
+                                                            <option value="{{ value }}" {% if form.type_production_bio.data and value in form.type_production_bio.data %}selected{% endif %}>{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <input type="hidden" name="mode_production_bio" value="1"> <!-- Valeur fixe pour Bio -->
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <h5 class="mb-3">Production Conventionnelle</h5>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Types de Production Conventionnelle</label>
+                                                    <input class="form-control type-production-tagify" name="type_production_display_conv" placeholder="Ajouter des types de production conventionnelle">
+                                                    <select class="type-production-select" name="type_production_conv" multiple hidden>
+                                                        {% for value, label in form.type_production.choices %}
+                                                            <option value="{{ value }}" {% if form.type_production_conv.data and value in form.type_production_conv.data %}selected{% endif %}>{{ label }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <input type="hidden" name="mode_production_conv" value="2"> <!-- Valeur fixe pour Conventionnelle -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <!-- Champ caché pour stocker toutes les données de production -->
-                                <input type="hidden" name="all_productions" id="all-productions-data">
 
                                 <div class="row mt-4">
                                     <div class="col-12">

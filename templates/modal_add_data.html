@@ -364,21 +364,7 @@
         }
     }
 
-    // Fonction pour synchroniser Tagify avec un champ caché
-    function syncTagifyWithHidden(tagifyInstance, hiddenSelector) {
-        if (!tagifyInstance) return;
-
-        const hiddenInput = document.querySelector(hiddenSelector);
-        if (!hiddenInput) return;
-
-        // Mettre à jour le champ caché lorsque les tags changent
-        tagifyInstance.on('change', function(e) {
-            const values = tagifyInstance.value.map(tag => tag.value);
-            for (let option of hiddenInput.options) {
-                option.selected = values.includes(option.value);
-            }
-        });
-    }
+    // Cette fonction a été supprimée car elle est définie ailleurs dans le code
 
     // Fonction globale pour réinitialiser le formulaire
     function resetForm() {
@@ -538,28 +524,48 @@
 
     // Fonction pour synchroniser Tagify avec un champ caché
     function syncTagifyWithHidden(tagifyInstance, hiddenSelector) {
-        if (!tagifyInstance) return;
+        if (!tagifyInstance) {
+            console.error("Tagify instance not provided");
+            return;
+        }
 
         const hiddenInput = document.querySelector(hiddenSelector);
         if (!hiddenInput) {
             console.error(`Hidden input not found: ${hiddenSelector}`);
             return;
         }
+        
+        console.log(`Synchronizing Tagify with hidden input: ${hiddenSelector}`);
 
         tagifyInstance.on('change', function(e) {
+            console.log(`Tagify change event for ${hiddenSelector}:`, tagifyInstance.value);
+            
             // Vérifier si c'est un select multiple ou un input
             if (hiddenInput.tagName === 'SELECT' && hiddenInput.multiple) {
                 // Pour les select multiples, mettre à jour les options sélectionnées
                 const values = tagifyInstance.value.map(tag => tag.value);
+                console.log(`Values for ${hiddenSelector}:`, values);
+                
+                // D'abord, désélectionner toutes les options
                 for (let option of hiddenInput.options) {
-                    option.selected = values.includes(option.value);
+                    option.selected = false;
+                }
+                
+                // Ensuite, sélectionner les options correspondantes
+                for (let option of hiddenInput.options) {
+                    if (values.includes(option.value)) {
+                        option.selected = true;
+                        console.log(`Selected option ${option.value} in ${hiddenSelector}`);
+                    }
                 }
             } else if (hiddenInput.tagName === 'SELECT') {
                 // Pour les selects simples
                 hiddenInput.value = tagifyInstance.value.length > 0 ? tagifyInstance.value[0].value : '';
+                console.log(`Set single select ${hiddenSelector} value to:`, hiddenInput.value);
             } else {
                 // Pour les inputs
                 hiddenInput.value = tagifyInstance.value.map(tag => tag.value).join(',');
+                console.log(`Set input ${hiddenSelector} value to:`, hiddenInput.value);
             }
         });
     }
@@ -950,8 +956,16 @@
     }
     
     // Initialiser les champs de type de production bio et conventionnelle
-    initializeTypeProductionTagify('bio');
-    initializeTypeProductionTagify('conv');
+    const bioTagify = initializeTypeProductionTagify('bio');
+    const convTagify = initializeTypeProductionTagify('conv');
+    
+    // Vérifier que les tagify ont été correctement initialisés
+    console.log('Bio Tagify initialized:', bioTagify);
+    console.log('Conv Tagify initialized:', convTagify);
+    
+    // Débogage des sélecteurs
+    console.log('Bio select:', document.querySelector('.type-production-select[name="type_production_bio"]'));
+    console.log('Conv select:', document.querySelector('.type-production-select[name="type_production_conv"]'));
     
     // Nous n'avons plus besoin de gérer l'ajout de nouvelles entrées de production
     // car nous avons maintenant deux champs fixes pour Bio et Conventionnel
