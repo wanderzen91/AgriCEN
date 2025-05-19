@@ -90,14 +90,7 @@ def populate_form_choices(form):
         form.type_milieu.choices = [(milieu.id_type_milieu, milieu.milieu) for milieu in type_milieux]
         form.appellation_contrat.choices = [(contrat.id_type_contrat, contrat.appellation_contrat) for contrat in contrats]
         form.produit_fini.choices = [(prod.id_type_produit_fini, prod.nature_produit_fini) for prod in produits_finis]
-        
-        # Choix pour les types de production (anciens et nouveaux champs)
-        production_choices = [(prod.id_type_production, prod.nature_production) for prod in productions]
-        form.type_production.choices = production_choices
-        form.type_production_bio.choices = production_choices
-        form.type_production_conv.choices = production_choices
-        
-        # Choix pour les modes de production
+        form.type_production.choices = [(prod.id_type_production, prod.nature_production) for prod in productions]
         form.mode_production.choices = [(mode.id, mode.nom) for mode in modes_production]
 
     except Exception as e:
@@ -911,65 +904,10 @@ def search_referent():
 
     return jsonify(results), 200
 
-    
-def add_data():
-    """Traite les données du formulaire d'ajout de données agricoles "modal_add_data.html".
-    
-    Cette fonction gère l'ajout ou la mise à jour d'un établissement agricole,
-    avec ses productions bio et conventionnelles associées, en utilisant SQLAlchemy.
-    """
-    # Créer une instance du formulaire avec les données soumises
-    form = CombinedForm(request.form)
-    
-    # Initialiser les choix du formulaire
-    populate_form_choices(form)
-    try:
-        # Afficher les données reçues pour le débogage
-        print("Données du formulaire reçues:")
-        for key in request.form:
-            if key not in ['csrf_token']:
-                print(f"{key}: {request.form.get(key)}")
-        
-        # Débogage des données du formulaire
-        print("Form Data:", request.form)
-        
-        # Débogage des données de production
-        print("Type Production Data:", form.type_production_bio.data if hasattr(form, 'type_production_bio') else None)
-        print("Type Production Field:", form.type_production_bio if hasattr(form, 'type_production_bio') else None)
-        print("Type Production Errors:", form.type_production_bio.errors if hasattr(form, 'type_production_bio') and hasattr(form.type_production_bio, 'errors') else [])
-        
-        # Traiter manuellement les données de production pour éviter les erreurs de validation
-        # Nous allons extraire les valeurs directement du formulaire soumis
-        # plutôt que de compter sur la validation WTForms
-        
-        # Extraire les données de type_production_bio et type_production_conv
-        # depuis le formulaire soumis
-        type_production_bio_values = request.form.getlist('type_production_bio')
-        type_production_conv_values = request.form.getlist('type_production_conv')
-        
-        # Si les données sont vides, essayer d'extraire des données JSON des champs d'affichage
-        if not type_production_bio_values and 'type_production_display_bio' in request.form:
-            try:
-                display_data = json.loads(request.form.get('type_production_display_bio'))
-                type_production_bio_values = [item['value'] for item in display_data if 'value' in item]
-            except (json.JSONDecodeError, TypeError):
-                pass
-                
-        if not type_production_conv_values and 'type_production_display_conv' in request.form:
-            try:
-                display_data = json.loads(request.form.get('type_production_display_conv'))
-                type_production_conv_values = [item['value'] for item in display_data if 'value' in item]
-            except (json.JSONDecodeError, TypeError):
-                pass
 
-        # Vérifier qu'au moins un type de production est sélectionné
-        if not type_production_bio_values and not type_production_conv_values:
-            return jsonify({
-                "success": False, 
-                "message": "Erreur de validation du formulaire", 
-                "errors": {"type_production_bio": ["Au moins un type de production (bio ou conventionnel) doit être sélectionné."]}
-            })
-        
+@app.route('/add_data', methods=['POST'])
+def add_data():
+    try:
         # Récupérer les données du formulaire
         nom_societe = request.form.get('nom_societe')
         siret = request.form.get('siret')
@@ -979,215 +917,152 @@ def add_data():
         tranche_effectif = request.form.get('tranche_effectif')
         contact = request.form.get('contact')
         
-        # Récupérer les données de l'agriculteur
-        nom_agri = request.form.get('nom_agri')
-        prenom_agri = request.form.get('prenom_agri')
-        date_naissance_str = request.form.get('date_naissance')
-        date_naissance = None
-        if date_naissance_str:
-            try:
-                date_naissance = datetime.strptime(date_naissance_str, '%Y-%m-%d').date()
-            except ValueError:
-                print(f"Format de date invalide: {date_naissance_str}")
-        
         # Récupérer les coordonnées géographiques
         latitude = request.form.get('latitude')
         longitude = request.form.get('longitude')
         
-        # Utiliser les valeurs extraites manuellement
-        type_production_bio = [int(val) if val.isdigit() else val for val in type_production_bio_values]
-        mode_production_bio = 1  # Valeur fixe 1 pour Bio
+        # Récupérer les informations sur l'agriculteur
+        nom_agri = request.form.get('nom_agri')
+        prenom_agri = request.form.get('prenom_agri')
+        date_naissance = request.form.get('date_naissance')
         
-        type_production_conv = [int(val) if val.isdigit() else val for val in type_production_conv_values]
-        mode_production_conv = 2  # Valeur fixe 2 pour Conventionnelle
+        # Récupérer les types de production et le mode de production
+        type_production = request.form.getlist('type_production')
+        mode_production = request.form.get('mode_production')
         
-        print(f"Type production bio: {type_production_bio}")
-        print(f"Mode production bio: {mode_production_bio}")
-        print(f"Type production conv: {type_production_conv}")
-        print(f"Mode production conv: {mode_production_conv}")
+        # Récupérer les produits finis
+        produit_fini = request.form.getlist('produit_fini')
         
-        # Préparer la liste des productions à insérer
-        productions = []
+        # Récupérer les données des contrats (format JSON)
+        contracts_data = request.form.get('contracts_data')
+        contracts = json.loads(contracts_data) if contracts_data else []
         
-        # Ajouter les productions bio
-        for type_prod in type_production_bio:
-            if type_prod:  # Vérifier que la valeur n'est pas vide
-                try:
-                    # Convertir en entier si ce n'est pas déjà fait
-                    type_prod_int = int(type_prod) if not isinstance(type_prod, int) else type_prod
-                    productions.append({
-                        'mode_production': mode_production_bio,
-                        'type_production': type_prod_int
-                    })
-                except (ValueError, TypeError) as e:
-                    print(f"Erreur de conversion pour type_prod bio {type_prod}: {e}")
+        # Insérer l'établissement dans la base de données
+        cursor = db.session.cursor()
         
-        # Ajouter les productions conventionnelles
-        for type_prod in type_production_conv:
-            if type_prod:  # Vérifier que la valeur n'est pas vide
-                try:
-                    # Convertir en entier si ce n'est pas déjà fait
-                    type_prod_int = int(type_prod) if not isinstance(type_prod, int) else type_prod
-                    productions.append({
-                        'mode_production': mode_production_conv,
-                        'type_production': type_prod_int
-                    })
-                except (ValueError, TypeError) as e:
-                    print(f"Erreur de conversion pour type_prod conv {type_prod}: {e}")
-        
-        # Insérer ou mettre à jour l'agriculteur si les données sont fournies
-        agriculteur_id = None
-        if nom_agri and prenom_agri:
-            # Vérifier si l'agriculteur existe déjà
-            agriculteur = Agriculteur.query.filter_by(
-                nom_agri=nom_agri, 
-                prenom_agri=prenom_agri
-            ).first()
-            
-            if agriculteur:
-                # Mettre à jour l'agriculteur existant
-                if date_naissance:
-                    agriculteur.date_naissance = date_naissance
-                agriculteur_id = agriculteur.id_agriculteur
-            else:
-                # Créer un nouvel agriculteur
-                nouvel_agriculteur = Agriculteur(
-                    nom_agri=nom_agri,
-                    prenom_agri=prenom_agri,
-                    date_naissance=date_naissance
-                )
-                db.session.add(nouvel_agriculteur)
-                db.session.flush()  # Pour obtenir l'ID généré
-                agriculteur_id = nouvel_agriculteur.id_agriculteur
-        
-        # Vérifier si l'établissement (société) existe déjà
-        etablissement_existant = Societe.query.filter_by(siret=siret).first() if siret else None
+        # Vérifier si l'établissement existe déjà
+        cursor.execute("SELECT id FROM etablissement WHERE siret = %s", (siret,))
+        etablissement_existant = cursor.fetchone()
         
         if etablissement_existant:
             # Mettre à jour l'établissement existant
-            etablissement_existant.nom_societe = nom_societe
-            etablissement_existant.adresse_etablissement = adresse_etablissement
-            etablissement_existant.activite_principale = activite_principale
-            etablissement_existant.categorie_juridique = categorie_juridique
-            etablissement_existant.tranche_effectif = tranche_effectif
-            etablissement_existant.contact = contact
-            if latitude and longitude:
-                etablissement_existant.latitude = latitude
-                etablissement_existant.longitude = longitude
+            etablissement_id = etablissement_existant[0]
+            cursor.execute("""
+                UPDATE etablissement 
+                SET nom_societe = %s, adresse_etablissement = %s, 
+                    activite_principale = %s, categorie_juridique = %s, 
+                    tranche_effectif = %s, contact = %s,
+                    latitude = %s, longitude = %s
+                WHERE id = %s
+            """, (
+                nom_societe, adresse_etablissement, 
+                activite_principale, categorie_juridique, 
+                tranche_effectif, contact,
+                latitude, longitude, 
+                etablissement_id
+            ))
             
             # Supprimer les productions existantes
-            TypeProductionSociete.query.filter_by(id_societe=etablissement_existant.id_societe).delete()
-            
-            etablissement_id = etablissement_existant.id_societe
+            cursor.execute("DELETE FROM production WHERE id_etablissement = %s", (etablissement_id,))
         else:
-            # Créer un nouvel établissement
-            nouvel_etablissement = Societe(
-                siret=siret,
-                nom_societe=nom_societe,
-                adresse_etablissement=adresse_etablissement,
-                activite_principale=activite_principale,
-                categorie_juridique=categorie_juridique,
-                tranche_effectif=tranche_effectif,
-                contact=contact,
-                latitude=latitude,
-                longitude=longitude
-            )
-            db.session.add(nouvel_etablissement)
-            db.session.flush()  # Pour obtenir l'ID généré
-            etablissement_id = nouvel_etablissement.id_societe
+            # Insérer un nouvel établissement
+            cursor.execute("""
+                INSERT INTO etablissement (
+                    siret, nom_societe, adresse_etablissement, 
+                    activite_principale, categorie_juridique, 
+                    tranche_effectif, contact,
+                    latitude, longitude
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                siret, nom_societe, adresse_etablissement, 
+                activite_principale, categorie_juridique, 
+                tranche_effectif, contact,
+                latitude, longitude
+            ))
+            etablissement_id = cursor.lastrowid
         
-        # Associer l'agriculteur à l'établissement si les deux existent
-        if agriculteur_id and etablissement_id:
-            # Vérifier si l'association existe déjà
-            association_existante = AgriculteurSociete.query.filter_by(
-                id_agriculteur=agriculteur_id,
-                id_societe=etablissement_id
-            ).first()
+        # Insérer ou mettre à jour l'agriculteur
+        if nom_agri and prenom_agri:
+            cursor.execute("""
+                INSERT INTO agriculteur (nom, prenom, date_naissance) 
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE date_naissance = VALUES(date_naissance)
+            """, (nom_agri, prenom_agri, date_naissance))
             
-            if not association_existante:
-                # Créer une nouvelle association
-                nouvelle_association = AgriculteurSociete(
-                    id_agriculteur=agriculteur_id,
-                    id_societe=etablissement_id
-                )
-                db.session.add(nouvelle_association)
+            # Récupérer l'ID de l'agriculteur
+            cursor.execute("SELECT id FROM agriculteur WHERE nom = %s AND prenom = %s", (nom_agri, prenom_agri))
+            agriculteur_id = cursor.fetchone()[0]
+            
+            # Lier l'agriculteur à l'établissement
+            cursor.execute("""
+                INSERT INTO agriculteur_etablissement (id_agriculteur, id_etablissement) 
+                VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE id_agriculteur = VALUES(id_agriculteur)
+            """, (agriculteur_id, etablissement_id))
         
         # Insérer les productions
-        for production in productions:
-            nouvelle_production = TypeProductionSociete(
-                id_societe=etablissement_id,
-                id_type_production=production['type_production'],
-                id_mode_production=production['mode_production']
-            )
-            db.session.add(nouvelle_production)
+        if type_production and mode_production:
+            for tp in type_production:
+                cursor.execute("""
+                    INSERT INTO production (
+                        id_etablissement, id_mode_production, id_type_production
+                    ) VALUES (%s, %s, %s)
+                """, (
+                    etablissement_id, 
+                    mode_production, 
+                    tp
+                ))
+        
+        # Insérer les produits finis
+        if produit_fini:
+            for pf in produit_fini:
+                cursor.execute("""
+                    INSERT INTO produit_fini_etablissement (
+                        id_etablissement, id_produit_fini
+                    ) VALUES (%s, %s)
+                    ON DUPLICATE KEY UPDATE id_produit_fini = VALUES(id_produit_fini)
+                """, (etablissement_id, pf))
+        
+        # Insérer les contrats
+        for contract in contracts:
+            cursor.execute("""
+                INSERT INTO contrat (
+                    id_etablissement, appellation_contrat, date_signature,
+                    date_prise_effet, date_fin, nom_referent, prenom_referent,
+                    surf_contractualisee
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                etablissement_id,
+                contract.get('appellation_contrat'),
+                contract.get('date_signature'),
+                contract.get('date_prise_effet'),
+                contract.get('date_fin'),
+                contract.get('nom_referent'),
+                contract.get('prenom_referent'),
+                contract.get('surf_contractualisee')
+            ))
             
-        # Journalisation pour le débogage
-        print(f"Productions ajoutées: {len(productions)}")
-        print(f"Productions bio: {type_production_bio}")
-        print(f"Productions conventionnelles: {type_production_conv}")
-        
-        # Après l'insertion des productions
-        from sqlalchemy import text
-        result = db.session.execute(text("SELECT * FROM saisie.type_production_societe WHERE id_societe = :id"), {"id": etablissement_id})
-        rows = result.fetchall()
-        print(f"Productions trouvées dans la base après insertion: {len(rows)}")
-        for row in rows:
-            print(row)
-
-        # Ajouter les produits finis si présents
-        produits_finis = request.form.getlist('produit_fini')
-        if produits_finis:
-            # Supprimer les associations existantes
-            EtablissementProduitFini.query.filter_by(id_etablissement=etablissement_id).delete()
+            # Récupérer l'ID du contrat
+            contrat_id = cursor.lastrowid
             
-            for produit_id in produits_finis:
-                if produit_id:  # Vérifier que la valeur n'est pas vide
-                    nouvelle_association = EtablissementProduitFini(
-                        id_etablissement=etablissement_id,
-                        id_produit_fini=produit_id
-                    )
-                    db.session.add(nouvelle_association)
+            # Insérer les types de milieu pour ce contrat
+            for type_milieu in contract.get('types_milieu', []):
+                cursor.execute("""
+                    INSERT INTO type_milieu_contrat (
+                        id_contrat, id_type_milieu
+                    ) VALUES (%s, %s)
+                """, (contrat_id, type_milieu))
         
-        # Traiter les données des contrats si présentes
-        contracts_data = request.form.get('contracts_data')
-        if contracts_data:
-            try:
-                contracts = json.loads(contracts_data)
-                for contract in contracts:
-                    # Créer un nouveau contrat
-                    nouveau_contrat = Contrat(
-                        id_societe=etablissement_id,
-                        appellation_contrat=contract.get('appellation_contrat'),
-                        date_signature=datetime.strptime(contract.get('date_signature'), '%Y-%m-%d').date() if contract.get('date_signature') else None,
-                        date_prise_effet=datetime.strptime(contract.get('date_prise_effet'), '%Y-%m-%d').date() if contract.get('date_prise_effet') else None,
-                        date_fin=datetime.strptime(contract.get('date_fin'), '%Y-%m-%d').date() if contract.get('date_fin') else None,
-                        nom_referent=contract.get('nom_referent'),
-                        prenom_referent=contract.get('prenom_referent'),
-                        surf_contractualisee=contract.get('surf_contractualisee')
-                    )
-                    db.session.add(nouveau_contrat)
-                    db.session.flush()  # Pour obtenir l'ID généré
-                    
-                    # Insérer les types de milieu pour ce contrat
-                    types_milieu = contract.get('types_milieu', [])
-                    for type_milieu_id in types_milieu:
-                        nouvelle_association = TypeMilieuContrat(
-                            id_contrat=nouveau_contrat.id_contrat,
-                            id_type_milieu=type_milieu_id
-                        )
-                        db.session.add(nouvelle_association)
-            except json.JSONDecodeError as e:
-                print(f"Erreur lors du décodage des données de contrat: {str(e)}")
-        
-        # Valider toutes les modifications
         db.session.commit()
+        cursor.close()
         
         return jsonify({"success": True, "message": "Données ajoutées avec succès"})
     
     except Exception as e:
-        db.session.rollback()
         print(f"Erreur lors de l'ajout des données: {str(e)}")
-        # Afficher plus de détails sur l'erreur pour faciliter le débogage
-        import traceback
-        traceback.print_exc()
-        return jsonify({"success": False, "message": f"Erreur: {str(e)}", "details": traceback.format_exc()})
+        return jsonify({"success": False, "message": f"Erreur: {str(e)}"})
+
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000)

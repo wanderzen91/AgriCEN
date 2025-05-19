@@ -209,7 +209,7 @@ class AgriculteurSociete(db.Model):
 # Table d'association TypeProductionMode
 class TypeProductionMode(db.Model):
     __tablename__ = 'type_production_mode'
-    __table_args__ = {'schema': 'referentiel'}
+    __table_args__ = {'schema': 'saisie'}
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_type_production = db.Column(db.Integer, db.ForeignKey('referentiel.type_production.id_type_production'), primary_key=True)

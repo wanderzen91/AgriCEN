@@ -92,29 +92,40 @@
                                                 <div class="production-entry mb-3">
                                                     <div class="row gx-4 gy-3">
                                                         <div class="col-12">
-                                                            <h5 class="mb-3">Production Bio</h5>
+                                                            <h5 class="mb-3">Production</h5>
                                                             <div class="mb-3">
-                                                                <label class="form-label">Types de Production Bio</label>
-                                                                <input class="form-control type-production-tagify" name="type_production_display_bio" placeholder="Ajouter des types de production bio">
-                                                                <select class="type-production-select" name="type_production_bio" multiple hidden>
+                                                                <label class="form-label">Types de Production</label>
+                                                                <input class="form-control type-production-tagify" name="type_production_display" placeholder="Ajouter des types de production">
+                                                                <select class="type-production-select" name="type_production" multiple hidden>
                                                                     {% for value, label in form.type_production.choices %}
                                                                         <option value="{{ value }}">{{ label }}</option>
                                                                     {% endfor %}
                                                                 </select>
-                                                                <input type="hidden" name="mode_production_bio" value="1"> <!-- Valeur fixe pour Bio -->
                                                             </div>
-                                                        </div>
-                                                        <div class="col-12">
-                                                            <h5 class="mb-3">Production Conventionnelle</h5>
                                                             <div class="mb-3">
-                                                                <label class="form-label">Types de Production Conventionnelle</label>
-                                                                <input class="form-control type-production-tagify" name="type_production_display_conv" placeholder="Ajouter des types de production conventionnelle">
-                                                                <select class="type-production-select" name="type_production_conv" multiple hidden>
+                                                                <label class="form-label">Mode de Production</label>
+                                                                <select class="form-select" name="mode_production">
+                                                                    <option value="" selected disabled>Sélectionner un mode de production</option>
+                                                                    <option value="1">Bio</option>
+                                                                    <option value="2">Conventionnelle</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Types de Production</label>
+                                                                <input class="form-control type-production-tagify" name="type_production_display" placeholder="Ajouter des types de production">
+                                                                <select class="type-production-select" name="type_production" multiple hidden>
                                                                     {% for value, label in form.type_production.choices %}
                                                                         <option value="{{ value }}">{{ label }}</option>
                                                                     {% endfor %}
                                                                 </select>
-                                                                <input type="hidden" name="mode_production_conv" value="2"> <!-- Valeur fixe pour Conventionnelle -->
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Mode de Production</label>
+                                                                <select class="form-select" name="mode_production">
+                                                                    <option value="" selected disabled>Sélectionner un mode de production</option>
+                                                                    <option value="1">Bio</option>
+                                                                    <option value="2">Conventionnelle</option>
+                                                                </select>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -915,13 +926,13 @@
     // Initialiser Tagify pour le premier type de milieu
     initializeTypeMilieuTagify(1);
     
-    // Initialiser Tagify pour les types de production bio et conventionnelle
-    function initializeTypeProductionTagify(type) {
-        const typeProductionInput = document.querySelector(`.type-production-tagify[name="type_production_display_${type}"]`);
-        const typeProductionSelect = document.querySelector(`.type-production-select[name="type_production_${type}"]`);
+    // Initialiser Tagify pour les types de production
+    function initializeTypeProductionTagify() {
+        const typeProductionInput = document.querySelector('.type-production-tagify[name="type_production_display"]');
+        const typeProductionSelect = document.querySelector('.type-production-select[name="type_production"]');
         
         if (typeProductionInput && typeProductionSelect) {
-            console.log(`Initializing Tagify for type_production_${type}`);
+            console.log('Initializing Tagify for type_production');
             
             const typeProductionChoices = Array.from(typeProductionSelect.options).map(option => ({
                 value: option.value,
@@ -945,30 +956,27 @@
             };
             
             const tagify = initializeTagify(typeProductionInput, typeProductionChoices, emojiMapping);
-            syncTagifyWithHidden(tagify, `.type-production-select[name="type_production_${type}"]`);
+            syncTagifyWithHidden(tagify, '.type-production-select[name="type_production"]');
             return tagify;
         } else {
-            console.error(`Type production Tagify elements not found for type ${type}`);
+            console.error('Type production Tagify elements not found');
             console.log('typeProductionInput:', typeProductionInput);
             console.log('typeProductionSelect:', typeProductionSelect);
             return null;
         }
     }
     
-    // Initialiser les champs de type de production bio et conventionnelle
-    const bioTagify = initializeTypeProductionTagify('bio');
-    const convTagify = initializeTypeProductionTagify('conv');
+    // Initialiser le champ de type de production
+    const typeProductionTagify = initializeTypeProductionTagify();
     
-    // Vérifier que les tagify ont été correctement initialisés
-    console.log('Bio Tagify initialized:', bioTagify);
-    console.log('Conv Tagify initialized:', convTagify);
+    // Vérifier que le tagify a été correctement initialisé
+    console.log('Type Production Tagify initialized:', typeProductionTagify);
     
-    // Débogage des sélecteurs
-    console.log('Bio select:', document.querySelector('.type-production-select[name="type_production_bio"]'));
-    console.log('Conv select:', document.querySelector('.type-production-select[name="type_production_conv"]'));
+    // Débogage du sélecteur
+    console.log('Type Production select:', document.querySelector('.type-production-select[name="type_production"]'));
     
     // Nous n'avons plus besoin de gérer l'ajout de nouvelles entrées de production
-    // car nous avons maintenant deux champs fixes pour Bio et Conventionnel
+    // car nous avons maintenant un champ unifié pour les types de production
     
     // Initialiser Tagify pour les produits finis
     const produitFiniInput = document.getElementById('produit_fini_tagify');

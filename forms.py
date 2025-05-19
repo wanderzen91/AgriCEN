@@ -1,21 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import (
     StringField, DecimalField, DateField, HiddenField, TextAreaField, 
-    IntegerField, SubmitField, SelectField, SelectMultipleField, RadioField,
-    ValidationError, Form
+    IntegerField, SubmitField, SelectField, SelectMultipleField, RadioField
 )
-from wtforms.validators import DataRequired, Optional, NumberRange, Length, Email
-
-# Validateur personnalisé pour vérifier qu'au moins un type de production est sélectionné
-def at_least_one_production_type(form, field):
-    """Vérifie qu'au moins un type de production (bio ou conventionnel) est sélectionné."""
-    # Ce validateur sera attaché au champ type_production_bio
-    # mais vérifiera aussi type_production_conv
-    bio_values = form.type_production_bio.data if form.type_production_bio.data else []
-    conv_values = form.type_production_conv.data if form.type_production_conv.data else []
-    
-    if not bio_values and not conv_values:
-        raise ValidationError('Au moins un type de production (bio ou conventionnel) doit être sélectionné.')
+from wtforms.validators import DataRequired, Optional, NumberRange, Length
 
 class CombinedForm(FlaskForm):
 
@@ -65,49 +53,18 @@ class CombinedForm(FlaskForm):
     )
 
 
-    # Champs pour Type de Production Bio
-    type_production_bio = SelectMultipleField(
-        'Types de Production Bio', 
-        choices=[],  # Les choix seront définis dynamiquement
-        validators=[Optional(), at_least_one_production_type],  # Validateur personnalisé
-        coerce=int  # Convertit les données soumises en `int` automatiquement
-    )
-    
-    # Champs pour Type de Production Conventionnelle
-    type_production_conv = SelectMultipleField(
-        'Types de Production Conventionnelle', 
-        choices=[],  # Les choix seront définis dynamiquement
-        validators=[Optional()],  # Optional car on peut n'avoir que du bio
-        coerce=int  # Convertit les données soumises en `int` automatiquement
-    )
-    
-    # Champs pour Mode de Production Bio
-    mode_production_bio = HiddenField(
-        'Mode de Production Bio',
-        validators=[Optional()],  # Optional car on peut n'avoir que du conventionnel
-        default=1  # Valeur fixe pour Bio
-    )
-    
-    # Champs pour Mode de Production Conventionnelle
-    mode_production_conv = HiddenField(
-        'Mode de Production Conventionnelle',
-        validators=[Optional()],  # Optional car on peut n'avoir que du bio
-        default=2  # Valeur fixe pour Conventionnelle
-    )
-    
-    # Gardons les champs originaux pour la compatibilité avec le code existant
-    # mais rendons-les optionnels
+    # Champs pour Type de Production
     type_production = SelectMultipleField(
         'Types de Production', 
         choices=[],  # Les choix seront définis dynamiquement
-        validators=[Optional()],
+        validators=[DataRequired()], #Essayer de trouver un validateur personnalisé pour SelectMultipleField car lorsqu'aucune valeur n'est sélectionnée, le champ renvoie une liste vide ([]) et DataRequired() ne considère pas une liste vide comme une valeur invalide, donc la validation passe silencieusement.
         coerce=int  # Convertit les données soumises en `int` automatiquement
     )
-    
+
     mode_production = SelectField(
         'Mode de Production',
         choices=[],  # Les choix seront définis dynamiquement
-        validators=[Optional()],
+        validators=[DataRequired()],
         coerce=int  # Convertit les données soumises en int automatiquement
     )
     
