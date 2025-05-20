@@ -925,140 +925,127 @@ def add_data():
         nom_agri = request.form.get('nom_agri')
         prenom_agri = request.form.get('prenom_agri')
         date_naissance = request.form.get('date_naissance')
+        if date_naissance:
+            date_naissance = datetime.strptime(date_naissance, '%Y-%m-%d').date()
         
         # Récupérer les types de production et le mode de production
-        type_production = request.form.getlist('type_production')
-        mode_production = request.form.get('mode_production')
+        type_production_ids = request.form.getlist('type_production')
+        mode_production_id = request.form.get('mode_production')
         
         # Récupérer les produits finis
-        produit_fini = request.form.getlist('produit_fini')
+        produit_fini_ids = request.form.getlist('produit_fini')
         
         # Récupérer les données des contrats (format JSON)
         contracts_data = request.form.get('contracts_data')
         contracts = json.loads(contracts_data) if contracts_data else []
         
-        # Insérer l'établissement dans la base de données
-        cursor = db.session.cursor()
-        
         # Vérifier si l'établissement existe déjà
-        cursor.execute("SELECT id FROM etablissement WHERE siret = %s", (siret,))
-        etablissement_existant = cursor.fetchone()
+        societe = Societe.query.filter_by(siret=siret).first()
         
-        if etablissement_existant:
+        if societe:
             # Mettre à jour l'établissement existant
-            etablissement_id = etablissement_existant[0]
-            cursor.execute("""
-                UPDATE etablissement 
-                SET nom_societe = %s, adresse_etablissement = %s, 
-                    activite_principale = %s, categorie_juridique = %s, 
-                    tranche_effectif = %s, contact = %s,
-                    latitude = %s, longitude = %s
-                WHERE id = %s
-            """, (
-                nom_societe, adresse_etablissement, 
-                activite_principale, categorie_juridique, 
-                tranche_effectif, contact,
-                latitude, longitude, 
-                etablissement_id
-            ))
+            societe.nom_societe = nom_societe
+            societe.adresse_etablissement = adresse_etablissement
+            societe.activite_principale = activite_principale
+            societe.categorie_juridique = categorie_juridique
+            societe.tranche_effectif = tranche_effectif
+            societe.contact = contact
             
             # Supprimer les productions existantes
-            cursor.execute("DELETE FROM production WHERE id_etablissement = %s", (etablissement_id,))
+            TypeProductionSociete.query.filter_by(id_societe=societe.id_societe).delete()
         else:
-            # Insérer un nouvel établissement
-            cursor.execute("""
-                INSERT INTO etablissement (
-                    siret, nom_societe, adresse_etablissement, 
-                    activite_principale, categorie_juridique, 
-                    tranche_effectif, contact,
-                    latitude, longitude
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                siret, nom_societe, adresse_etablissement, 
-                activite_principale, categorie_juridique, 
-                tranche_effectif, contact,
-                latitude, longitude
-            ))
-            etablissement_id = cursor.lastrowid
+            # Créer un nouvel établissement
+            societe = Societe(
+                siret=siret,
+                nom_societe=nom_societe,
+                adresse_etablissement=adresse_etablissement,
+                activite_principale=activite_principale,
+                categorie_juridique=categorie_juridique,
+                tranche_effectif=tranche_effectif,
+                contact=contact
+            )
+            db.session.add(societe)
+            # Flush pour obtenir l'ID généré
+            db.session.flush()
         
         # Insérer ou mettre à jour l'agriculteur
         if nom_agri and prenom_agri:
-            cursor.execute("""
-                INSERT INTO agriculteur (nom, prenom, date_naissance) 
-                VALUES (%s, %s, %s)
-                ON DUPLICATE KEY UPDATE date_naissance = VALUES(date_naissance)
-            """, (nom_agri, prenom_agri, date_naissance))
+            agriculteur = Agriculteur.query.filter_by(nom_agri=nom_agri, prenom_agri=prenom_agri).first()
             
-            # Récupérer l'ID de l'agriculteur
-            cursor.execute("SELECT id FROM agriculteur WHERE nom = %s AND prenom = %s", (nom_agri, prenom_agri))
-            agriculteur_id = cursor.fetchone()[0]
+            if not agriculteur:
+                agriculteur = Agriculteur(
+                    nom_agri=nom_agri,
+                    prenom_agri=prenom_agri,
+                    date_naissance=date_naissance
+                )
+                db.session.add(agriculteur)
+                db.session.flush()
+            elif date_naissance:
+                agriculteur.date_naissance = date_naissance
             
-            # Lier l'agriculteur à l'établissement
-            cursor.execute("""
-                INSERT INTO agriculteur_etablissement (id_agriculteur, id_etablissement) 
-                VALUES (%s, %s)
-                ON DUPLICATE KEY UPDATE id_agriculteur = VALUES(id_agriculteur)
-            """, (agriculteur_id, etablissement_id))
+            # Vérifier si la relation existe déjà
+            relation = AgriculteurSociete.query.filter_by(
+                id_agriculteur=agriculteur.id_agriculteur,
+                id_societe=societe.id_societe
+            ).first()
+            
+            if not relation:
+                # Créer la relation agriculteur-société
+                relation = AgriculteurSociete(
+                    id_agriculteur=agriculteur.id_agriculteur,
+                    id_societe=societe.id_societe
+                )
+                db.session.add(relation)
         
         # Insérer les productions
-        if type_production and mode_production:
-            for tp in type_production:
-                cursor.execute("""
-                    INSERT INTO production (
-                        id_etablissement, id_mode_production, id_type_production
-                    ) VALUES (%s, %s, %s)
-                """, (
-                    etablissement_id, 
-                    mode_production, 
-                    tp
-                ))
+        if type_production_ids and mode_production_id:
+            for tp_id in type_production_ids:
+                production = TypeProductionSociete(
+                    id_societe=societe.id_societe,
+                    id_type_production=tp_id,
+                    id_mode_production=mode_production_id
+                )
+                db.session.add(production)
         
-        # Insérer les produits finis
-        if produit_fini:
-            for pf in produit_fini:
-                cursor.execute("""
-                    INSERT INTO produit_fini_etablissement (
-                        id_etablissement, id_produit_fini
-                    ) VALUES (%s, %s)
-                    ON DUPLICATE KEY UPDATE id_produit_fini = VALUES(id_produit_fini)
-                """, (etablissement_id, pf))
+        # Insérer les produits finis (à adapter selon votre modèle)
+        # Note: Il semble qu'il manque un modèle pour cette relation dans les modèles fournis
         
         # Insérer les contrats
-        for contract in contracts:
-            cursor.execute("""
-                INSERT INTO contrat (
-                    id_etablissement, appellation_contrat, date_signature,
-                    date_prise_effet, date_fin, nom_referent, prenom_referent,
-                    surf_contractualisee
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                etablissement_id,
-                contract.get('appellation_contrat'),
-                contract.get('date_signature'),
-                contract.get('date_prise_effet'),
-                contract.get('date_fin'),
-                contract.get('nom_referent'),
-                contract.get('prenom_referent'),
-                contract.get('surf_contractualisee')
-            ))
+        for contract_data in contracts:
+            # Convertir les dates de chaîne en objets date
+            date_signature = datetime.strptime(contract_data.get('date_signature'), '%Y-%m-%d').date() if contract_data.get('date_signature') else None
+            date_prise_effet = datetime.strptime(contract_data.get('date_prise_effet'), '%Y-%m-%d').date() if contract_data.get('date_prise_effet') else None
+            date_fin = datetime.strptime(contract_data.get('date_fin'), '%Y-%m-%d').date() if contract_data.get('date_fin') else None
             
-            # Récupérer l'ID du contrat
-            contrat_id = cursor.lastrowid
+            # Créer le contrat
+            contrat = Contrat(
+                id_societe=societe.id_societe,
+                id_type_contrat=contract_data.get('appellation_contrat'),
+                date_signature=date_signature,
+                date_prise_effet=date_prise_effet,
+                date_fin=date_fin,
+                nom_referent=contract_data.get('nom_referent'),
+                prenom_referent=contract_data.get('prenom_referent'),
+                surf_contractualisee=contract_data.get('surf_contractualisee')
+            )
+            db.session.add(contrat)
+            db.session.flush()  # Pour obtenir l'ID du contrat
             
-            # Insérer les types de milieu pour ce contrat
-            for type_milieu in contract.get('types_milieu', []):
-                cursor.execute("""
-                    INSERT INTO type_milieu_contrat (
-                        id_contrat, id_type_milieu
-                    ) VALUES (%s, %s)
-                """, (contrat_id, type_milieu))
+            # Ajouter les types de milieu pour ce contrat
+            for type_milieu_id in contract_data.get('types_milieu', []):
+                milieu_contrat = TypeMilieuContrat(
+                    id_contrat=contrat.id_contrat,
+                    id_type_milieu=type_milieu_id
+                )
+                db.session.add(milieu_contrat)
         
+        # Valider toutes les modifications
         db.session.commit()
-        cursor.close()
         
         return jsonify({"success": True, "message": "Données ajoutées avec succès"})
     
     except Exception as e:
+        db.session.rollback()
         print(f"Erreur lors de l'ajout des données: {str(e)}")
         return jsonify({"success": False, "message": f"Erreur: {str(e)}"})
 
