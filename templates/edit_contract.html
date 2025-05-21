@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('backButton').addEventListener('click', goBackOrRedirect);
 
     // 🌍 Initialisation de la carte Leaflet
-    const map = L.map('small_map').setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
+    const map = L.map('small_map');
         
     // Ajout du fond de carte OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -307,10 +307,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }).addTo(map);
     
-    // Ajuster la vue pour montrer tous les sites
-    if (sitesLayer.getBounds().isValid()) {
-        map.fitBounds(sitesLayer.getBounds());
-    }
+    // Ajouter un marqueur pour le contrat sélectionné avec un style amélioré
+    const contractMarker = L.marker([{{ contrat.latitude }}, {{ contrat.longitude }}], {
+        icon: L.divIcon({
+            className: 'contract-marker',
+            html: '<div style="background-color: #ff3333; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        })
+    }).addTo(map);
+    
+    // Ajouter une popup améliorée au marqueur du contrat
+    const popupContent = `
+        <div style="text-align: center;">
+            <h6 style="margin: 0; padding: 5px 0;"><strong>Contrat sélectionné</strong></h6>
+            <div style="padding: 5px 0;">
+                <strong>Site:</strong> {{ contrat.sites_cen[0].site_cen.nom_site if contrat.sites_cen and contrat.sites_cen[0].site_cen else 'Site non spécifié' }}<br>
+                <strong>Code:</strong> {{ contrat.sites_cen[0].site_cen.code_site if contrat.sites_cen and contrat.sites_cen[0].site_cen else 'Non spécifié' }}
+            </div>
+        </div>
+    `;
+    contractMarker.bindPopup(popupContent, {maxWidth: 300}).openPopup();
+    
+    // Centrer d'abord la carte sur le contrat avec un zoom approprié
+    map.setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
+    
+    // Ajouter un bouton pour voir tous les sites CEN
+    const viewAllSitesButton = L.control({position: 'topright'});
+    viewAllSitesButton.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        div.innerHTML = '<a href="#" title="Voir tous les sites CEN" style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; background-color: white; font-size: 18px;"><i class="bi bi-arrows-fullscreen"></i></a>';
+        div.onclick = function() {
+            if (sitesLayer.getBounds().isValid()) {
+                map.fitBounds(sitesLayer.getBounds());
+            }
+            return false;
+        };
+        return div;
+    };
+    viewAllSitesButton.addTo(map);
     
     // Gestion du bouton de retour
     document.getElementById('backButton').addEventListener('click', function() {
