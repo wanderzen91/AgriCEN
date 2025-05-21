@@ -279,8 +279,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('backButton').addEventListener('click', goBackOrRedirect);
 
     // 🌍 Initialisation de la carte Leaflet
-    const map = L.map('small_map').setView([44.8378, 0.5792], 8); // Coordonnées centrées sur la Nouvelle-Aquitaine
-    
+    const map = L.map('small_map').setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
+        
     // Ajout du fond de carte OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
