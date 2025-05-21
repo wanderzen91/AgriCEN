@@ -742,6 +742,10 @@ autocomplete(
         // Récupérer les valeurs pour le filtre de surface contractualisée
         const surfaceOperator = document.getElementById('searchSurfaceContractualiseeOperator').value;
         const surfaceValue = document.getElementById('searchSurfaceContractualiseeValue').value;
+
+        // Afficher les valeurs sélectionnées pour le débogage
+        console.log('Filtre Type de production:', typeProduction);
+        console.log('Filtre Produit fini:', produitFini);
     
         let hasResults = false;
     
@@ -758,30 +762,60 @@ autocomplete(
                 if (typeAgriculture && data.type_agriculture && data.type_agriculture.toLowerCase().trim() !== typeAgriculture) match = false;
     
                 if (typeProduction) {
-                    const selectedProductions = typeProduction.split(",").map(e => e.trim().toLowerCase());
-                    // Vérifier que type_productions existe, est un tableau et contient au moins un élément correspondant
+                    // Afficher les données pour le débogage
+                    console.log('Données type_productions:', data.type_productions);
+                    
+                    // Vérifier que type_productions existe et est un tableau
                     if (!data.type_productions || !Array.isArray(data.type_productions) || data.type_productions.length === 0) {
+                        console.log('Type productions invalide ou vide');
                         match = false;
                     } else {
-                        // Convertir tous les éléments en minuscules pour une comparaison insensible à la casse
-                        const lowerCaseProductions = data.type_productions.map(p => typeof p === 'string' ? p.toLowerCase() : '');
-                        // Vérifier si au moins une des productions sélectionnées est dans le tableau
-                        if (!selectedProductions.some(selected => lowerCaseProductions.includes(selected))) {
+                        let found = false;
+                        // Parcourir chaque type de production et vérifier s'il correspond à la valeur sélectionnée
+                        for (let i = 0; i < data.type_productions.length; i++) {
+                            // Vérifier si l'élément est un objet avec une propriété 'type'
+                            const productionObj = data.type_productions[i];
+                            if (productionObj && typeof productionObj === 'object' && productionObj.type) {
+                                const productionType = productionObj.type.toLowerCase();
+                                console.log(`Comparaison: "${productionType}" === "${typeProduction}"`);
+                                if (productionType === typeProduction) {
+                                    found = true;
+                                    console.log('Correspondance trouvée!');
+                                    break;
+                                }
+                            } else {
+                                // Essayer comme une chaîne simple au cas où
+                                const production = String(productionObj).toLowerCase();
+                                console.log(`Comparaison (string): "${production}" === "${typeProduction}"`);
+                                if (production === typeProduction) {
+                                    found = true;
+                                    console.log('Correspondance trouvée (string)!');
+                                    break;
+                                }
+                            }
+                        }
+                        if (!found) {
+                            console.log('Aucune correspondance trouvée pour le type de production');
                             match = false;
                         }
                     }
                 }
     
                 if (produitFini) {
-                    const selectedProducts = produitFini.split(",").map(e => e.trim().toLowerCase());
-                    // Vérifier que produits_finis existe, est un tableau et contient au moins un élément correspondant
+                    // Vérifier que produits_finis existe et est un tableau
                     if (!data.produits_finis || !Array.isArray(data.produits_finis) || data.produits_finis.length === 0) {
                         match = false;
                     } else {
-                        // Convertir tous les éléments en minuscules pour une comparaison insensible à la casse
-                        const lowerCaseProducts = data.produits_finis.map(p => typeof p === 'string' ? p.toLowerCase() : '');
-                        // Vérifier si au moins un des produits sélectionnés est dans le tableau
-                        if (!selectedProducts.some(selected => lowerCaseProducts.includes(selected))) {
+                        // Parcourir chaque produit fini et vérifier s'il correspond à la valeur sélectionnée
+                        let found = false;
+                        for (let i = 0; i < data.produits_finis.length; i++) {
+                            const product = String(data.produits_finis[i]).toLowerCase();
+                            if (product === produitFini) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
                             match = false;
                         }
                     }
