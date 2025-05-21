@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, session
 from forms import CombinedForm
 from models import *
 from config import Config
@@ -11,8 +11,9 @@ from shapely.geometry import mapping
 from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import load_only, selectinload
 from flask_migrate import Migrate
-
-# from sqlalchemy import text
+from flask_login import login_required, current_user
+from flask_session import Session
+from auth import init_auth
 
 app = Flask(__name__)
 
@@ -22,27 +23,12 @@ app.config['SECRET_KEY'] = secrets.token_hex(24)
 # Configuration de base
 app.config.from_object(Config)
 
-# # Création d'un logger pour l'application
-# app_logger = logging.getLogger('app_logger')
-# app_logger.setLevel(logging.DEBUG)  # Niveau de log pour l'application
+# Initialisation de la session
+app.config['SESSION_TYPE'] = Config.SESSION_TYPE
+Session(app)
 
-# # Handler pour les logs d'application
-# app_log_handler = logging.FileHandler('app_logs.log', mode='a')  # Ajout au fichier
-# app_log_handler.setLevel(logging.DEBUG)  # Niveau de log pour ce handler
-# app_log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-# app_log_handler.setFormatter(app_log_formatter)
-# app_logger.addHandler(app_log_handler)
-
-# # Création d'un logger pour SQLAlchemy
-# sqlalchemy_logger = logging.getLogger('sqlalchemy.engine')  # Logger intégré à SQLAlchemy
-# sqlalchemy_logger.setLevel(logging.DEBUG)  # Niveau de log pour SQLAlchemy
-
-# # Handler pour les logs SQLAlchemy
-# sqlalchemy_log_handler = logging.FileHandler('sqlalchemy_logs.log', mode='a')  # Ajout au fichier
-# sqlalchemy_log_handler.setLevel(logging.DEBUG)
-# sqlalchemy_log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-# sqlalchemy_log_handler.setFormatter(sqlalchemy_log_formatter)
-# sqlalchemy_logger.addHandler(sqlalchemy_log_handler)
+# Initialisation de l'authentification
+init_auth(app)
 
 # Initialisation de la base de données
 db.init_app(app)
@@ -290,6 +276,7 @@ def check_siret_in_database(siret):
         return None
 
 @app.route('/api/siret', methods=['POST'])
+@login_required
 def siret_lookup():
     siret = request.json.get("siret")
     
@@ -308,7 +295,13 @@ def siret_lookup():
     return jsonify(api_result), status_code
     
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
+@login_required
+def index():
+    return render_template('map.html')
+
+@app.route('/map', methods=['GET', 'POST'])
+@login_required
 def map_page():
     print("Route map_page appelée")  # Vérifie que la route est exécutée
     form = CombinedForm()

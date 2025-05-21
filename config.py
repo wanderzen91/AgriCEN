@@ -28,3 +28,13 @@ class Config:
     }
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Configuration pour l'authentification Microsoft 365
+    CLIENT_ID = os.environ.get("AZURE_CLIENT_ID", "")
+    CLIENT_SECRET = os.environ.get("AZURE_CLIENT_SECRET", "")
+    TENANT_ID = os.environ.get("AZURE_TENANT_ID", "")
+    AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
+    REDIRECT_PATH = "/auth/callback"  # Route de redirection après authentification
+    SCOPE = ["User.Read"]  # Permissions demandées
+    SESSION_TYPE = "filesystem"  # Pour stocker les sessions utilisateur
+    PERMANENT_SESSION_LIFETIME = 3600  # Durée de vie de la session en secondes
