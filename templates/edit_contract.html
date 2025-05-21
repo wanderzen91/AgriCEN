@@ -143,9 +143,9 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Bio</label>
                                                     <input class="form-control type-production-tagify" name="type_production_display_bio" placeholder="Ajouter des types de production bio">
-                                                    <select class="type-production-select" name="type_production_bio" multiple hidden>
+                                                    <select class="type-production-select" name="type_production" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
-                                                            <option value="{{ value }}" {% if form.type_production_bio.data and value in form.type_production_bio.data %}selected{% endif %}>{{ label }}</option>
+                                                            <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <input type="hidden" name="mode_production_bio" value="1"> <!-- Valeur fixe pour Bio -->
@@ -156,9 +156,9 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Conventionnelle</label>
                                                     <input class="form-control type-production-tagify" name="type_production_display_conv" placeholder="Ajouter des types de production conventionnelle">
-                                                    <select class="type-production-select" name="type_production_conv" multiple hidden>
+                                                    <select class="type-production-select" name="type_production" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
-                                                            <option value="{{ value }}" {% if form.type_production_conv.data and value in form.type_production_conv.data %}selected{% endif %}>{{ label }}</option>
+                                                            <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <input type="hidden" name="mode_production_conv" value="2"> <!-- Valeur fixe pour Conventionnelle -->
