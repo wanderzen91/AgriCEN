@@ -114,6 +114,37 @@ def get_sites_cen_geojson():
 
 
 
+@app.route('/site_cen_geojson/<string:code_site>')
+def get_site_cen_geojson_by_id(code_site):
+    """Récupère le GeoJSON d'un site CEN spécifique par son code."""
+    # Récupérer uniquement le site demandé
+    site = VueSites.query.filter_by(codesite=code_site).first()
+    
+    if not site:
+        return jsonify({"type": "FeatureCollection", "features": []})
+    
+    # Convertir la géométrie PostGIS en GeoJSON
+    shape = to_shape(site.geom)
+    geojson = mapping(shape)
+    
+    feature = {
+        "type": "Feature",
+        "geometry": geojson,
+        "properties": {
+            "codesite": site.codesite,
+            "nom_site": site.nom_site
+        }
+    }
+    
+    geojson_data = {
+        "type": "FeatureCollection",
+        "features": [feature]
+    }
+    
+    return jsonify(geojson_data)
+
+
+
 def fetch_siret_data(siret, flash_messages = False):
     """
     Récupère les informations d'une entreprise via l'API SIRENE en fonction du numéro SIRET.
@@ -542,13 +573,21 @@ def map_page():
 
     # Envoyer les données au template après la boucle
     return render_template('map.html', form=form, geojson=geojson, contrats=contrat_data)
-
-
-@app.route('/edit_contract/<int:contract_id>', methods=['GET', 'POST'])
 def edit_contract(contract_id):
 
-    # Charger le GeoJSON pour la carte
-    sites_geojson = get_sites_cen_geojson().json
+    # Récupérer le site CEN associé au contrat
+    contrat = db.session.query(Contrat).options(
+        selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen)
+    ).filter(Contrat.id_contrat == contract_id).first()
+    
+    # Vérifier si le contrat existe et a un site associé
+    if not contrat or not contrat.sites_cen or not contrat.sites_cen[0].site_cen:
+        flash("Contrat introuvable ou sans site associé.", "danger")
+        return redirect(url_for('map_page'))
+    
+    # Récupérer uniquement le GeoJSON du site associé au contrat
+    code_site = contrat.sites_cen[0].site_cen.code_site
+    sites_geojson = get_site_cen_geojson_by_id(code_site).json
 
     # Charger un formulaire unique contenant tous les champs
     form = CombinedForm()
