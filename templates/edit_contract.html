@@ -143,9 +143,9 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Bio</label>
                                                     <input class="form-control type-production-tagify" name="type_production_display_bio" placeholder="Ajouter des types de production bio">
-                                                    <select class="type-production-select" name="type_production" multiple hidden>
+                                                    <select class="type-production-select" name="type_production_bio" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
-                                                            <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
+                                                            <option value="{{ value }}" {% if form.type_production_bio.data and value in form.type_production_bio.data %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <input type="hidden" name="mode_production_bio" value="1"> <!-- Valeur fixe pour Bio -->
@@ -156,9 +156,9 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Conventionnelle</label>
                                                     <input class="form-control type-production-tagify" name="type_production_display_conv" placeholder="Ajouter des types de production conventionnelle">
-                                                    <select class="type-production-select" name="type_production" multiple hidden>
+                                                    <select class="type-production-select" name="type_production_conv" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
-                                                            <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
+                                                            <option value="{{ value }}" {% if form.type_production_conv.data and value in form.type_production_conv.data %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <input type="hidden" name="mode_production_conv" value="2"> <!-- Valeur fixe pour Conventionnelle -->
@@ -279,35 +279,42 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('backButton').addEventListener('click', goBackOrRedirect);
 
     // 🌍 Initialisation de la carte Leaflet
-    const map = L.map('small_map').setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
+    const map = L.map('small_map').setView([44.8378, 0.5792], 8); // Coordonnées centrées sur la Nouvelle-Aquitaine
     
+    // Ajout du fond de carte OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-
-    // Charger et ajouter le GeoJSON des départements
-    fetch('{{ url_for("static", filename="sig/depts_na.geojson") }}')
-        .then(response => response.json())
-        .then(data => {
-            L.geoJSON(data, {
-                style: {
-                    color: '#3388ff',
-                    weight: 2,
-                    opacity: 0.5,
-                    fillOpacity: 0.1
-                }
-            }).addTo(map);
-        })
-        .catch(error => console.error('Erreur lors du chargement du GeoJSON:', error));
-
-    const marker = L.marker([{{ contrat.latitude }}, {{ contrat.longitude }}]).addTo(map)
-        .bindPopup("{{ contrat.nom_site }}");
-
-    // Gestion des événements pour l'affichage du popup
-    marker.on({
-        mouseover: () => marker.openPopup(),
-        mouseout: () => marker.closePopup(),
-        click: () => marker.openPopup()
+    
+    // Ajout des sites CEN depuis le GeoJSON
+    const sitesLayer = L.geoJSON({{ geojson|tojson }}, {
+        style: function(feature) {
+            return {
+                color: '#3388ff',
+                weight: 2,
+                opacity: 0.8,
+                fillColor: '#3388ff',
+                fillOpacity: 0.3
+            };
+        },
+        onEachFeature: function(feature, layer) {
+            if (feature.properties) {
+                layer.bindPopup(`
+                    <strong>${feature.properties.nom_site || 'Site sans nom'}</strong><br>
+                    Code: ${feature.properties.codesite || 'Non spécifié'}
+                `);
+            }
+        }
+    }).addTo(map);
+    
+    // Ajuster la vue pour montrer tous les sites
+    if (sitesLayer.getBounds().isValid()) {
+        map.fitBounds(sitesLayer.getBounds());
+    }
+    
+    // Gestion du bouton de retour
+    document.getElementById('backButton').addEventListener('click', function() {
+        goBackOrRedirect();
     });
 
     // 🎯 Fonction pour initialiser Tagify
