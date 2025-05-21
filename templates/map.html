@@ -738,7 +738,10 @@ autocomplete(
         const typeProduction = document.getElementById('searchTypeProduction').value.trim().toLowerCase();
         const produitFini = document.getElementById('searchProduitFini').value.trim().toLowerCase();
         const typeAgriculture = document.getElementById('searchTypeAgriculture').value.trim().toLowerCase();
-    
+        
+        // Récupérer les valeurs pour le filtre de surface contractualisée
+        const surfaceOperator = document.getElementById('searchSurfaceContractualiseeOperator').value;
+        const surfaceValue = document.getElementById('searchSurfaceContractualiseeValue').value;
     
         let hasResults = false;
     
@@ -752,6 +755,7 @@ autocomplete(
                 if (typeContrat && data.type_contrat.toLowerCase().trim() !== typeContrat) match = false;
                 if (nomSociete && data.nom_societe.toLowerCase().trim() !== nomSociete) match = false;
                 if (referent && data.referent.toLowerCase().trim() !== referent) match = false;
+                if (typeAgriculture && data.type_agriculture && data.type_agriculture.toLowerCase().trim() !== typeAgriculture) match = false;
     
                 if (typeProduction) {
                     const selectedProductions = typeProduction.split(",").map(e => e.trim().toLowerCase());
@@ -763,6 +767,20 @@ autocomplete(
                 if (produitFini) {
                     const selectedProducts = produitFini.split(",").map(e => e.trim().toLowerCase());
                     if (!data.produits_finis || !selectedProducts.some(selected => data.produits_finis.map(p => p.toLowerCase()).includes(selected))) {
+                        match = false;
+                    }
+                }
+                
+                // Filtrage par surface contractualisée
+                if (surfaceValue && !isNaN(parseFloat(surfaceValue))) {
+                    const surfaceNum = parseFloat(surfaceValue);
+                    const dataSurface = parseFloat(data.surface_contractualisee);
+                    
+                    if (!isNaN(dataSurface)) {
+                        if (surfaceOperator === '>' && dataSurface <= surfaceNum) match = false;
+                        if (surfaceOperator === '<' && dataSurface >= surfaceNum) match = false;
+                    } else if (surfaceValue) {
+                        // Si la valeur de surface n'est pas un nombre valide dans les données mais qu'un filtre est appliqué
                         match = false;
                     }
                 }
