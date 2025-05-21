@@ -295,78 +295,9 @@ def siret_lookup():
     return jsonify(api_result), status_code
     
 
-@app.route('/')
-@login_required
-def index():
-    form = CombinedForm()
-    # Charger les choix dynamiques
-    populate_form_choices(form)
-    
-    # Charger le GeoJSON pour la carte
-    try:
-        with open('static/sig/depts_na.geojson') as geojson_file:
-            geojson = json.load(geojson_file)
-    except FileNotFoundError:
-        flash("Erreur : Fichier GeoJSON introuvable.", "danger")
-        geojson = {}
-        
-    
-    # Préparer les données pour la visualisation
-    contrats_query = (
-        Contrat.query
-        .options(selectinload(Contrat.societe))
-        .options(selectinload(Contrat.referent))
-        .options(selectinload(Contrat.types_milieu))
-        .options(selectinload(Contrat.produits_finis))
-        .options(selectinload(Contrat.sites_cen))
-    )
-    
-    contrats = []
-    for contrat in contrats_query.yield_per(100):
-        try:
-            contrat_data = {
-                "id": contrat.id_contrat,
-                "latitude": float(contrat.latitude) if contrat.latitude else None,
-                "longitude": float(contrat.longitude) if contrat.longitude else None,
-                "surf_contractualisee": float(contrat.surf_contractualisee) if contrat.surf_contractualisee else None,
-                "date_signature": contrat.date_signature.strftime('%Y-%m-%d'),
-                "date_fin": contrat.date_fin.strftime('%Y-%m-%d'),
-                "date_prise_effet": contrat.date_prise_effet.strftime('%Y-%m-%d'),
-                "remarques": contrat.remarques,
-                "societe": {
-                    "id": contrat.societe.id_societe,
-                    "nom": contrat.societe.nom_societe,
-                    "contact": contrat.societe.contact,
-                    "siret": contrat.societe.siret
-                },
-                "referent": {
-                    "id": contrat.referent.id_referent,
-                    "nom": contrat.referent.nom_referent,
-                    "prenom": contrat.referent.prenom_referent
-                },
-                "type_contrat": {
-                    "id": contrat.id_type_contrat
-                },
-                "types_milieu": [{
-                    "id": milieu.id_type_milieu
-                } for milieu in contrat.types_milieu],
-                "produits_finis": [{
-                    "id": produit.id_type_produit_fini
-                } for produit in contrat.produits_finis],
-                "sites_cen": [{
-                    "id": rel.id_site,
-                    "code": rel.site_cen.code_site,
-                    "nom": rel.site_cen.nom_site
-                } for rel in contrat.sites_cen]
-            }
-            contrats.append(contrat_data)
-        except Exception as e:
-            print(f"Erreur lors de la conversion du contrat {contrat.id_contrat}: {str(e)}")
-    
-    return render_template('map.html', form=form, geojson=geojson, contrats=contrats)
 
 
-@app.route('/map', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 @login_required
 def map_page():
     print("Route map_page appelée")  # Vérifie que la route est exécutée
