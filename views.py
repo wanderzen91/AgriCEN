@@ -12,7 +12,7 @@ from geoalchemy2.shape import to_shape
 from sqlalchemy.orm import load_only, selectinload
 from flask_migrate import Migrate
 from flask_login import login_required, current_user
-from flask_session import Session
+import flask_session
 from auth import init_auth
 
 app = Flask(__name__)
@@ -25,7 +25,7 @@ app.config.from_object(Config)
 
 # Initialisation de la session
 app.config['SESSION_TYPE'] = Config.SESSION_TYPE
-Session(app)
+flask_session.Session(app)
 
 # Initialisation de l'authentification
 init_auth(app)
