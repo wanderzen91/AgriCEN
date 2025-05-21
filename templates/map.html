@@ -759,15 +759,31 @@ autocomplete(
     
                 if (typeProduction) {
                     const selectedProductions = typeProduction.split(",").map(e => e.trim().toLowerCase());
-                    if (!data.type_productions || !selectedProductions.some(selected => data.type_productions.map(p => p.toLowerCase()).includes(selected))) {
+                    // Vérifier que type_productions existe, est un tableau et contient au moins un élément correspondant
+                    if (!data.type_productions || !Array.isArray(data.type_productions) || data.type_productions.length === 0) {
                         match = false;
+                    } else {
+                        // Convertir tous les éléments en minuscules pour une comparaison insensible à la casse
+                        const lowerCaseProductions = data.type_productions.map(p => typeof p === 'string' ? p.toLowerCase() : '');
+                        // Vérifier si au moins une des productions sélectionnées est dans le tableau
+                        if (!selectedProductions.some(selected => lowerCaseProductions.includes(selected))) {
+                            match = false;
+                        }
                     }
                 }
     
                 if (produitFini) {
                     const selectedProducts = produitFini.split(",").map(e => e.trim().toLowerCase());
-                    if (!data.produits_finis || !selectedProducts.some(selected => data.produits_finis.map(p => p.toLowerCase()).includes(selected))) {
+                    // Vérifier que produits_finis existe, est un tableau et contient au moins un élément correspondant
+                    if (!data.produits_finis || !Array.isArray(data.produits_finis) || data.produits_finis.length === 0) {
                         match = false;
+                    } else {
+                        // Convertir tous les éléments en minuscules pour une comparaison insensible à la casse
+                        const lowerCaseProducts = data.produits_finis.map(p => typeof p === 'string' ? p.toLowerCase() : '');
+                        // Vérifier si au moins un des produits sélectionnés est dans le tableau
+                        if (!selectedProducts.some(selected => lowerCaseProducts.includes(selected))) {
+                            match = false;
+                        }
                     }
                 }
                 
