@@ -295,12 +295,7 @@ def siret_lookup():
     return jsonify(api_result), status_code
     
 
-@app.route('/')
-@login_required
-def index():
-    return render_template('map.html')
-
-@app.route('/map', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 @login_required
 def map_page():
     print("Route map_page appelée")  # Vérifie que la route est exécutée
@@ -317,39 +312,6 @@ def map_page():
         flash("Erreur : Fichier GeoJSON introuvable.", "danger")
         geojson = {}
 
-    ## Méthode pour utiliser requete brute (méthode suivante avec la vue à privilégier)
-    # try:
-    #         # Obtenez le moteur pour la base secondaire
-    #     engine = db.get_engine(app, bind='secondary')
-    #     # Requête brute pour charger uniquement les colonnes nécessaires
-    #     # Requête brute
-    #     # Créez une connexion explicite
-    #     with engine.connect() as connection:
-    #         # Requête brute
-    #         sql = """
-    #             SELECT codesite, nom_site
-    #             FROM saisie.site_geojson
-    #         """
-    #         result = connection.execute(text(sql))
-
-    #         for row in result:
-    #             print(row)
-
-    # except FileNotFoundError:
-    #     flash("Erreur : Fichier GeoJSON introuvable.", "danger")
-   
-
-    # # Charger les choix pour les champs code_site et nom_site dans le cas où l'utilisateur voudrait chercher par autocompletion un site (rechercher pour zoom automatique sur le site par exemple)
-    # try:
-    #     # Charger uniquement les colonnes nécessaires
-    #     sites = VueSites.query.options(load_only(VueSites.codesite, VueSites.nom_site)).all()
-    #     site_choices = [(site.codesite, site.nom_site) for site in sites]
-    #     # Remplir les choix pour les champs dans le formulaire
-    #     form.nom_site.choices = [(nom, nom) for _, nom in site_choices]
-    #     form.code_site.choices = [(code, code) for code, _ in site_choices]
-    # except Exception as e:
-    #     app.logger.error(f"Erreur lors du chargement des sites : {e}")
-    #     flash("Erreur lors du chargement des sites CEN.", "danger")
 
     # 🔹 Si l'utilisateur clique sur "Rechercher via l'API"
     if form.fetch_sirene.data:
