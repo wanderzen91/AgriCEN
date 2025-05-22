@@ -602,89 +602,11 @@
     }
 
     // Configuration de l'autocomplétion pour le référent
+    // La recherche de référents est maintenant gérée par le script referent_search.js
     function setupReferentAutocomplete(contractIndex) {
-        const searchReferentInput = document.getElementById(`search_referent_${contractIndex}`);
-        const referentSuggestionsDiv = searchReferentInput.nextElementSibling;
-        let referentDebounceTimer;
-
-        if (searchReferentInput) {
-            searchReferentInput.addEventListener('input', function() {
-                clearTimeout(referentDebounceTimer);
-                const searchTerm = this.value.trim();
-
-                if (searchTerm.length < 2) {
-                    referentSuggestionsDiv.style.display = 'none';
-                    return;
-                }
-
-                referentDebounceTimer = setTimeout(async () => {
-                    try {
-                        const response = await fetch('/api/search_referent', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ search_term: searchTerm })
-                        });
-
-                        const data = await response.json();
-                        referentSuggestionsDiv.innerHTML = '';
-
-                        if (data.length === 0) {
-                            // Ajouter la suggestion pour créer un nouveau référent
-                            const newReferentItem = document.createElement('div');
-                            newReferentItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                            newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) référent(e) : ' + searchTerm;
-                            newReferentItem.addEventListener('click', () => {
-                                // Pré-remplir les champs avec le terme de recherche séparé
-                                const { nom, prenom } = splitSearchTerm(searchTerm);
-                                const nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
-                                const prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
-                                if (nomReferent && prenomReferent) {
-                                    nomReferent.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
-                                    prenomReferent.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
-                                    // Désactiver les champs après les avoir remplis
-                                    enableReferentFields(contractIndex, false);
-                                }
-                                searchReferentInput.value = '';
-                                referentSuggestionsDiv.style.display = 'none';
-                            });
-                            referentSuggestionsDiv.appendChild(newReferentItem);
-                            referentSuggestionsDiv.style.display = 'block';
-                        } else {
-                            data.forEach(referent => {
-                                const div = document.createElement('div');
-                                div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
-                                div.textContent = `${referent.nom} ${referent.prenom}`;
-                                div.addEventListener('click', () => {
-                                    const nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
-                                    const prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
-                                    if (nomReferent && prenomReferent) {
-                                        nomReferent.value = referent.nom;
-                                        prenomReferent.value = referent.prenom;
-                                    }
-                                    enableReferentFields(contractIndex, false);
-                                    searchReferentInput.value = `${referent.nom} ${referent.prenom}`;
-                                    referentSuggestionsDiv.style.display = 'none';
-                                });
-                                referentSuggestionsDiv.appendChild(div);
-                            });
-                            referentSuggestionsDiv.style.display = 'block';
-                        }
-                    } catch (error) {
-                        console.error('Erreur lors de la recherche:', error);
-                        referentSuggestionsDiv.style.display = 'none';
-                    }
-                }, 300);
-            });
-
-            // Fermer les suggestions si on clique ailleurs
-            document.addEventListener('click', function(e) {
-                if (!referentSuggestionsDiv.contains(e.target) && e.target !== searchReferentInput) {
-                    referentSuggestionsDiv.style.display = 'none';
-                }
-            });
-        }
+        // Cette fonction est maintenant un simple wrapper pour la compatibilité avec le code existant
+        // La vraie implémentation est dans referent_search.js
+        console.log(`Configuration de l'autocomplétion pour le référent #${contractIndex} via le script externe`);
     }
 
     // Initialiser Tagify pour les types de milieu
@@ -1004,147 +926,12 @@
         updateContractsData();
     });
 
-        // Gestion de la recherche d'exploitant
-        const searchAgriculteurInput = document.getElementById('search_agriculteur');
-        const agriculteurSuggestions = document.getElementById('agriculteur_suggestions');
-
-        if (searchAgriculteurInput && agriculteurSuggestions) {
-            console.log("Initializing search_agriculteur event listeners");
-            
-            // Fonction pour effectuer la recherche
-            const searchAgriculteur = async (searchTerm) => {
-                if (!searchTerm || searchTerm.length < 2) {
-                    agriculteurSuggestions.style.display = 'none';
-                    return;
-                }
-                
-                try {
-                    console.log("Searching for agriculteur:", searchTerm);
-                    const response = await fetch("/api/search_agriculteur", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ search_term: searchTerm })
-                    });
-
-                    const results = await response.json();
-                    console.log("Search results:", results);
-                    
-                    // Afficher les résultats
-                    agriculteurSuggestions.innerHTML = '';
-                    
-                    if (results.length === 0) {
-                        agriculteurSuggestions.style.display = 'none';
-                        return;
-                    }
-                    
-                    results.forEach(result => {
-                        const item = document.createElement('div');
-                        item.className = 'p-2 border-bottom suggestion-item';
-                        item.textContent = result.display;
-                        item.style.cursor = 'pointer';
-                        
-                        item.addEventListener('click', () => {
-                            // Remplir les champs avec les données de l'agriculteur sélectionné
-                            document.getElementById('modal_nom_agri').value = result.nom;
-                            document.getElementById('modal_prenom_agri').value = result.prenom;
-                            searchAgriculteurInput.value = result.display;
-                            agriculteurSuggestions.style.display = 'none';
-                        });
-                        
-                        agriculteurSuggestions.appendChild(item);
-                    });
-                    
-                    agriculteurSuggestions.style.display = 'block';
-                    
-                } catch (error) {
-                    console.error("Error searching for agriculteur:", error);
-                    agriculteurSuggestions.style.display = 'none';
-                }
-            };
-            
-            // Événement de saisie dans le champ de recherche
-            searchAgriculteurInput.addEventListener('input', function() {
-                const searchTerm = this.value.trim();
-                searchAgriculteur(searchTerm);
-            });
-            
-            // Masquer les suggestions lorsqu'on clique ailleurs
-            document.addEventListener('click', function(event) {
-                if (!searchAgriculteurInput.contains(event.target) && !agriculteurSuggestions.contains(event.target)) {
-                    agriculteurSuggestions.style.display = 'none';
-                }
-            });
-        } else {
-            console.error("Search agriculteur elements not found");
-        }
+        // La gestion de la recherche d'agriculteurs est maintenant gérée par le script agriculteur_search.js
         
-        // Gestion de l'API SIRENE
-        const fetchSireneButton = document.querySelector('button[name="fetch_sirene"]');
-        const siretInput = document.getElementById('siret');
-
-        if (fetchSireneButton && siretInput) {
-            console.log("Initializing fetch_sirene button event listener");
-            
-            fetchSireneButton.addEventListener("click", async function (event) {
-                event.preventDefault();
-                console.log("Fetch SIRENE button clicked");
-
-                const siret = siretInput.value.trim();
-                if (!siret) {
-                    Swal.fire({
-                        icon: "warning",
-                        title: "Attention",
-                        text: "Veuillez saisir un numéro SIRET valide"
-                    });
-                    return;
-                }
-
-                try {
-                    console.log("Fetching SIRET data for:", siret);
-                    const response = await fetch("/api/siret", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ siret })
-                    });
-
-                    const data = await response.json();
-                    console.log("SIRET API response:", data);
-
-                    if (data.error) {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Erreur",
-                            text: data.error
-                        });
-                        return;
-                    }
-                    
-                    // Remplir les champs de base de la société
-                    document.querySelector('[name="nom_societe"]').value = data.nom_societe || data.denomination || "Non renseigné";
-                    document.querySelector('[name="adresse_etablissement"]').value = data.adresse_etablissement || "Non renseigné";
-                    document.querySelector('[name="tranche_effectif"]').value = data.tranche_effectif || "Non renseigné";
-                    document.querySelector('[name="categorie_juridique"]').value = data.categorie_juridique || "Non renseigné";
-                    document.querySelector('[name="activite_principale"]').value = data.activite_principale || "Non renseigné";
-                    
-                    // Afficher un message de succès
-                    Swal.fire({
-                        icon: "success",
-                        title: "Succès",
-                        text: "Les informations de l'entreprise ont été récupérées avec succès."
-                    });
-                    
-                } catch (error) {
-                    console.error("Error fetching SIRET data:", error);
-                    Swal.fire({
-                        icon: "error",
-                        title: "Erreur",
-                        text: "Une erreur est survenue lors de la récupération des données SIRENE."
-                    });
-                }
-            });
-        } else {
-            console.error("Fetch SIRENE button or SIRET input not found");
-        }
+        // La gestion de l'API SIRENE est maintenant gérée par le script siret_handler.js
     });
 
 </script>
+<script src="{{ url_for('static', filename='js/agriculteur_search.js') }}"></script>
+<script src="{{ url_for('static', filename='js/referent_search.js') }}"></script>
+<script src="{{ url_for('static', filename='js/siret_handler.js') }}"></script>
