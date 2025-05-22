@@ -121,7 +121,7 @@ def get_site_cen_geojson(site_id):
     Cela permet d'optimiser le chargement de la page edit_contract.html.
     """
     # Récupérer uniquement le site spécifié
-    site = VueSites.query.filter_by(id_site=site_id).first()
+    site = VueSites.query.filter_by(idsite=site_id).first()
     
     if not site:
         return jsonify({"type": "FeatureCollection", "features": []}), 404
@@ -587,9 +587,20 @@ def edit_contract(contract_id):
     contrat = Contrat.query.options(selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen)).filter(Contrat.id_contrat == contract_id).first()
     
     if contrat and contrat.sites_cen and contrat.sites_cen[0].site_cen:
-        site_id = contrat.sites_cen[0].site_cen.id_site
-        # Charger uniquement le site spécifique
-        sites_geojson = get_site_cen_geojson(site_id).json
+        # Récupérer le code du site (codesite) pour faire la correspondance
+        code_site = contrat.sites_cen[0].site_cen.code_site
+        
+        # Rechercher le site correspondant dans VueSites par son code
+        vue_site = VueSites.query.filter_by(codesite=code_site).first()
+        
+        if vue_site:
+            # Utiliser l'idsite de VueSites
+            site_id = vue_site.idsite
+            # Charger uniquement le site spécifique
+            sites_geojson = get_site_cen_geojson(site_id).json
+        else:
+            # Si le site n'est pas trouvé dans VueSites, renvoyer un GeoJSON vide
+            sites_geojson = {"type": "FeatureCollection", "features": []}
     else:
         # Si pas de site associé, renvoyer un GeoJSON vide
         sites_geojson = {"type": "FeatureCollection", "features": []}
