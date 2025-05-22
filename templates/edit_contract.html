@@ -104,25 +104,25 @@
                                         </div>
                                         <div class="mb-3">
                                             {{ form.activite_principale.label }}
-                                            {{ form.activite_principale(class="form-control") }}
+                                            {{ form.activite_principale(class="form-control", readonly=True) }}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.categorie_juridique.label }}
-                                            {{ form.categorie_juridique(class="form-control") }}
+                                            {{ form.categorie_juridique(class="form-control", readonly=True) }}
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             {{ form.nom_societe.label }}
-                                            {{ form.nom_societe(class="form-control") }}
+                                            {{ form.nom_societe(class="form-control", readonly=True) }}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.adresse_etablissement.label }}
-                                            {{ form.adresse_etablissement(class="form-control") }}
+                                            {{ form.adresse_etablissement(class="form-control", readonly=True) }}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.tranche_effectif.label }}
-                                            {{ form.tranche_effectif(class="form-control") }}
+                                            {{ form.tranche_effectif(class="form-control", readonly=True)}}
                                         </div>
                                     </div>
                                 </div>
@@ -836,33 +836,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updateAllProductionsData();
     }
 
-    // 🎯 Gestion de l'API SIRENE pour récupérer les données SIRET
-    document.querySelector('[name="fetch_sirene"]').addEventListener("click", async function (event) {
-        event.preventDefault();
-
-        const siret = document.querySelector('[name="siret"]').value.trim();
-        if (!siret) return;
-
-        try {
-            const response = await fetch("/api/siret", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ siret })
-            });
-
-            const data = await response.json();
-            if (data.error) {
-                Swal.fire({ icon: "error", title: "Erreur", text: data.error });
-            } else {
-                ['nom_societe', 'adresse_etablissement', 'tranche_effectif', 'categorie_juridique', 'activite_principale'].forEach(field => {
-                    document.querySelector(`[name="${field}"]`).value = data[field] || "Non renseigné";
-                });
-                Swal.fire({ icon: "success", title: "Succès", text: "Les données ont été récupérées avec succès." });
-            }
-        } catch (error) {
-            Swal.fire({ icon: "error", title: "Erreur serveur", text: "Une erreur s'est produite lors de la récupération des données." });
-        }
-    });
 
     // Ajout du style pour les éléments d'autocomplétion
     document.head.insertAdjacentHTML('beforeend', `
@@ -1106,5 +1079,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+<!-- Inclusion du script de gestion SIRET -->
+<script src="{{ url_for('static', filename='js/siret_handler.js') }}"></script>
 
 {% endblock %}
