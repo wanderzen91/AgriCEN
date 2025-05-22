@@ -576,6 +576,9 @@ def map_page():
 
     # Envoyer les données au template après la boucle
     return render_template('map.html', form=form, geojson=geojson, contrats=contrat_data)
+
+    
+@app.route('/edit_contract/<int:contract_id>', methods=['GET', 'POST'])
 def edit_contract(contract_id):
 
     # Charger uniquement le GeoJSON du site associé au contrat (optimisation)
