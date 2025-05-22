@@ -114,6 +114,40 @@ def get_sites_cen_geojson():
 
 
 
+@app.route('/site_cen_geojson/<int:site_id>')
+def get_site_cen_geojson(site_id):
+    """
+    Récupère les données GeoJSON pour un seul site CEN spécifié par son ID.
+    Cela permet d'optimiser le chargement de la page edit_contract.html.
+    """
+    # Récupérer uniquement le site spécifié
+    site = VueSites.query.filter_by(id_site=site_id).first()
+    
+    if not site:
+        return jsonify({"type": "FeatureCollection", "features": []}), 404
+    
+    # Convertir la géométrie PostGIS en GeoJSON
+    shape = to_shape(site.geom)
+    geojson = mapping(shape)
+    
+    feature = {
+        "type": "Feature",
+        "geometry": geojson,
+        "properties": {
+            "codesite": site.codesite,
+            "nom_site": site.nom_site
+        }
+    }
+    
+    geojson_data = {
+        "type": "FeatureCollection",
+        "features": [feature]
+    }
+    
+    return jsonify(geojson_data)
+
+
+
 def fetch_siret_data(siret, flash_messages = False):
     """
     Récupère les informations d'une entreprise via l'API SIRENE en fonction du numéro SIRET.
@@ -542,13 +576,20 @@ def map_page():
 
     # Envoyer les données au template après la boucle
     return render_template('map.html', form=form, geojson=geojson, contrats=contrat_data)
-
-
-@app.route('/edit_contract/<int:contract_id>', methods=['GET', 'POST'])
 def edit_contract(contract_id):
 
-    # Charger le GeoJSON pour la carte
-    sites_geojson = get_sites_cen_geojson().json
+    # Charger uniquement le GeoJSON du site associé au contrat (optimisation)
+    site_id = None
+    # Vérifier si le contrat a un site CEN associé
+    contrat = Contrat.query.options(selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen)).filter(Contrat.id_contrat == contract_id).first()
+    
+    if contrat and contrat.sites_cen and contrat.sites_cen[0].site_cen:
+        site_id = contrat.sites_cen[0].site_cen.id_site
+        # Charger uniquement le site spécifique
+        sites_geojson = get_site_cen_geojson(site_id).json
+    else:
+        # Si pas de site associé, renvoyer un GeoJSON vide
+        sites_geojson = {"type": "FeatureCollection", "features": []}
 
     # Charger un formulaire unique contenant tous les champs
     form = CombinedForm()
