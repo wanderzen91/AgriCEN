@@ -257,65 +257,6 @@
 
 
 <script>
-    // Fonction pour créer des choix avec des emojis
-    function createChoicesWithIcons(choices, emojiMapping) {
-        return choices.map(choice => {
-            const emoji = emojiMapping[choice.label.toLowerCase()];
-            console.log('Choice:', choice.label, 'Emoji:', emoji);
-            return {
-                ...choice,
-                emoji: emoji || '❓'
-            };
-        });
-    }
-
-    // Fonction pour initialiser Tagify avec un template personnalisé incluant des émojis
-    function initializeTagify(selector, choices, emojiMapping) {
-        const input = typeof selector === 'string' ? document.querySelector(selector) : selector;
-        if (!input) return null;
-        
-        // Vérifier si Tagify est déjà initialisé
-        if (input._tagify) {
-            return input._tagify;
-        }
-
-        try {
-            const tagify = new Tagify(input, {
-                whitelist: choices.map(choice => ({
-                    value: choice.value,
-                    label: choice.label,
-                    emoji: emojiMapping[choice.label] || emojiMapping[choice.label.toLowerCase()] || "❓"
-                })),
-                enforceWhitelist: true,
-                dropdown: { 
-                    enabled: 0,
-                    maxItems: 1000
-                },
-                templates: {
-                    tag: tagData => `
-                        <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
-                            <span class="tagify__tag-text">${tagData.emoji} ${tagData.label}</span>
-                            <x class="tagify__tag__removeBtn"></x>
-                        </tag>`,
-                    dropdownItem: suggestion => `
-                        <div class="tagify__dropdown__item">
-                            ${suggestion.emoji} ${suggestion.label}
-                        </div>`
-                }
-            });
-            
-            // Ajouter un gestionnaire d'événements pour afficher tous les tags au clic
-            input.addEventListener('click', function() {
-                tagify.dropdown.show.call(tagify);
-            });
-            
-            console.log("Tagify initialized for:", input);
-            return tagify;
-        } catch (error) {
-            console.error("Error initializing Tagify:", error);
-            return null;
-        }
-    }
 
 
     // Fonction globale pour réinitialiser le formulaire
@@ -425,56 +366,6 @@
         });
     }
 
-
-
-    // Fonction pour synchroniser Tagify avec un champ caché
-    function syncTagifyWithHidden(tagifyInstance, hiddenSelector) {
-        if (!tagifyInstance) {
-            console.error("Tagify instance not provided");
-            return;
-        }
-
-        const hiddenInput = document.querySelector(hiddenSelector);
-        if (!hiddenInput) {
-            console.error(`Hidden input not found: ${hiddenSelector}`);
-            return;
-        }
-        
-        console.log(`Synchronizing Tagify with hidden input: ${hiddenSelector}`);
-
-        tagifyInstance.on('change', function(e) {
-            console.log(`Tagify change event for ${hiddenSelector}:`, tagifyInstance.value);
-            
-            // Vérifier si c'est un select multiple ou un input
-            if (hiddenInput.tagName === 'SELECT' && hiddenInput.multiple) {
-                // Pour les select multiples, mettre à jour les options sélectionnées
-                const values = tagifyInstance.value.map(tag => tag.value);
-                console.log(`Values for ${hiddenSelector}:`, values);
-                
-                // D'abord, désélectionner toutes les options
-                for (let option of hiddenInput.options) {
-                    option.selected = false;
-                }
-                
-                // Ensuite, sélectionner les options correspondantes
-                for (let option of hiddenInput.options) {
-                    if (values.includes(option.value)) {
-                        option.selected = true;
-                        console.log(`Selected option ${option.value} in ${hiddenSelector}`);
-                    }
-                }
-            } else if (hiddenInput.tagName === 'SELECT') {
-                // Pour les selects simples
-                hiddenInput.value = tagifyInstance.value.length > 0 ? tagifyInstance.value[0].value : '';
-                console.log(`Set single select ${hiddenSelector} value to:`, hiddenInput.value);
-            } else {
-                // Pour les inputs
-                hiddenInput.value = tagifyInstance.value.map(tag => tag.value).join(',');
-                console.log(`Set input ${hiddenSelector} value to:`, hiddenInput.value);
-            }
-        });
-    }
-
     // Fonction pour activer/désactiver les champs référent
     function enableReferentFields(contractIndex, enable) {
         const nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
@@ -492,38 +383,6 @@
                 nomReferent.classList.add('disabled-look');
                 prenomReferent.classList.add('disabled-look');
             }
-        }
-    }
-
-    // Initialiser Tagify pour les types de milieu
-    function initializeTypeMilieuTagify(contractIndex) {
-        // Utiliser querySelectorAll pour trouver tous les éléments et sélectionner le bon par index
-        const contractEntries = document.querySelectorAll('.contract-entry');
-        const currentEntry = contractEntries[contractIndex - 1]; // -1 car les indices commencent à 0
-        
-        if (!currentEntry) {
-            console.error(`Contract entry #${contractIndex} not found`);
-            return;
-        }
-        
-        const typeMilieuInput = currentEntry.querySelector('.type-milieu-tagify');
-        const typeMilieuSelect = currentEntry.querySelector('.type-milieu-select');
-        
-        if (typeMilieuInput && typeMilieuSelect) {
-            console.log(`Initializing Tagify for contract #${contractIndex}`);
-            
-            const typeMilieuChoices = Array.from(typeMilieuSelect.options).map(option => ({
-                value: option.value,
-                label: option.textContent
-            }));
-            
-            // Utiliser le mapping global défini dans base.html
-            const tagify = initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
-            syncTagifyWithHidden(tagify, `select[name="type_milieu"]`);
-        } else {
-            console.error(`Tagify elements not found for contract #${contractIndex}`);
-            console.log('typeMilieuInput:', typeMilieuInput);
-            console.log('typeMilieuSelect:', typeMilieuSelect);
         }
     }
 
@@ -656,15 +515,12 @@
                     }
                 }
                 
-                const tagify = initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
+                const tagify = TagifyHandler.initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
                 
                 // Synchroniser avec le select caché
-                syncTagifyWithHidden(tagify, `select[name="type_milieu_${contractCounter}"]`);
+                TagifyHandler.syncTagifyWithHidden(tagify, `select[name="type_milieu_${contractCounter}"]`);
                 
-                // Ajouter un gestionnaire pour ouvrir le dropdown au clic
-                typeMilieuInput.addEventListener('click', function() {
-                    tagify.dropdown.show();
-                });
+                // Le gestionnaire d'événements pour l'ouverture du dropdown est déjà ajouté dans la fonction initializeTagify
             }
         }, 100);
         
@@ -726,62 +582,7 @@
     // Ajouter un gestionnaire d'événements pour le bouton d'ajout de contrat
     document.getElementById('add-contract').addEventListener('click', addNewContractEntry);
 
-    // Initialiser Tagify pour le premier type de milieu
-    initializeTypeMilieuTagify(1);
-    
-    // Initialiser Tagify pour les types de production
-    function initializeTypeProductionTagify() {
-        const typeProductionInput = document.querySelector('.type-production-tagify[name="type_production_display"]');
-        const typeProductionSelect = document.querySelector('.type-production-select[name="type_production"]');
-        
-        if (typeProductionInput && typeProductionSelect) {
-            console.log('Initializing Tagify for type_production');
-            
-            const typeProductionChoices = Array.from(typeProductionSelect.options).map(option => ({
-                value: option.value,
-                label: option.textContent
-            }));
-            
-            const tagify = initializeTagify(typeProductionInput, typeProductionChoices, window.emojiTypeProductionMapping);
-            syncTagifyWithHidden(tagify, '.type-production-select[name="type_production"]');
-            return tagify;
-        } else {
-            console.error('Type production Tagify elements not found');
-            console.log('typeProductionInput:', typeProductionInput);
-            console.log('typeProductionSelect:', typeProductionSelect);
-            return null;
-        }
-    }
-    
-    // Initialiser le champ de type de production
-    const typeProductionTagify = initializeTypeProductionTagify();
-    
-    // Vérifier que le tagify a été correctement initialisé
-    console.log('Type Production Tagify initialized:', typeProductionTagify);
-    
-    // Débogage du sélecteur
-    console.log('Type Production select:', document.querySelector('.type-production-select[name="type_production"]'));
-    
-    // Initialiser Tagify pour les produits finis
-    const produitFiniInput = document.getElementById('produit_fini_tagify');
-    const produitFiniSelect = document.getElementById('produit_fini');
-    
-    if (produitFiniInput && produitFiniSelect) {
-        console.log("Initializing Tagify for produit_fini");
-        
-        const produitFiniChoices = Array.from(produitFiniSelect.options).map(option => ({
-            value: option.value,
-            label: option.textContent
-        }));
-        
-        // Utiliser le mapping global défini dans base.html
-        window.produitFiniTagify = initializeTagify(produitFiniInput, produitFiniChoices, window.emojiProduitFiniMapping);
-        syncTagifyWithHidden(window.produitFiniTagify, '#produit_fini');
-    } else {
-        console.error("Produit fini Tagify elements not found");
-        console.log('produitFiniInput:', produitFiniInput);
-        console.log('produitFiniSelect:', produitFiniSelect);
-    }
+    // L'initialisation des champs Tagify est maintenant gérée automatiquement par le script tagify_handler.js
         
     // Mettre à jour les données des contrats avant la soumission du formulaire
     document.getElementById('addForm').addEventListener('submit', function(e) {
@@ -791,6 +592,7 @@
 
 
 </script>
+<script src="{{ url_for('static', filename='js/tagify_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='js/agriculteur_search.js') }}"></script>
 <script src="{{ url_for('static', filename='js/referent_search.js') }}"></script>
 <script src="{{ url_for('static', filename='js/siret_handler.js') }}"></script>
