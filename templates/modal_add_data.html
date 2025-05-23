@@ -108,25 +108,8 @@
                                                             </div>
                                                             <div class="mb-3">
                                                                 <label class="form-label">Mode de Production</label>
-                                                                <select class="form-select" name="mode_production">
-                                                                    <option value="" selected disabled>Sélectionner un mode de production</option>
-                                                                    <option value="1">Bio</option>
-                                                                    <option value="2">Conventionnelle</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Types de Production</label>
-                                                                <input class="form-control type-production-tagify" name="type_production_display" placeholder="Ajouter des types de production">
-                                                                <select class="type-production-select" name="type_production" multiple hidden>
-                                                                    {% for value, label in form.type_production.choices %}
-                                                                        <option value="{{ value }}">{{ label }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label">Mode de Production</label>
-                                                                <select class="form-select" name="mode_production">
-                                                                    <option value="" selected disabled>Sélectionner un mode de production</option>
+                                                                <select class="form-select" name="mode_production" required>
+                                                                    <option value="">Sélectionner un mode de production</option>
                                                                     <option value="1">Bio</option>
                                                                     <option value="2">Conventionnelle</option>
                                                                 </select>
@@ -199,9 +182,9 @@
                                         <div class="col-md-6">
                                             <!-- Nouveau champ de recherche avec autocomplétion -->
                                             <div class="mb-3">
-                                                <label for="search_referent_1" class="form-label">Rechercher un(e) référent(e)</label>
+                                                <label for="search_referent" class="form-label">Rechercher un(e) référent(e)</label>
                                                 <div class="position-relative">
-                                                    <input type="text" class="form-control search-referent" id="search_referent_1" 
+                                                    <input type="text" class="form-control search-referent" id="search_referent" 
                                                             placeholder="Rechercher un(e) référent(e) existant(e)...">
                                                     <div class="referent-suggestions position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
                                                         style="z-index: 1000; display: none;">
@@ -210,11 +193,11 @@
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.nom_referent.label }}
-                                                {{ form.nom_referent(class="form-control nom-referent", id="modal_nom_referent_1") }}
+                                                {{ form.nom_referent(class="form-control nom-referent", id="modal_nom_referent") }}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.prenom_referent.label }}
-                                                {{ form.prenom_referent(class="form-control prenom-referent", id="modal_prenom_referent_1") }}
+                                                {{ form.prenom_referent(class="form-control prenom-referent", id="modal_prenom_referent") }}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.surf_contractualisee.label }}
@@ -222,7 +205,7 @@
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.type_milieu.label }}
-                                                <input class="form-control type-milieu-tagify" name="type_milieu_display_1" placeholder="Ajouter des types de milieu">
+                                                <input class="form-control type-milieu-tagify" name="type_milieu_display" placeholder="Ajouter des types de milieu">
                                                 <select class="type-milieu-select" name="type_milieu" multiple hidden>
                                                     {% for value, label in form.type_milieu.choices %}
                                                         <option value="{{ value }}">{{ label }}</option>
@@ -233,13 +216,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mt-3">
-                                <div class="col-12">
-                                    <button type="button" id="add-contract" class="btn btn-success">
-                                        <i class="fas fa-plus-circle me-2"></i>Ajouter un contrat
-                                    </button>
-                                </div>
-                            </div>
+
                             <!-- Champ caché pour stocker les données des contrats -->
                             <input type="hidden" id="contracts-data" name="contracts_data" value="[]">
                         </div>
@@ -256,216 +233,7 @@
 </div>
 
 
-<script>
 
-
-
-    // Fonction pour ajouter un nouveau contrat
-    let contractCounter = 1;
-    
-    function addNewContractEntry() {
-        contractCounter++;
-        
-        // Créer un nouveau contrat à partir de zéro plutôt que de cloner
-        const contractsContainer = document.getElementById('contracts-container');
-        const firstContract = document.querySelector('.contract-entry');
-        
-        // Créer un nouveau conteneur pour le contrat
-        const newContract = document.createElement('div');
-        newContract.className = 'contract-entry mb-4 border-bottom pb-3';
-        
-        // Créer le contenu HTML du nouveau contrat
-        newContract.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5>Contrat #${contractCounter}</h5>
-                <button type="button" class="btn btn-danger btn-sm delete-contract">
-                    <i class="fas fa-trash me-1"></i>Supprimer
-                </button>
-            </div>
-            <div class="row gx-4 gy-3">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Appellation du contrat</label>
-                        <input type="text" class="form-control appellation-contrat" name="appellation_contrat">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date de signature</label>
-                        <input type="date" class="form-control date-signature" name="date_signature">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date de prise d'effet</label>
-                        <input type="date" class="form-control date-prise-effet" name="date_prise_effet">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date de fin</label>
-                        <input type="date" class="form-control date-fin" name="date_fin">
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="search_referent_${contractCounter}" class="form-label">Rechercher un(e) référent(e)</label>
-                        <div class="position-relative">
-                            <input type="text" class="form-control search-referent" id="search_referent_${contractCounter}" 
-                                    placeholder="Rechercher un(e) référent(e) existant(e)...">
-                            <div class="referent-suggestions position-absolute w-100 mt-1 bg-white border rounded shadow-sm" 
-                                style="z-index: 1000; display: none;">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nom du/de la référent(e)</label>
-                        <input type="text" class="form-control nom-referent" id="modal_nom_referent_${contractCounter}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Prénom du/de la référent(e)</label>
-                        <input type="text" class="form-control prenom-referent" id="modal_prenom_referent_${contractCounter}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Surface contractualisée (ha)</label>
-                        <input type="number" step="0.01" class="form-control surf-contractualisee" name="surf_contractualisee">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Type de milieu</label>
-                        <input class="form-control type-milieu-tagify" name="type_milieu_display_${contractCounter}" placeholder="Ajouter des types de milieu">
-                        <select class="type-milieu-select" name="type_milieu" multiple hidden>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Ajouter le nouveau contrat au conteneur
-        contractsContainer.appendChild(newContract);
-        
-        // Copier les options du select type_milieu du premier contrat
-        const firstTypeOptions = firstContract.querySelector('.type-milieu-select').options;
-        const newTypeSelect = newContract.querySelector('.type-milieu-select');
-        
-        for (let i = 0; i < firstTypeOptions.length; i++) {
-            const option = document.createElement('option');
-            option.value = firstTypeOptions[i].value;
-            option.textContent = firstTypeOptions[i].textContent;
-            newTypeSelect.appendChild(option);
-        }
-        
-
-        // Initialiser Tagify pour les types de milieu en utilisant directement les options du mapping global
-        setTimeout(() => {
-            const typeMilieuInput = newContract.querySelector('.type-milieu-tagify');
-            const typeMilieuSelect = newContract.querySelector('.type-milieu-select');
-            
-            if (typeMilieuInput && typeMilieuSelect) {
-                console.log(`Initializing Tagify for contract #${contractCounter}`);
-                
-                // Créer des choix à partir du mapping global d'emojis
-                const typeMilieuChoices = [];
-                
-                // D'abord, ajouter toutes les options du select
-                Array.from(typeMilieuSelect.options).forEach(option => {
-                    typeMilieuChoices.push({
-                        value: option.value,
-                        label: option.textContent
-                    });
-                });
-                
-                // Ensuite, s'assurer que toutes les options du mapping global sont incluses
-                for (const [label, emoji] of Object.entries(window.emojiTypeMilieuMapping)) {
-                    // Vérifier si cette option existe déjà dans les choix
-                    const exists = typeMilieuChoices.some(choice => 
-                        choice.label.toLowerCase() === label.toLowerCase());
-                    
-                    // Si elle n'existe pas, l'ajouter
-                    if (!exists) {
-                        typeMilieuChoices.push({
-                            value: label,
-                            label: label
-                        });
-                        
-                        // Ajouter aussi l'option au select
-                        const option = document.createElement('option');
-                        option.value = label;
-                        option.textContent = label;
-                        newTypeSelect.appendChild(option);
-                    }
-                }
-                
-                const tagify = TagifyHandler.initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
-                
-                // Synchroniser avec le select caché
-                TagifyHandler.syncTagifyWithHidden(tagify, `select[name="type_milieu_${contractCounter}"]`);
-                
-                // Le gestionnaire d'événements pour l'ouverture du dropdown est déjà ajouté dans la fonction initializeTagify
-            }
-        }, 100);
-        
-        // Ajouter un gestionnaire d'événements pour le bouton de suppression
-        const deleteBtn = newContract.querySelector('.delete-contract');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
-                newContract.remove();
-                updateContractsData();
-            });
-        }
-    }
-    
-    // Fonction utilitaire pour mettre à jour les attributs d'un élément
-    function updateElementAttributes(container, oldId, newId) {
-        const element = container.querySelector(`#${oldId}`);
-        if (element) {
-            element.id = newId;
-        }
-    }
-
-    // Fonction pour collecter les données des contrats
-    function updateContractsData() {
-        const contractEntries = document.querySelectorAll('.contract-entry');
-        const contractsData = [];
-        
-        contractEntries.forEach((entry, index) => {
-            const contractIndex = index + 1;
-            const appellationContrat = entry.querySelector('.appellation-contrat').value;
-            const dateSignature = entry.querySelector('.date-signature').value;
-            const datePriseEffet = entry.querySelector('.date-prise-effet').value;
-            const dateFin = entry.querySelector('.date-fin').value;
-            const nomReferent = entry.querySelector('.nom-referent').value;
-            const prenomReferent = entry.querySelector('.prenom-referent').value;
-            const surfContractualisee = entry.querySelector('.surf-contractualisee').value;
-            
-            // Récupérer les types de milieu sélectionnés
-            const typeMilieuSelect = entry.querySelector('.type-milieu-select');
-            const typesMilieu = Array.from(typeMilieuSelect.options)
-                .filter(option => option.selected)
-                .map(option => option.value);
-            
-            contractsData.push({
-                appellation_contrat: appellationContrat,
-                date_signature: dateSignature,
-                date_prise_effet: datePriseEffet,
-                date_fin: dateFin,
-                nom_referent: nomReferent,
-                prenom_referent: prenomReferent,
-                surf_contractualisee: surfContractualisee,
-                types_milieu: typesMilieu
-            });
-        });
-        
-        // Mettre à jour le champ caché avec les données JSON
-        document.getElementById('contracts-data').value = JSON.stringify(contractsData);
-    }
-
-    // Ajouter un gestionnaire d'événements pour le bouton d'ajout de contrat
-    document.getElementById('add-contract').addEventListener('click', addNewContractEntry);
-
-    // L'initialisation des champs Tagify est maintenant gérée automatiquement par le script tagify_handler.js
-        
-    // Mettre à jour les données des contrats avant la soumission du formulaire
-    document.getElementById('addForm').addEventListener('submit', function(e) {
-        updateContractsData();
-    });
-
-
-
-</script>
 <script src="{{ url_for('static', filename='js/tagify_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='js/agriculteur_search.js') }}"></script>
 <script src="{{ url_for('static', filename='js/referent_search.js') }}"></script>

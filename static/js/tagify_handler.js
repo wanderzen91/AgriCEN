@@ -98,7 +98,14 @@ TagifyHandler.syncTagifyWithHidden = function(tagifyInstance, hiddenSelector) {
         return;
     }
 
-    const hiddenInput = document.querySelector(hiddenSelector);
+    // Accepter soit un sélecteur CSS soit un élément DOM directement
+    let hiddenInput;
+    if (typeof hiddenSelector === 'string') {
+        hiddenInput = document.querySelector(hiddenSelector);
+    } else {
+        hiddenInput = hiddenSelector;
+    }
+    
     if (!hiddenInput) {
         console.error(`Hidden input not found: ${hiddenSelector}`);
         return;
@@ -203,29 +210,18 @@ TagifyHandler.initializeProduitFiniTagify = function() {
 }
 
 // Initialiser Tagify pour les types de milieu
-TagifyHandler.initializeTypeMilieuTagify = function(contractIndex) {
-    console.log('Initializing Type Milieu Tagify for contract #', contractIndex);
+TagifyHandler.initializeTypeMilieuTagify = function() {
+    console.log('Initializing Type Milieu Tagify');
     
-    // Utiliser querySelectorAll pour trouver tous les éléments et sélectionner le bon par index
-    const typeMilieuInputs = document.querySelectorAll('.type-milieu-tagify');
-    const typeMilieuSelects = document.querySelectorAll('.type-milieu-select');
+    // Maintenant nous n'avons qu'un seul champ pour le type de milieu
+    const typeMilieuInput = document.querySelector('.type-milieu-tagify');
+    const typeMilieuSelect = document.querySelector('.type-milieu-select');
     
-    console.log('Found', typeMilieuInputs.length, 'type milieu inputs');
-    console.log('Found', typeMilieuSelects.length, 'type milieu selects');
-    
-    // Ajuster l'index pour le sélecteur basé sur 0
-    const adjustedIndex = contractIndex - 1;
-    
-    if (adjustedIndex < 0 || adjustedIndex >= typeMilieuInputs.length) {
-        console.error(`Type milieu Tagify elements not found for contract #${contractIndex}`);
-        return null;
-    }
-    
-    const typeMilieuInput = typeMilieuInputs[adjustedIndex];
-    const typeMilieuSelect = typeMilieuSelects[adjustedIndex];
+    console.log('Type milieu input found:', !!typeMilieuInput);
+    console.log('Type milieu select found:', !!typeMilieuSelect);
     
     if (typeMilieuInput && typeMilieuSelect) {
-        console.log('Type Milieu input and select found for contract #', contractIndex);
+        console.log('Type Milieu input and select found');
         
         // Créer des choix à partir du mapping global d'emojis
         const typeMilieuChoices = [];
@@ -242,10 +238,35 @@ TagifyHandler.initializeTypeMilieuTagify = function(contractIndex) {
         console.log('Type Milieu emoji mapping:', window.emojiTypeMilieuMapping);
         
         const tagify = TagifyHandler.initializeTagify(typeMilieuInput, typeMilieuChoices, window.emojiTypeMilieuMapping);
-        TagifyHandler.syncTagifyWithHidden(tagify, typeMilieuSelects[adjustedIndex]);
+        
+        // S'assurer que la synchronisation fonctionne correctement
+        tagify.on('change', function(e) {
+            console.log('Type Milieu Tagify change event triggered');
+            console.log('New value:', tagify.value);
+            
+            // Désélectionner toutes les options actuelles
+            Array.from(typeMilieuSelect.options).forEach(option => {
+                option.selected = false;
+            });
+            
+            // Sélectionner les options correspondant aux tags sélectionnés
+            if (tagify.value && tagify.value.length > 0) {
+                tagify.value.forEach(tag => {
+                    const option = Array.from(typeMilieuSelect.options).find(opt => opt.value === tag.value || opt.textContent === tag.value);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+            }
+            
+            // Déclencher un événement de changement sur le select pour que le formulaire le détecte
+            const event = new Event('change', { bubbles: true });
+            typeMilieuSelect.dispatchEvent(event);
+        });
+        
         return tagify;
     } else {
-        console.error(`Type milieu Tagify elements not found for contract #${contractIndex}`);
+        console.error('Type milieu Tagify elements not found');
         console.log('typeMilieuInput:', typeMilieuInput);
         console.log('typeMilieuSelect:', typeMilieuSelect);
         return null;
@@ -273,8 +294,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (document.querySelector('.type-milieu-tagify')) {
-            console.log('Auto-initializing Type Milieu Tagify for first contract');
-            TagifyHandler.initializeTypeMilieuTagify(1);
+            console.log('Auto-initializing Type Milieu Tagify');
+            TagifyHandler.initializeTypeMilieuTagify();
         }
     }, 500); // Délai pour s'assurer que tous les éléments sont chargés
 });

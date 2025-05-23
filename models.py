@@ -28,16 +28,16 @@ class Societe(db.Model):
     id_societe = db.Column(db.Integer, primary_key=True)
     nom_societe = db.Column(db.String(100))
     contact = db.Column(db.String(100), nullable=False)
-    siret = db.Column(db.String(14))
-    categorie_juridique = db.Column(db.String(150))
-    activite_principale = db.Column(db.String(150))
-    tranche_effectif = db.Column(db.String(50))
+    siret = db.Column(db.String(14), unique=True)
+    categorie_juridique = db.Column(db.String(4), db.ForeignKey('referentiel.type_categorie_juridique.code_type_categorie_juridique'))
+    activite_principale = db.Column(db.String(6), db.ForeignKey('referentiel.type_activite_principale.code_type_activite_principale'))
+    tranche_effectif = db.Column(db.String(2), db.ForeignKey('referentiel.type_tranche_effectif.code_type_tranche_effectif'))
     adresse_etablissement = db.Column(db.String(150))
     commune_etablissement = db.Column(db.String(150))
     nom_etablissement = db.Column(db.String(150))
+    remarques = db.Column(db.String(300))
 
-
-    # Relation avec AgriculteurSociete
+    # Relations
     agriculteurs_intermediaires = db.relationship(
         'AgriculteurSociete',
         back_populates='societe',
@@ -48,27 +48,19 @@ class Societe(db.Model):
         'Contrat', 
         back_populates='societe',
         cascade='all, delete-orphan'
-        )
-    # Relation avec TypeProductionSociete
+    )
+    
     types_production_societe = db.relationship(
         'TypeProductionSociete',
         back_populates='societe',
         cascade='all, delete-orphan'
     )
 
-    # Clé étrangère vers TypeActivitePrincipale
-    activite_principale = db.Column(db.String(10), db.ForeignKey('referentiel.type_activite_principale.code_type_activite_principale'))
-    activite_principale_obj = db.relationship('TypeActivitePrincipale', back_populates='societes')
-
-    # Clé étrangère vers TypeCategorieJuridique
-    categorie_juridique = db.Column(db.String(10), db.ForeignKey('referentiel.type_categorie_juridique.code_type_categorie_juridique'))
+    # Relations avec les tables de référence
     categorie_juridique_obj = db.relationship('TypeCategorieJuridique', back_populates='societes')
-
-    # Clé étrangère vers TypeTrancheEffectif
-    tranche_effectif = db.Column(db.String(10), db.ForeignKey('referentiel.type_tranche_effectif.code_type_tranche_effectif'))
+    activite_principale_obj = db.relationship('TypeActivitePrincipale', back_populates='societes')
     tranche_effectif_obj = db.relationship('TypeTrancheEffectif', back_populates='societes')
 
-    
 # Table TypeProduction
 class TypeProduction(db.Model):
     __tablename__ = 'type_production'
@@ -87,7 +79,6 @@ class TypeProduction(db.Model):
         overlaps="modes_production,types_production"
     )
 
-
 # Modèle ModeProduction
 class ModeProduction(db.Model):
     __tablename__ = 'mode_production'
@@ -103,8 +94,6 @@ class ModeProduction(db.Model):
         cascade="all, delete-orphan",
         overlaps="modes_production,types_production"
     )
-
-
 
 # Table TypeProduitFini
 class TypeProduitFini(db.Model):
@@ -159,27 +148,27 @@ class Contrat(db.Model):
     __table_args__ = {'schema': 'saisie'}
     id_contrat = db.Column(db.Integer, primary_key=True)
     surf_contractualisee = db.Column(db.Numeric(4, 2))
-    date_signature = db.Column(db.Date, nullable=False)
-    date_fin = db.Column(db.Date, nullable=False)
-    date_prise_effet = db.Column(db.Date, nullable=False)
+    date_signature = db.Column(db.Date)
+    date_fin = db.Column(db.Date)
+    date_prise_effet = db.Column(db.Date)
     latitude = db.Column(db.Numeric(8, 5))
     longitude = db.Column(db.Numeric(8, 5))
     date_ajout_bdd = db.Column(db.DateTime, default=datetime.now)
     numero_contrat = db.Column(db.String(50))
-    remarques = db.Column(db.String(300))
+    remarques = db.Column(db.Text)
 
     id_societe = db.Column(db.Integer, db.ForeignKey('saisie.societe.id_societe'), nullable=False)
-    id_referent = db.Column(db.Integer, db.ForeignKey('saisie.referent.id_referent'), nullable=False)
-    id_type_contrat = db.Column(db.Integer, db.ForeignKey('referentiel.type_contrat.id_type_contrat'), nullable=False)
+    id_referent = db.Column(db.Integer, db.ForeignKey('saisie.referent.id_referent'))
+    id_type_contrat = db.Column(db.Integer, db.ForeignKey('referentiel.type_contrat.id_type_contrat'))
 
     societe = db.relationship('Societe', back_populates='contrats')
     referent = db.relationship('Referent', back_populates='contrats')
     type_contrat = db.relationship('TypeContrat', back_populates='contrats')
     
     produits_finis = db.relationship(
-    'ProduitFiniContrat',
-    back_populates='contrat',
-    cascade='all, delete-orphan'
+        'ProduitFiniContrat',
+        back_populates='contrat',
+        cascade='all, delete-orphan'
     )
     # Relation avec TypeMilieuContrat
     types_milieu = db.relationship(
@@ -191,7 +180,7 @@ class Contrat(db.Model):
         'ContratSiteCEN', 
         back_populates='contrat',
         cascade='all, delete-orphan'
-        )
+    )
 
 # Association Table: Agriculteur - Société
 class AgriculteurSociete(db.Model):
@@ -205,17 +194,16 @@ class AgriculteurSociete(db.Model):
     # Relation avec Agriculteur
     agriculteur = db.relationship('Agriculteur', back_populates='societes_intermediaires')
 
-
 # Table d'association TypeProductionMode
 class TypeProductionMode(db.Model):
     __tablename__ = 'type_production_mode'
     __table_args__ = {'schema': 'saisie'}
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    id_type_production = db.Column(db.Integer, db.ForeignKey('referentiel.type_production.id_type_production'), primary_key=True)
+    id_type_production = db.Column(db.Integer, db.ForeignKey('referentiel.type_production.id_type_production'))
     id_mode_production = db.Column(db.Integer, db.ForeignKey('referentiel.mode_production.id'), nullable=False)
 
-    # Ajouter les relations back_populates pour éviter les conflits
+    # Relations
     type_production = db.relationship("TypeProduction", back_populates="modes_production")
     mode_production = db.relationship("ModeProduction", back_populates="types_production")
 
@@ -226,11 +214,11 @@ class TypeProductionSociete(db.Model):
 
     id_societe = db.Column(db.Integer, db.ForeignKey('saisie.societe.id_societe'), primary_key=True)
     id_type_production = db.Column(db.Integer, db.ForeignKey('referentiel.type_production.id_type_production'), primary_key=True)
-    id_mode_production = db.Column(db.Integer, db.ForeignKey('referentiel.mode_production.id'), nullable=False)
+    id_mode_production = db.Column(db.Integer, db.ForeignKey('referentiel.mode_production.id'))
 
     type_production = db.relationship('TypeProduction', back_populates='societes')
     societe = db.relationship('Societe', back_populates='types_production_societe')
-    mode_production = db.relationship('ModeProduction') 
+    mode_production = db.relationship('ModeProduction')
     
 # Association Table: ProduitFini - Contrat
 class ProduitFiniContrat(db.Model):
@@ -262,7 +250,7 @@ class ContratSiteCEN(db.Model):
     site_cen = db.relationship('SiteCEN', back_populates='contrats')
     contrat = db.relationship('Contrat', back_populates='sites_cen')
 
-
+# Tables de référence
 class TypeActivitePrincipale(db.Model):
     __tablename__ = 'type_activite_principale'
     __table_args__ = {'schema': 'referentiel'}
@@ -272,7 +260,6 @@ class TypeActivitePrincipale(db.Model):
 
     # Relation avec Societe
     societes = db.relationship('Societe', back_populates='activite_principale_obj')
-
 
 class TypeCategorieJuridique(db.Model):
     __tablename__ = 'type_categorie_juridique'
@@ -294,8 +281,7 @@ class TypeTrancheEffectif(db.Model):
     # Relation avec Societe
     societes = db.relationship('Societe', back_populates='tranche_effectif_obj')
 
-
-### vue depuis BDD FoncierCEN
+# Vue depuis BDD FoncierCEN
 class VueSites(db.Model):
     __bind_key__ = 'secondary'  # Associe ce modèle à la base secondaire
     __tablename__ = 'site_geojson'

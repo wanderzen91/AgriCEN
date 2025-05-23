@@ -29,15 +29,12 @@ class ReferentSearch {
      * Configure la recherche pour tous les contrats existants
      */
     setupAllContractReferents() {
-        // Trouver tous les champs de recherche de référents pour les contrats
-        const contractSearchInputs = document.querySelectorAll('[id^="search_referent_"]');
+        // Trouver le champ de recherche de référent pour le contrat
+        const contractSearchInput = document.getElementById('search_referent');
         
-        if (contractSearchInputs.length > 0) {
-            console.log(`Configuration de ${contractSearchInputs.length} champs de recherche de référents`);
-            
-            contractSearchInputs.forEach(input => {
-                this.setupSingleReferentSearch(input);
-            });
+        if (contractSearchInput) {
+            console.log('Configuration du champ de recherche de référent');
+            this.setupSingleReferentSearch(contractSearchInput);
         }
     }
 
@@ -55,9 +52,8 @@ class ReferentSearch {
             return;
         }
         
-        // Extraire l'index du contrat à partir de l'ID (si applicable)
-        const idMatch = searchInput.id.match(/search_referent_(\d+)/);
-        const contractIndex = idMatch ? parseInt(idMatch[1]) : null;
+        // Plus besoin d'extraire l'index du contrat car il n'y a qu'un seul contrat
+        const contractIndex = null;
         
         // Initialiser avec les valeurs actuelles si elles existent
         this.initializeWithExistingValues(searchInput, contractIndex);
@@ -192,13 +188,9 @@ class ReferentSearch {
                     const { nom, prenom } = this.splitSearchTerm(searchTerm);
                     let nomReferent, prenomReferent;
                     
-                    if (contractIndex) {
-                        nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
-                        prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
-                    } else {
-                        nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
-                        prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
-                    }
+                    // Il n'y a plus qu'un seul contrat, donc on utilise les IDs sans suffixe
+                    nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
+                    prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
                     
                     if (nomReferent && prenomReferent) {
                         nomReferent.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
@@ -223,13 +215,9 @@ class ReferentSearch {
                     div.addEventListener('click', () => {
                         let nomReferent, prenomReferent;
                         
-                        if (contractIndex) {
-                            nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
-                            prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
-                        } else {
-                            nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
-                            prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
-                        }
+                        // Il n'y a plus qu'un seul contrat, donc on utilise les IDs sans suffixe
+                        nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
+                        prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
                         
                         if (nomReferent && prenomReferent) {
                             nomReferent.value = referent.nom;
