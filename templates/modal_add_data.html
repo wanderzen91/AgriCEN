@@ -1,3 +1,7 @@
+<!-- Lien vers le fichier CSS dédié pour le modal d'ajout de données -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modal_add_data.css') }}">
+
+
 <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
@@ -251,68 +255,6 @@
     </div>
 </div>
 
-<style>
-    .form-control[readonly].disabled-look {
-        background-color: #e9ecef;
-        opacity: 1;
-        cursor: not-allowed;
-        pointer-events: none;
-    }
-    
-    /* Style pour les champs désactivés */
-    input:disabled, select:disabled, textarea:disabled, .tagify--readonly {
-        background-color: #e9ecef;
-        opacity: 1;
-        cursor: not-allowed;
-    }
-    
-    /* Style pour les tags en lecture seule */
-    .tagify--readonly .tagify__tag {
-        opacity: 0.7;
-    }
-    
-    .tagify__dropdown {
-        max-height: 300px !important;
-        overflow-y: auto !important;
-    }
-    
-    .tagify__dropdown__wrapper {
-        max-height: 300px !important;
-        overflow-y: auto !important;
-    }
-    
-    .tagify__dropdown .tagify__dropdown__item {
-        padding: 5px;
-        border-radius: 3px;
-        margin: 2px;
-    }
-    
-    /* Styles pour les boutons d'ajout */
-    .add-button {
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 10px;
-    }
-    
-    /* Style pour les suggestions */
-    .referent-suggestions {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    
-    .suggestion-item {
-        padding: 8px 12px;
-        cursor: pointer;
-    }
-    
-    .suggestion-item:hover {
-        background-color: #f8f9fa;
-    }
-</style>
 
 <script>
     // Fonction pour créer des choix avec des emojis
@@ -375,7 +317,6 @@
         }
     }
 
-    // Cette fonction a été supprimée car elle est définie ailleurs dans le code
 
     // Fonction globale pour réinitialiser le formulaire
     function resetForm() {
@@ -484,54 +425,7 @@
         });
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-    // Fonction pour initialiser Tagify avec un template personnalisé incluant des émojis
-    function initializeTagify(selector, choices, emojiMapping) {
-        const input = typeof selector === 'string' ? document.querySelector(selector) : selector;
-        if (!input) return null;
-        
-        // Vérifier si Tagify est déjà initialisé
-        if (input._tagify) {
-            return input._tagify;
-        }
 
-        try {
-            const tagify = new Tagify(input, {
-                whitelist: choices.map(choice => ({
-                    value: choice.value,
-                    label: choice.label,
-                    emoji: emojiMapping[choice.label] || emojiMapping[choice.label.toLowerCase()] || "❓"
-                })),
-                enforceWhitelist: true,
-                dropdown: { 
-                    enabled: 0,
-                    maxItems: 1000
-                },
-                templates: {
-                    tag: tagData => `
-                        <tag title="${tagData.label}" contenteditable="false" class="tagify__tag">
-                            <span class="tagify__tag-text">${tagData.emoji} ${tagData.label}</span>
-                            <x class="tagify__tag__removeBtn"></x>
-                        </tag>`,
-                    dropdownItem: suggestion => `
-                        <div class="tagify__dropdown__item">
-                            ${suggestion.emoji} ${suggestion.label}
-                        </div>`
-                }
-            });
-            
-            // Ajouter un gestionnaire d'événements pour afficher tous les tags au clic
-            input.addEventListener('click', function() {
-                tagify.dropdown.show.call(tagify);
-            });
-            
-            console.log("Tagify initialized for:", input);
-            return tagify;
-        } catch (error) {
-            console.error("Error initializing Tagify:", error);
-            return null;
-        }
-    }
 
     // Fonction pour synchroniser Tagify avec un champ caché
     function syncTagifyWithHidden(tagifyInstance, hiddenSelector) {
@@ -729,9 +623,7 @@
             newTypeSelect.appendChild(option);
         }
         
-        // Initialiser l'autocomplétion pour le référent
-        setupReferentAutocomplete(contractCounter);
-        
+
         // Initialiser Tagify pour les types de milieu en utilisant directement les options du mapping global
         setTimeout(() => {
             const typeMilieuInput = newContract.querySelector('.type-milieu-tagify');
@@ -842,9 +734,6 @@
     // Ajouter un gestionnaire d'événements pour le bouton d'ajout de contrat
     document.getElementById('add-contract').addEventListener('click', addNewContractEntry);
 
-    // Initialiser l'autocomplétion pour le premier référent
-    setupReferentAutocomplete(1);
-        
     // Initialiser Tagify pour le premier type de milieu
     initializeTypeMilieuTagify(1);
     
@@ -926,10 +815,7 @@
         updateContractsData();
     });
 
-        // La gestion de la recherche d'agriculteurs est maintenant gérée par le script agriculteur_search.js
-        
-        // La gestion de l'API SIRENE est maintenant gérée par le script siret_handler.js
-    });
+
 
 </script>
 <script src="{{ url_for('static', filename='js/agriculteur_search.js') }}"></script>

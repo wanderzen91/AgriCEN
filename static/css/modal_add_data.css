@@ -1,0 +1,64 @@
+/* Styles pour le modal d'ajout de données */
+
+/* Style pour les champs en lecture seule avec apparence désactivée */
+.form-control[readonly].disabled-look {
+    background-color: #e9ecef;
+    opacity: 1;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Style pour les champs désactivés */
+input:disabled, select:disabled, textarea:disabled, .tagify--readonly {
+    background-color: #e9ecef;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+/* Style pour les tags en lecture seule */
+.tagify--readonly .tagify__tag {
+    opacity: 0.7;
+}
+
+/* Styles pour le dropdown Tagify */
+.tagify__dropdown {
+    max-height: 300px !important;
+    overflow-y: auto !important;
+}
+
+.tagify__dropdown__wrapper {
+    max-height: 300px !important;
+    overflow-y: auto !important;
+}
+
+.tagify__dropdown .tagify__dropdown__item {
+    padding: 5px;
+    border-radius: 3px;
+    margin: 2px;
+}
+
+/* Styles pour les boutons d'ajout */
+.add-button {
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+}
+
+/* Style pour les suggestions */
+.referent-suggestions {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
