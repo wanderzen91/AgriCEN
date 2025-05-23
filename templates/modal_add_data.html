@@ -495,14 +495,6 @@
         }
     }
 
-    // Configuration de l'autocomplétion pour le référent
-    // La recherche de référents est maintenant gérée par le script referent_search.js
-    function setupReferentAutocomplete(contractIndex) {
-        // Cette fonction est maintenant un simple wrapper pour la compatibilité avec le code existant
-        // La vraie implémentation est dans referent_search.js
-        console.log(`Configuration de l'autocomplétion pour le référent #${contractIndex} via le script externe`);
-    }
-
     // Initialiser Tagify pour les types de milieu
     function initializeTypeMilieuTagify(contractIndex) {
         // Utiliser querySelectorAll pour trouver tous les éléments et sélectionner le bon par index
@@ -750,23 +742,7 @@
                 label: option.textContent
             }));
             
-            // Utiliser le mapping global défini dans base.html ou un mapping par défaut
-            const emojiMapping = window.emojiTypeProductionMapping || {
-                "céréales": "🌾",
-                "oléagineux": "🌻",
-                "protéagineux": "🌱",
-                "légumes": "🥕",
-                "fruits": "🍎",
-                "viticulture": "🍇",
-                "élevage bovin": "🐄",
-                "élevage ovin": "🐑",
-                "élevage caprin": "🐐",
-                "élevage porcin": "🐖",
-                "élevage avicole": "🐓",
-                "apiculture": "🐝"
-            };
-            
-            const tagify = initializeTagify(typeProductionInput, typeProductionChoices, emojiMapping);
+            const tagify = initializeTagify(typeProductionInput, typeProductionChoices, window.emojiTypeProductionMapping);
             syncTagifyWithHidden(tagify, '.type-production-select[name="type_production"]');
             return tagify;
         } else {
@@ -785,9 +761,6 @@
     
     // Débogage du sélecteur
     console.log('Type Production select:', document.querySelector('.type-production-select[name="type_production"]'));
-    
-    // Nous n'avons plus besoin de gérer l'ajout de nouvelles entrées de production
-    // car nous avons maintenant un champ unifié pour les types de production
     
     // Initialiser Tagify pour les produits finis
     const produitFiniInput = document.getElementById('produit_fini_tagify');
