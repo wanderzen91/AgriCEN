@@ -366,25 +366,7 @@
         });
     }
 
-    // Fonction pour activer/désactiver les champs référent
-    function enableReferentFields(contractIndex, enable) {
-        const nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
-        const prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
-        
-        if (nomReferent && prenomReferent) {
-            if (enable) {
-                nomReferent.readOnly = false;
-                prenomReferent.readOnly = false;
-                nomReferent.classList.remove('disabled-look');
-                prenomReferent.classList.remove('disabled-look');
-            } else {
-                nomReferent.readOnly = true;
-                prenomReferent.readOnly = true;
-                nomReferent.classList.add('disabled-look');
-                prenomReferent.classList.add('disabled-look');
-            }
-        }
-    }
+    // La fonction enableReferentFields a été déplacée vers referent_search.js
 
     // Fonction pour ajouter un nouveau contrat
     let contractCounter = 1;
