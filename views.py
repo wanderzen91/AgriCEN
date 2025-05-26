@@ -463,22 +463,64 @@ def map_page():
                 db.session.add(type_milieu_contrat)
                 db.session.commit()
 
-            # Associer les types de production avec leurs modes de production
-            mode_production_id = int(form.mode_production.data)
-            type_productions = request.form.getlist('type_production')
-            modes_production = request.form.getlist('mode_production')
+            # Récupérer les types de production bio et conventionnelle
+            type_production_bio = request.form.getlist('type_production_bio[]')
+            type_production_conv = request.form.getlist('type_production_conv[]')
+            
+            print("Types de production bio:", type_production_bio)
+            print("Types de production conventionnelle:", type_production_conv)
+            
+            # Définir les IDs des modes de production
+            mode_production_bio_id = 1  # ID pour le mode Bio
+            mode_production_conv_id = 2  # ID pour le mode Conventionnelle
 
-            # Créer les associations TypeProductionSociete
-            for i, production_id in enumerate(type_productions):
-                # Utiliser le mode de production correspondant s'il existe, sinon utiliser le premier mode
-                current_mode_id = int(modes_production[i]) if i < len(modes_production) else mode_production_id
-                
-                type_production_societe = TypeProductionSociete(
-                    id_societe=societe.id_societe,
-                    id_type_production=int(production_id),
-                    id_mode_production=current_mode_id
-                )
-                db.session.add(type_production_societe)
+            # Traiter les types de production bio
+            for production_id in type_production_bio:
+                if production_id:  # Vérifier que l'ID n'est pas vide
+                    # Créer l'association TypeProductionMode si elle n'existe pas déjà
+                    existing_type_mode = TypeProductionMode.query.filter_by(
+                        id_type_production=int(production_id),
+                        id_mode_production=mode_production_bio_id
+                    ).first()
+                    
+                    if not existing_type_mode:
+                        type_mode = TypeProductionMode(
+                            id_type_production=int(production_id),
+                            id_mode_production=mode_production_bio_id
+                        )
+                        db.session.add(type_mode)
+                    
+                    # Créer l'association TypeProductionSociete
+                    type_production_societe = TypeProductionSociete(
+                        id_societe=societe.id_societe,
+                        id_type_production=int(production_id),
+                        id_mode_production=mode_production_bio_id
+                    )
+                    db.session.add(type_production_societe)
+            
+            # Traiter les types de production conventionnelle
+            for production_id in type_production_conv:
+                if production_id:  # Vérifier que l'ID n'est pas vide
+                    # Créer l'association TypeProductionMode si elle n'existe pas déjà
+                    existing_type_mode = TypeProductionMode.query.filter_by(
+                        id_type_production=int(production_id),
+                        id_mode_production=mode_production_conv_id
+                    ).first()
+                    
+                    if not existing_type_mode:
+                        type_mode = TypeProductionMode(
+                            id_type_production=int(production_id),
+                            id_mode_production=mode_production_conv_id
+                        )
+                        db.session.add(type_mode)
+                    
+                    # Créer l'association TypeProductionSociete
+                    type_production_societe = TypeProductionSociete(
+                        id_societe=societe.id_societe,
+                        id_type_production=int(production_id),
+                        id_mode_production=mode_production_conv_id
+                    )
+                    db.session.add(type_production_societe)
 
             for produit_fini_id in request.form.getlist('produit_fini'):
                 produit_fini_contrat = ProduitFiniContrat(

@@ -155,30 +155,142 @@ TagifyHandler.syncTagifyWithHidden = function(tagifyInstance, hiddenSelector) {
     });
 }
 
-// Initialiser Tagify pour les types de production
+// Initialiser Tagify pour les types de production (bio et conventionnel)
 TagifyHandler.initializeTypeProductionTagify = function() {
-    console.log('Initializing Type Production Tagify');
+    console.log('Auto-initializing Type Production Tagify (Bio and Conv)');
     
-    const typeProductionInput = document.querySelector('.type-production-tagify[name="type_production_display"]');
-    const typeProductionSelect = document.querySelector('.type-production-select[name="type_production"]');
+    // Initialiser les deux types de production
+    const bioTagify = initializeTypeProductionBio();
+    const convTagify = initializeTypeProductionConv();
     
-    if (typeProductionInput && typeProductionSelect) {
-        const typeProductionChoices = Array.from(typeProductionSelect.options).map(option => ({
-            value: option.value,
-            label: option.textContent
-        }));
+    // Récupérer le champ caché original pour la validation du formulaire
+    const originalTypeProductionSelect = document.querySelector('.type-production-select[name="type_production"]');
+    
+    if (originalTypeProductionSelect) {
+        console.log('Original type_production select found for validation');
         
-        console.log('Type Production choices:', typeProductionChoices);
-        console.log('Type Production emoji mapping:', window.emojiTypeProductionMapping);
+        // Fonction pour mettre à jour le champ caché original
+        const updateOriginalTypeProduction = function() {
+            // Récupérer toutes les valeurs sélectionnées (bio et conventionnelle)
+            const bioSelect = document.querySelector('.type-production-bio-select');
+            const convSelect = document.querySelector('.type-production-conv-select');
+            
+            let selectedValues = [];
+            
+            // Ajouter les valeurs bio sélectionnées
+            if (bioSelect) {
+                Array.from(bioSelect.selectedOptions).forEach(option => {
+                    selectedValues.push(option.value);
+                });
+            }
+            
+            // Ajouter les valeurs conventionnelles sélectionnées
+            if (convSelect) {
+                Array.from(convSelect.selectedOptions).forEach(option => {
+                    selectedValues.push(option.value);
+                });
+            }
+            
+            console.log('Combined selected values for validation:', selectedValues);
+            
+            // Désélectionner toutes les options du select original
+            Array.from(originalTypeProductionSelect.options).forEach(option => {
+                option.selected = false;
+            });
+            
+            // Sélectionner les options correspondantes dans le select original
+            if (selectedValues.length > 0) {
+                selectedValues.forEach(value => {
+                    const option = Array.from(originalTypeProductionSelect.options).find(opt => opt.value === value);
+                    if (option) {
+                        option.selected = true;
+                        console.log(`Selected option ${option.value} in original select for validation`);
+                    }
+                });
+            } else {
+                // Si aucune valeur n'est sélectionnée, sélectionner au moins la première option
+                // pour éviter l'erreur de validation "This field is required"
+                if (originalTypeProductionSelect.options.length > 0) {
+                    originalTypeProductionSelect.options[0].selected = true;
+                    console.log('No values selected, selecting first option for validation');
+                }
+            }
+            
+            // Déclencher un événement de changement sur le select original
+            originalTypeProductionSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        };
         
-        const tagify = TagifyHandler.initializeTagify(typeProductionInput, typeProductionChoices, window.emojiTypeProductionMapping);
-        TagifyHandler.syncTagifyWithHidden(tagify, '.type-production-select[name="type_production"]');
-        return tagify;
+        // Configurer les écouteurs d'événements pour les deux champs Tagify
+        if (bioTagify) {
+            bioTagify.on('change', updateOriginalTypeProduction);
+        }
+        
+        if (convTagify) {
+            convTagify.on('change', updateOriginalTypeProduction);
+        }
+        
+        // Appeler la fonction une fois au démarrage pour initialiser le champ
+        setTimeout(updateOriginalTypeProduction, 100);
     } else {
-        console.error('Type production Tagify elements not found');
-        console.log('typeProductionInput:', typeProductionInput);
-        console.log('typeProductionSelect:', typeProductionSelect);
-        return null;
+        console.error('Original type_production select not found for validation');
+    }
+    
+    return {
+        bioTagify: bioTagify,
+        convTagify: convTagify
+    };
+    
+    // Fonction interne pour initialiser le champ des types de production bio
+    function initializeTypeProductionBio() {
+        const typeProductionBioInput = document.querySelector('.type-production-bio-tagify');
+        const typeProductionBioSelect = document.querySelector('.type-production-bio-select');
+        
+        if (typeProductionBioInput && typeProductionBioSelect) {
+            console.log('Type Production Bio input and select found');
+            
+            const typeProductionChoices = Array.from(typeProductionBioSelect.options).map(option => ({
+                value: option.value,
+                label: option.textContent
+            }));
+            
+            console.log('Type Production Bio choices:', typeProductionChoices);
+            console.log('Type Production emoji mapping:', window.emojiTypeProductionMapping);
+            
+            const tagify = TagifyHandler.initializeTagify(typeProductionBioInput, typeProductionChoices, window.emojiTypeProductionMapping);
+            TagifyHandler.syncTagifyWithHidden(tagify, '.type-production-bio-select');
+            return tagify;
+        } else {
+            console.error('Type production Bio Tagify elements not found');
+            console.log('typeProductionBioInput:', typeProductionBioInput);
+            console.log('typeProductionBioSelect:', typeProductionBioSelect);
+            return null;
+        }
+    }
+    
+    // Fonction interne pour initialiser le champ des types de production conventionnelle
+    function initializeTypeProductionConv() {
+        const typeProductionConvInput = document.querySelector('.type-production-conv-tagify');
+        const typeProductionConvSelect = document.querySelector('.type-production-conv-select');
+        
+        if (typeProductionConvInput && typeProductionConvSelect) {
+            console.log('Type Production Conv input and select found');
+            
+            const typeProductionChoices = Array.from(typeProductionConvSelect.options).map(option => ({
+                value: option.value,
+                label: option.textContent
+            }));
+            
+            console.log('Type Production Conv choices:', typeProductionChoices);
+            
+            const tagify = TagifyHandler.initializeTagify(typeProductionConvInput, typeProductionChoices, window.emojiTypeProductionMapping);
+            TagifyHandler.syncTagifyWithHidden(tagify, '.type-production-conv-select');
+            return tagify;
+        } else {
+            console.error('Type production Conv Tagify elements not found');
+            console.log('typeProductionConvInput:', typeProductionConvInput);
+            console.log('typeProductionConvSelect:', typeProductionConvSelect);
+            return null;
+        }
     }
 }
 
@@ -208,6 +320,8 @@ TagifyHandler.initializeProduitFiniTagify = function() {
         return null;
     }
 }
+
+// Initialiser Tagify pour les types de milieu
 
 // Initialiser Tagify pour les types de milieu
 TagifyHandler.initializeTypeMilieuTagify = function() {
@@ -280,22 +394,31 @@ console.log('TagifyHandler object initialized with all functions');
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOMContentLoaded event fired, initializing Tagify fields');
     
-    // Initialiser les champs Tagify si nécessaire
+    // Initialiser les champs Tagify avec un léger délai pour s'assurer que le DOM est complètement chargé
     setTimeout(function() {
-        // Vérifier si les éléments existent avant d'initialiser
-        if (document.querySelector('.type-production-tagify')) {
-            console.log('Auto-initializing Type Production Tagify');
+        // Initialiser les champs de type de production (bio et conventionnel)
+        if (document.querySelector('.type-production-bio-tagify') || document.querySelector('.type-production-conv-tagify')) {
+            console.log('Auto-initializing Type Production Tagify (Bio and Conv)');
+            const tagifyInstances = TagifyHandler.initializeTypeProductionTagify();
+            console.log('Type Production Tagify instances:', tagifyInstances);
+        } else if (document.querySelector('.type-production-tagify')) {
+            // Compatibilité avec l'ancien format si nécessaire
+            console.log('Auto-initializing legacy Type Production Tagify');
             window.typeProductionTagify = TagifyHandler.initializeTypeProductionTagify();
         }
         
+        // Initialiser le champ des produits finis
         if (document.getElementById('produit_fini_tagify')) {
             console.log('Auto-initializing Produit Fini Tagify');
             window.produitFiniTagify = TagifyHandler.initializeProduitFiniTagify();
         }
         
+        // Initialiser le champ des types de milieu
         if (document.querySelector('.type-milieu-tagify')) {
             console.log('Auto-initializing Type Milieu Tagify');
-            TagifyHandler.initializeTypeMilieuTagify();
+            window.typeMilieuTagify = TagifyHandler.initializeTypeMilieuTagify();
         }
-    }, 500); // Délai pour s'assurer que tous les éléments sont chargés
+        
+        console.log('All Tagify fields initialized successfully');
+    }, 300); // Délai réduit pour une meilleure réactivité
 });

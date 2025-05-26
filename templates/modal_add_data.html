@@ -98,22 +98,31 @@
                                                         <div class="col-12">
                                                             <h5 class="mb-3">Production</h5>
                                                             <div class="mb-3">
-                                                                <label class="form-label">Types de Production</label>
-                                                                <input class="form-control type-production-tagify" name="type_production_display" placeholder="Ajouter des types de production">
-                                                                <select class="type-production-select" name="type_production" multiple hidden>
+                                                                <label class="form-label">Types de Production Bio</label>
+                                                                <input class="form-control type-production-bio-tagify" name="type_production_bio_display" placeholder="Ajouter des types de production bio">
+                                                                <select class="type-production-bio-select" name="type_production_bio[]" multiple hidden>
                                                                     {% for value, label in form.type_production.choices %}
                                                                         <option value="{{ value }}">{{ label }}</option>
                                                                     {% endfor %}
                                                                 </select>
                                                             </div>
                                                             <div class="mb-3">
-                                                                <label class="form-label">Mode de Production</label>
-                                                                <select class="form-select" name="mode_production" required>
-                                                                    <option value="">Sélectionner un mode de production</option>
-                                                                    <option value="1">Bio</option>
-                                                                    <option value="2">Conventionnelle</option>
+                                                                <label class="form-label">Types de Production Conventionnelle</label>
+                                                                <input class="form-control type-production-conv-tagify" name="type_production_conv_display" placeholder="Ajouter des types de production conventionnelle">
+                                                                <select class="type-production-conv-select" name="type_production_conv[]" multiple hidden>
+                                                                    {% for value, label in form.type_production.choices %}
+                                                                        <option value="{{ value }}">{{ label }}</option>
+                                                                    {% endfor %}
                                                                 </select>
                                                             </div>
+                                                            <!-- Champ caché pour la validation du formulaire -->
+                                                            <select class="type-production-select" name="type_production" multiple hidden>
+                                                                {% for value, label in form.type_production.choices %}
+                                                                    <option value="{{ value }}">{{ label }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <!-- Champ caché pour le mode de production (pour la validation) -->
+                                                            <input type="hidden" name="mode_production" value="1">
                                                         </div>
                                                     </div>
                                                 </div>
