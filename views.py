@@ -65,11 +65,11 @@ def populate_form_choices(form):
             ModeProduction.query.options(load_only(ModeProduction.id, ModeProduction.nom))
         ).scalars()
 
-        # Modification du chargement des types de production pour inclure les modes
+        # Chargement des types de production
         productions = db.session.execute(
             TypeProduction.query.options(
                 load_only(TypeProduction.id_type_production, TypeProduction.nature_production)
-            ).options(selectinload(TypeProduction.modes_production))
+            )
         ).scalars()
 
         # Remplir les choix des champs du formulaire
@@ -477,20 +477,7 @@ def map_page():
             # Traiter les types de production bio
             for production_id in type_production_bio:
                 if production_id:  # Vérifier que l'ID n'est pas vide
-                    # Créer l'association TypeProductionMode si elle n'existe pas déjà
-                    existing_type_mode = TypeProductionMode.query.filter_by(
-                        id_type_production=int(production_id),
-                        id_mode_production=mode_production_bio_id
-                    ).first()
-                    
-                    if not existing_type_mode:
-                        type_mode = TypeProductionMode(
-                            id_type_production=int(production_id),
-                            id_mode_production=mode_production_bio_id
-                        )
-                        db.session.add(type_mode)
-                    
-                    # Créer l'association TypeProductionSociete
+                    # Créer directement l'association TypeProductionSociete
                     type_production_societe = TypeProductionSociete(
                         id_societe=societe.id_societe,
                         id_type_production=int(production_id),
@@ -501,20 +488,7 @@ def map_page():
             # Traiter les types de production conventionnelle
             for production_id in type_production_conv:
                 if production_id:  # Vérifier que l'ID n'est pas vide
-                    # Créer l'association TypeProductionMode si elle n'existe pas déjà
-                    existing_type_mode = TypeProductionMode.query.filter_by(
-                        id_type_production=int(production_id),
-                        id_mode_production=mode_production_conv_id
-                    ).first()
-                    
-                    if not existing_type_mode:
-                        type_mode = TypeProductionMode(
-                            id_type_production=int(production_id),
-                            id_mode_production=mode_production_conv_id
-                        )
-                        db.session.add(type_mode)
-                    
-                    # Créer l'association TypeProductionSociete
+                    # Créer directement l'association TypeProductionSociete
                     type_production_societe = TypeProductionSociete(
                         id_societe=societe.id_societe,
                         id_type_production=int(production_id),
