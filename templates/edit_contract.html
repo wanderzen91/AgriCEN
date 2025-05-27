@@ -240,6 +240,9 @@
                     </div>
                 </div>
 
+                <!-- Champ caché pour stocker les données de production -->
+                <input type="hidden" id="all-productions-data" name="all_productions" value="[]">
+
                 <hr class="my-4">
 
                 <!-- Boutons d'action -->
@@ -260,6 +263,47 @@ document.addEventListener('DOMContentLoaded', function () {
     const emojiTypeProductionMapping = window.emojiTypeProductionMapping || {};
     const emojiProduitFiniMapping = window.emojiProduitFiniMapping || {};
     const emojiTypeMilieuMapping = window.emojiTypeMilieuMapping || {};
+    
+    // Intercepter la soumission du formulaire pour validation
+    document.querySelector('form').addEventListener('submit', function(event) {
+        // Mise à jour des données de production avant validation
+        updateAllProductionsData();
+        
+        // Récupérer les données de production
+        const allProductionsData = document.getElementById('all-productions-data');
+        let isValid = true;
+        
+        try {
+            const productions = JSON.parse(allProductionsData.value);
+            
+            // Vérifier qu'il y a au moins une entrée de production
+            if (!productions || productions.length === 0) {
+                alert("Veuillez ajouter au moins un type de production avec son mode.");
+                isValid = false;
+            } else {
+                // Vérifier que chaque entrée a au moins un type de production et un mode
+                for (const prod of productions) {
+                    if (!prod.type_production || prod.type_production.length === 0 || !prod.mode_production) {
+                        alert("Chaque entrée de production doit avoir au moins un type et un mode de production.");
+                        isValid = false;
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Erreur lors de la validation des données de production:", e);
+            alert("Erreur lors de la validation des données de production. Veuillez réessayer.");
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            event.preventDefault();
+            // Afficher l'onglet Exploitation pour montrer les champs à remplir
+            document.getElementById('exploitation-tab').click();
+        } else {
+            console.log("Formulaire valide, soumission en cours...");
+        }
+    });
     
     // Debugging
     console.log("emojiTypeProductionMapping:", emojiTypeProductionMapping);
@@ -639,21 +683,47 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateAllProductionsData() {
+        // Vérifier si le conteneur de production existe
+        if (!productionContainer) {
+            console.error('Conteneur de production non trouvé');
+            return;
+        }
+
+        // Vérifier si le champ caché existe
+        if (!allProductionsData) {
+            console.error('Champ caché all-productions-data non trouvé');
+            return;
+        }
+
         const entries = Array.from(productionContainer.querySelectorAll('.production-entry')).map(entry => {
             const typeProductionSelect = entry.querySelector('.type-production-select');
             const modeProductionSelect = entry.querySelector('.mode-production');
             
+            if (!typeProductionSelect || !modeProductionSelect) {
+                console.error('Certains éléments de production sont manquants dans une entrée');
+                return null;
+            }
+            
             const selectedTypes = Array.from(typeProductionSelect.selectedOptions).map(option => option.value);
             const selectedMode = modeProductionSelect.value;
+            
+            console.log('Types sélectionnés:', selectedTypes, 'Mode:', selectedMode);
             
             return {
                 type_production: selectedTypes,
                 mode_production: selectedMode
             };
-        });
+        }).filter(Boolean); // Filtrer les entrées nulles
+
+        // Vérifier que nous avons des données valides
+        if (entries.length === 0) {
+            console.warn('Aucune entrée de production valide trouvée');
+        }
 
         // Mettre à jour le champ caché avec les données JSON
-        allProductionsData.value = JSON.stringify(entries);
+        const jsonData = JSON.stringify(entries);
+        allProductionsData.value = jsonData;
+        console.log('Données de production mises à jour:', jsonData);
     }
 
     // Initialiser les Tagify existants si le formulaire est déjà rempli

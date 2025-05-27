@@ -786,13 +786,13 @@ def edit_contract(contract_id):
                 # Vérifier que nous avons des données valides
                 if not all_productions:
                     flash("Veuillez ajouter au moins un type de production avec son mode.", "danger")
-                    return render_template('edit_contract.html', contrat=contrat, form=form)
+                    return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson)
                 
                 # Vérifier que chaque entrée a un mode de production
                 for prod in all_productions:
                     if not prod.get('mode_production'):
                         flash("Veuillez sélectionner un mode de production pour chaque type de production.", "danger")
-                        return render_template('edit_contract.html', contrat=contrat, form=form)
+                        return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson)
                 
                 # Supprimer les anciennes relations
                 TypeProductionSociete.query.filter_by(id_societe=contrat.societe.id_societe).delete()
@@ -813,7 +813,7 @@ def edit_contract(contract_id):
                 
             except json.JSONDecodeError:
                 flash("Erreur lors de la lecture des données de production.", "danger")
-                return render_template('edit_contract.html', contrat=contrat, form=form)
+                return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson)
 
             db.session.commit()
             flash("Les modifications ont été enregistrées avec succès.", "success")
@@ -823,7 +823,10 @@ def edit_contract(contract_id):
             db.session.rollback()
             flash(f"Erreur lors de la mise à jour : {str(e)}", "danger")
 
-    return render_template('edit_contract.html', contrat=contrat, form=form)
+    # Récupérer les données GeoJSON pour la carte
+    sites_geojson = get_geojson_data()
+    
+    return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson)
 
 
 @app.route('/delete_contract/<int:contract_id>', methods=['POST'])
