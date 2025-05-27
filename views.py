@@ -549,6 +549,9 @@ def map_page():
                     'type': tps.type_production.nature_production,
                     'mode_production': tps.mode_production.nom if tps.mode_production else None
                 })
+
+        # Récupérer le premier mode de production (s'il existe)
+        mode_production = type_productions[0]['mode_production'] if type_productions else "Non spécifié"
                 
         # Produits finis
         produits_finis = [
@@ -556,12 +559,6 @@ def map_page():
             for produit in contrat.produits_finis
         ]
 
-        # Modes de production
-        mode_production = (
-            contrat.societe.types_production_societe[0].mode_production.nom
-            if contrat.societe and contrat.societe.types_production_societe and contrat.societe.types_production_societe[0].mode_production
-            else "Non spécifié"
-        )
 
         contrat_data.append({
             "id": contrat.id_contrat,
@@ -690,9 +687,31 @@ def edit_contract(contract_id):
         # Sélection multiple
         form.type_milieu.data = [milieu.type_milieu.id_type_milieu for milieu in contrat.types_milieu]
         form.produit_fini.data = [produit.produit_fini.id_type_produit_fini for produit in contrat.produits_finis]
+        
+        # Récupérer tous les types de production
         form.type_production.data = [prod.type_production.id_type_production for prod in contrat.societe.types_production_societe]
         
-        # Mode de production
+        # Séparer les types de production par mode (bio et conventionnel)
+        type_production_bio = []
+        type_production_conv = []
+        
+        # ID des modes de production
+        mode_production_bio_id = 1  # ID pour le mode Bio
+        mode_production_conv_id = 2  # ID pour le mode Conventionnelle
+        
+        # Parcourir les types de production associés à la société
+        if contrat.societe and contrat.societe.types_production_societe:
+            for tps in contrat.societe.types_production_societe:
+                if tps.id_mode_production == mode_production_bio_id:
+                    type_production_bio.append(tps.id_type_production)
+                elif tps.id_mode_production == mode_production_conv_id:
+                    type_production_conv.append(tps.id_type_production)
+        
+        # Ajouter ces listes au contexte pour le template
+        form.type_production_bio = type_production_bio
+        form.type_production_conv = type_production_conv
+        
+        # Mode de production par défaut
         if contrat.societe.types_production_societe:
             form.mode_production.data = contrat.societe.types_production_societe[0].id_mode_production
 

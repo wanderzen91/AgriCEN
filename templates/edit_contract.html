@@ -142,10 +142,10 @@
                                                 <h5 class="mb-3">Production Bio</h5>
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Bio</label>
-                                                    <input class="form-control type-production-tagify" name="type_production_display_bio" placeholder="Ajouter des types de production bio">
-                                                    <select class="type-production-select" name="type_production" multiple hidden>
+                                                    <input class="form-control type-production-bio-tagify" name="type_production_bio_display" placeholder="Ajouter des types de production bio">
+                                                    <select class="type-production-bio-select" name="type_production_bio[]" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
-                                                            <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
+                                                            <option value="{{ value }}" {% if form.type_production_bio and value|int in form.type_production_bio %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <input type="hidden" name="mode_production_bio" value="1"> <!-- Valeur fixe pour Bio -->
@@ -155,10 +155,10 @@
                                                 <h5 class="mb-3">Production Conventionnelle</h5>
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Conventionnelle</label>
-                                                    <input class="form-control type-production-tagify" name="type_production_display_conv" placeholder="Ajouter des types de production conventionnelle">
-                                                    <select class="type-production-select" name="type_production" multiple hidden>
+                                                    <input class="form-control type-production-conv-tagify" name="type_production_conv_display" placeholder="Ajouter des types de production conventionnelle">
+                                                    <select class="type-production-conv-select" name="type_production_conv[]" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
-                                                            <option value="{{ value }}" {% if form.type_production.data and value in form.type_production.data %}selected{% endif %}>{{ label }}</option>
+                                                            <option value="{{ value }}" {% if form.type_production_conv and value|int in form.type_production_conv %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
                                                     <input type="hidden" name="mode_production_conv" value="2"> <!-- Valeur fixe pour Conventionnelle -->
@@ -403,6 +403,18 @@ document.addEventListener('DOMContentLoaded', function () {
             {% endfor %}],
             emojiTypeMilieuMapping
         ),
+        typeProductionBio: initializeTagify(".type-production-bio-tagify", 
+            [{% for value, label in form.type_production.choices %}
+                {value: "{{ value }}", label: "{{ label }}"},
+            {% endfor %}],
+            emojiTypeProductionMapping || {}
+        ),
+        typeProductionConv: initializeTagify(".type-production-conv-tagify", 
+            [{% for value, label in form.type_production.choices %}
+                {value: "{{ value }}", label: "{{ label }}"},
+            {% endfor %}],
+            emojiTypeProductionMapping || {}
+        ),
     };
 
     // Ajouter des logs pour déboguer
@@ -411,15 +423,54 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log("Type milieu element:", document.querySelector("#type_milieu_tagify"));
 
     // 🔄 Synchronisation des champs cachés avec Tagify
-    Object.entries(tagifyInstances).forEach(([key, instance]) => {
-        if (instance) {
-            const selector = key === 'produitFini' ? '#produit_fini' :
-                           key === 'typeMilieu' ? '#type_milieu' : null;
-            if (selector) {
-                syncTagifyWithHidden(instance, selector);
+    if (tagifyInstances.produitFini) {
+        syncTagifyWithHidden(tagifyInstances.produitFini, '#produit_fini');
+    }
+    
+    if (tagifyInstances.typeMilieu) {
+        syncTagifyWithHidden(tagifyInstances.typeMilieu, '#type_milieu');
+    }
+    
+    // Synchronisation spécifique pour les types de production bio et conventionnels
+    if (tagifyInstances.typeProductionBio) {
+        tagifyInstances.typeProductionBio.on('change', function(e) {
+            const hiddenSelect = document.querySelector('.type-production-bio-select');
+            if (hiddenSelect) {
+                // Vider les options sélectionnées
+                Array.from(hiddenSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+                
+                // Sélectionner les nouvelles options
+                if (this.value && this.value.length) {
+                    this.value.forEach(tag => {
+                        const option = hiddenSelect.querySelector(`option[value="${tag.value}"]`);
+                        if (option) option.selected = true;
+                    });
+                }
             }
-        }
-    });
+        });
+    }
+    
+    if (tagifyInstances.typeProductionConv) {
+        tagifyInstances.typeProductionConv.on('change', function(e) {
+            const hiddenSelect = document.querySelector('.type-production-conv-select');
+            if (hiddenSelect) {
+                // Vider les options sélectionnées
+                Array.from(hiddenSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+                
+                // Sélectionner les nouvelles options
+                if (this.value && this.value.length) {
+                    this.value.forEach(tag => {
+                        const option = hiddenSelect.querySelector(`option[value="${tag.value}"]`);
+                        if (option) option.selected = true;
+                    });
+                }
+            }
+        });
+    }
 
     // 🔄 Ajout des valeurs déjà sélectionnées aux champs Tagify
     if (tagifyInstances.produitFini) {
@@ -453,6 +504,42 @@ document.addEventListener('DOMContentLoaded', function () {
         ];
         if (selectedTypeMilieu.length > 0) {
             tagifyInstances.typeMilieu.addTags(selectedTypeMilieu);
+        }
+    }
+    
+    // Initialiser les valeurs pour les types de production bio
+    if (tagifyInstances.typeProductionBio) {
+        const selectedTypeProductionBio = [
+            {% if form.type_production_bio %}
+            {% for value in form.type_production_bio %}
+                {
+                    value: "{{ value }}",
+                    label: "{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
+                    emoji: emojiTypeProductionMapping["{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first | lower }}"] || "❓"
+                },
+            {% endfor %}
+            {% endif %}
+        ];
+        if (selectedTypeProductionBio.length > 0) {
+            tagifyInstances.typeProductionBio.addTags(selectedTypeProductionBio);
+        }
+    }
+    
+    // Initialiser les valeurs pour les types de production conventionnels
+    if (tagifyInstances.typeProductionConv) {
+        const selectedTypeProductionConv = [
+            {% if form.type_production_conv %}
+            {% for value in form.type_production_conv %}
+                {
+                    value: "{{ value }}",
+                    label: "{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first }}",
+                    emoji: emojiTypeProductionMapping["{{ form.type_production.choices | selectattr(0, 'equalto', value) | map(attribute=1) | first | lower }}"] || "❓"
+                },
+            {% endfor %}
+            {% endif %}
+        ];
+        if (selectedTypeProductionConv.length > 0) {
+            tagifyInstances.typeProductionConv.addTags(selectedTypeProductionConv);
         }
     }
 
