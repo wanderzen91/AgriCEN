@@ -582,6 +582,7 @@ def map_page():
             "date_signature": contrat.date_signature.strftime("%Y-%m-%d") if contrat.date_signature else "Non spécifié",
             "date_prise_effet": contrat.date_prise_effet.strftime("%Y-%m-%d") if contrat.date_prise_effet else "Non spécifié",
             "date_fin": contrat.date_fin.strftime("%Y-%m-%d") if contrat.date_fin else "Non spécifié",
+            "date_ajout_bdd": contrat.date_ajout_bdd.strftime("%Y-%m-%d %H:%M:%S") if contrat.date_ajout_bdd else "Non spécifié",
             "referent": f"{contrat.referent.prenom_referent} {contrat.referent.nom_referent}" if contrat.referent else "Non spécifié",
             "surface_contractualisee": contrat.surf_contractualisee if contrat.surf_contractualisee else 'Non spécifié',
             "type_milieux": type_milieux,
