@@ -101,15 +101,6 @@ class Referent(db.Model):
 
     contrats = db.relationship('Contrat', back_populates='referent')
 
-# Table SiteCEN
-class SiteCEN(db.Model):
-    __tablename__ = 'site_cen'
-    __table_args__ = {'schema': 'saisie'}
-    id_site = db.Column(db.Integer, primary_key=True)
-    code_site = db.Column(db.String(25), nullable=False)
-    nom_site = db.Column(db.String(100), nullable=False)
-
-    contrats = db.relationship('ContratSiteCEN', back_populates='site_cen')
 
 # Table TypeMilieu
 class TypeMilieu(db.Model):
@@ -218,10 +209,13 @@ class TypeMilieuContrat(db.Model):
 class ContratSiteCEN(db.Model):
     __tablename__ = 'contrat_site_cen'
     __table_args__ = {'schema': 'saisie'}
-    id_site = db.Column(db.Integer, db.ForeignKey('saisie.site_cen.id_site'), primary_key=True)
+    id_site = db.Column(db.Integer, primary_key=True)
     id_contrat = db.Column(db.Integer, db.ForeignKey('saisie.contrat.id_contrat'), primary_key=True)
+    code_site = db.Column(db.String(25))
+    nom_site = db.Column(db.String(250))
 
-    site_cen = db.relationship('SiteCEN', back_populates='contrats')
+    # Plus de relation avec SiteCEN car cette table a été supprimée
+    # Les données du site sont maintenant stockées directement dans cette table
     contrat = db.relationship('Contrat', back_populates='sites_cen')
 
 # Tables de référence

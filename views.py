@@ -86,7 +86,9 @@ def populate_form_choices(form):
 
 
 @app.route('/sites_cen_geojson')
-def get_sites_cen_geojson():
+def get_all_sites_cen_geojson():
+    """Récupère les données GeoJSON pour TOUS les sites CEN.
+    Utilisé pour afficher tous les sites sur la carte principale."""
     sites = VueSites.query.all()
     features = []
     
@@ -99,6 +101,7 @@ def get_sites_cen_geojson():
             "type": "Feature",
             "geometry": geojson,
             "properties": {
+                "idsite": site.idsite,
                 "codesite": site.codesite,
                 "nom_site": site.nom_site
             }
@@ -115,7 +118,7 @@ def get_sites_cen_geojson():
 
 
 @app.route('/site_cen_geojson/<int:site_id>')
-def get_site_cen_geojson(site_id):
+def get_single_site_cen_geojson(site_id):
     """
     Récupère les données GeoJSON pour un seul site CEN spécifié par son ID.
     Cela permet d'optimiser le chargement de la page edit_contract.html.
@@ -287,11 +290,11 @@ def check_siret_in_database(siret):
                 # Récupération des sites CEN associés au contrat
                 sites = []
                 for rel in contrat.sites_cen:
-                    site = rel.site_cen
+                    # Accès direct aux attributs de ContratSiteCEN
                     sites.append({
-                        "id_site": site.id_site,
-                        "code_site": site.code_site,
-                        "nom_site": site.nom_site
+                        "id_site": rel.id_site,
+                        "code_site": rel.code_site,
+                        "nom_site": rel.nom_site
                     })
                 contrat_data["sites_cen"] = sites
                 
@@ -421,13 +424,7 @@ def map_page():
                 db.session.add(referent)
                 db.session.commit()
 
-            # Ajouter un Site CEN
-            site_cen = SiteCEN(
-                nom_site=form.nom_site.data,
-                code_site=form.code_site.data
-            )
-            db.session.add(site_cen)
-            db.session.commit()
+            # Nous n'avons plus besoin de créer un SiteCEN séparé car les informations sont maintenant directement dans ContratSiteCEN
 
             # Ajouter un contrat
             contrat = Contrat(
@@ -446,10 +443,12 @@ def map_page():
             db.session.commit()
 
 
-            # Associer le contrat au Site CEN
+            # Créer directement une entrée ContratSiteCEN avec les informations du site
             contrat_site_cen = ContratSiteCEN(
-                id_site=site_cen.id_site,
-                id_contrat=contrat.id_contrat
+                id_site=db.session.query(db.func.nextval('saisie.site_cen_id_site_seq')).scalar(),  # Générer un nouvel ID
+                id_contrat=contrat.id_contrat,
+                code_site=form.code_site.data,
+                nom_site=form.nom_site.data
             )
             db.session.add(contrat_site_cen)
             db.session.commit()
@@ -528,7 +527,7 @@ def map_page():
             selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.mode_production),
             selectinload(Contrat.types_milieu).selectinload(TypeMilieuContrat.type_milieu),
             selectinload(Contrat.produits_finis).selectinload(ProduitFiniContrat.produit_fini),
-            selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen),
+            selectinload(Contrat.sites_cen),
             selectinload(Contrat.referent)
         )
     )
@@ -564,8 +563,8 @@ def map_page():
             "id": contrat.id_contrat,
             "latitude": float(contrat.latitude) if contrat.latitude else None,
             "longitude": float(contrat.longitude) if contrat.longitude else None,
-            "nom_site": contrat.sites_cen[0].site_cen.nom_site if contrat.sites_cen and contrat.sites_cen[0].site_cen else "Non spécifié",
-            "code_site": contrat.sites_cen[0].site_cen.code_site if contrat.sites_cen and contrat.sites_cen[0].site_cen else "Non spécifié",
+            "nom_site": contrat.sites_cen[0].nom_site if contrat.sites_cen and len(contrat.sites_cen) > 0 else "Non spécifié",
+            "code_site": contrat.sites_cen[0].code_site if contrat.sites_cen and len(contrat.sites_cen) > 0 else "Non spécifié",
             "nom_societe": contrat.societe.nom_societe if contrat.societe else "Non spécifié",
             "agriculteur": f"{contrat.societe.agriculteurs_intermediaires[0].agriculteur.prenom_agri} {contrat.societe.agriculteurs_intermediaires[0].agriculteur.nom_agri}" if contrat.societe and contrat.societe.agriculteurs_intermediaires else "Non spécifié",
             "contact": contrat.societe.contact if contrat.societe else "Non spécifié",
@@ -598,11 +597,11 @@ def edit_contract(contract_id):
     # Charger uniquement le GeoJSON du site associé au contrat (optimisation)
     site_id = None
     # Vérifier si le contrat a un site CEN associé
-    contrat = Contrat.query.options(selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen)).filter(Contrat.id_contrat == contract_id).first()
+    contrat = Contrat.query.options(selectinload(Contrat.sites_cen)).filter(Contrat.id_contrat == contract_id).first()
     
-    if contrat and contrat.sites_cen and contrat.sites_cen[0].site_cen:
-        # Récupérer le code du site (codesite) pour faire la correspondance
-        code_site = contrat.sites_cen[0].site_cen.code_site
+    if contrat and contrat.sites_cen and len(contrat.sites_cen) > 0:
+        # Récupérer le code du site pour faire la correspondance
+        code_site = contrat.sites_cen[0].code_site
         
         # Rechercher le site correspondant dans VueSites par son code
         vue_site = VueSites.query.filter_by(codesite=code_site).first()
@@ -611,7 +610,7 @@ def edit_contract(contract_id):
             # Utiliser l'idsite de VueSites
             site_id = vue_site.idsite
             # Charger uniquement le site spécifique
-            sites_geojson = get_site_cen_geojson(site_id).json
+            sites_geojson = get_single_site_cen_geojson(site_id).json
         else:
             # Si le site n'est pas trouvé dans VueSites, renvoyer un GeoJSON vide
             sites_geojson = {"type": "FeatureCollection", "features": []}
@@ -634,7 +633,7 @@ def edit_contract(contract_id):
             selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.mode_production),
             selectinload(Contrat.types_milieu).selectinload(TypeMilieuContrat.type_milieu),
             selectinload(Contrat.produits_finis).selectinload(ProduitFiniContrat.produit_fini),
-            selectinload(Contrat.sites_cen).selectinload(ContratSiteCEN.site_cen),
+            selectinload(Contrat.sites_cen),
             selectinload(Contrat.referent)
         )
         .filter(Contrat.id_contrat == contract_id)
@@ -649,10 +648,10 @@ def edit_contract(contract_id):
 
     # 🟢 Pré-remplissage du formulaire en mode GET
     if request.method == 'GET':
-        # Vérifier que sites_cen existe, qu'il contient au moins un élément et que site_cen n'est pas None
-        if contrat.sites_cen and contrat.sites_cen[0].site_cen:
-            form.nom_site.data = contrat.sites_cen[0].site_cen.nom_site
-            form.code_site.data = contrat.sites_cen[0].site_cen.code_site
+        # Vérifier que sites_cen existe et qu'il contient au moins un élément
+        if contrat.sites_cen and len(contrat.sites_cen) > 0:
+            form.nom_site.data = contrat.sites_cen[0].nom_site
+            form.code_site.data = contrat.sites_cen[0].code_site
         else:
             form.nom_site.data = ""
             form.code_site.data = ""
@@ -743,9 +742,9 @@ def edit_contract(contract_id):
     elif request.method == 'POST':
         try:
             # Mise à jour des informations générales
-            if contrat.sites_cen:
-                contrat.sites_cen[0].site_cen.nom_site = form.nom_site.data
-                contrat.sites_cen[0].site_cen.code_site = form.code_site.data
+            if contrat.sites_cen and len(contrat.sites_cen) > 0:
+                contrat.sites_cen[0].nom_site = form.nom_site.data
+                contrat.sites_cen[0].code_site = form.code_site.data
 
             # Mise à jour de la société
             if contrat.societe:
@@ -845,18 +844,10 @@ def delete_contract(contract_id):
         societe_id = contrat.id_societe
         referent_id = contrat.id_referent
 
-        # Récupérer les IDs des sites CEN associés au contrat
-        site_ids = [cs.id_site for cs in ContratSiteCEN.query.filter_by(id_contrat=contract_id).all()]
-        
         # Supprimer les associations avec les sites CEN
+        # Comme les informations des sites sont maintenant directement dans ContratSiteCEN,
+        # il suffit de supprimer les enregistrements associés au contrat
         ContratSiteCEN.query.filter_by(id_contrat=contract_id).delete()
-
-        # Supprimer les sites CEN orphelins
-        for site_id in site_ids:
-            if not ContratSiteCEN.query.filter_by(id_site=site_id).first():
-                site = SiteCEN.query.get(site_id)
-                if site:
-                    db.session.delete(site)
 
         # Supprimer les associations avec les types de milieu
         db.session.query(TypeMilieuContrat).filter_by(id_contrat=contract_id).delete()
