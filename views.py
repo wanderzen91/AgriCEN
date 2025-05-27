@@ -795,22 +795,24 @@ def edit_contract(contract_id):
                         flash("Veuillez sélectionner un mode de production pour chaque type de production.", "danger")
                         return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson)
                 
-                # Supprimer les anciennes relations
-                TypeProductionSociete.query.filter_by(id_societe=contrat.societe.id_societe).delete()
-                
-                # Créer les nouvelles relations
+                # Créer une nouvelle liste de TypeProductionSociete
+                new_types_production = []
                 for prod in all_productions:
                     type_productions = prod.get('type_production', [])
                     mode_production = prod.get('mode_production')
                     
                     if type_productions and mode_production:
                         for type_prod in type_productions:
-                            type_prod_societe = TypeProductionSociete(
-                                id_type_production=int(type_prod),
-                                id_societe=contrat.societe.id_societe,
-                                id_mode_production=int(mode_production)
+                            new_types_production.append(
+                                TypeProductionSociete(
+                                    id_type_production=int(type_prod),
+                                    id_societe=contrat.societe.id_societe,
+                                    id_mode_production=int(mode_production)
+                                )
                             )
-                            db.session.add(type_prod_societe)
+                
+                # Remplacer la liste existante par la nouvelle liste
+                contrat.societe.types_production_societe = new_types_production
                 
             except json.JSONDecodeError:
                 flash("Erreur lors de la lecture des données de production.", "danger")
@@ -843,13 +845,14 @@ def delete_contract(contract_id):
         societe_id = contrat.id_societe
         referent_id = contrat.id_referent
 
+        # Récupérer les IDs des sites CEN associés au contrat
+        site_ids = [cs.id_site for cs in ContratSiteCEN.query.filter_by(id_contrat=contract_id).all()]
+        
         # Supprimer les associations avec les sites CEN
-        contract_sites = ContratSiteCEN.query.filter_by(id_contrat=contract_id).all()
-        for contract_site in contract_sites:
-            site_id = contract_site.id_site
-            db.session.delete(contract_site)
+        ContratSiteCEN.query.filter_by(id_contrat=contract_id).delete()
 
-            # Vérifier si le SiteCEN est orphelin
+        # Supprimer les sites CEN orphelins
+        for site_id in site_ids:
             if not ContratSiteCEN.query.filter_by(id_site=site_id).first():
                 site = SiteCEN.query.get(site_id)
                 if site:
