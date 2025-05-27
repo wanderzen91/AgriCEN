@@ -443,9 +443,16 @@ def map_page():
             db.session.commit()
 
 
+            # Rechercher le site correspondant dans VueSites par son code
+            vue_site = VueSites.query.filter_by(codesite=form.code_site.data).first()
+            
+            # Si le site existe dans VueSites, utiliser son idsite
+            # Sinon, générer un nouvel ID
+            site_id = vue_site.idsite if vue_site else db.session.query(db.func.nextval('saisie.site_cen_id_site_seq')).scalar()
+            
             # Créer directement une entrée ContratSiteCEN avec les informations du site
             contrat_site_cen = ContratSiteCEN(
-                id_site=db.session.query(db.func.nextval('saisie.site_cen_id_site_seq')).scalar(),  # Générer un nouvel ID
+                id_site=site_id,
                 id_contrat=contrat.id_contrat,
                 code_site=form.code_site.data,
                 nom_site=form.nom_site.data
