@@ -157,6 +157,15 @@ class SiretHandler {
      * @param {HTMLElement} form - Le formulaire à remplir
      */
     fillFormWithExistingData(data, form) {
+        console.log("Remplissage du formulaire avec les données:", data);
+        
+        // Remplir le champ contact explicitement
+        const contactInput = form.querySelector('[name="contact"]');
+        if (contactInput && data.contact) {
+            console.log("Remplissage du champ contact avec:", data.contact);
+            contactInput.value = data.contact;
+        }
+        
         // Remplir les informations de l'agriculteur
         if (data.agriculteurs && data.agriculteurs.length > 0) {
             const agriculteur = data.agriculteurs[0];
@@ -183,6 +192,8 @@ class SiretHandler {
         
         // Remplir les types de production
         if (data.productions && data.productions.length > 0) {
+            console.log("Données de production disponibles:", data.productions);
+            
             const typeProductionSelect = form.querySelector('.type-production-select');
             const modeProductionInput = form.querySelector('[name="mode_production"]');
             
@@ -200,20 +211,43 @@ class SiretHandler {
                     modeProductionInput.value = data.productions[0].id_mode_production;
                 }
                 
-                // Déclencher un événement de changement pour mettre à jour Tagify si nécessaire
+                // Déclencher un événement de changement pour mettre à jour Tagify
                 const event = new Event('change');
                 typeProductionSelect.dispatchEvent(event);
+                
+                // Mettre à jour directement le champ Tagify si possible
+                const tagifyInput = form.querySelector('.type-production-tagify');
+                if (tagifyInput && tagifyInput._tagify) {
+                    console.log("Mise à jour directe du Tagify pour les types de production");
+                    // Créer les tags au format attendu par Tagify
+                    const tags = [];
+                    Array.from(typeProductionSelect.selectedOptions).forEach(option => {
+                        tags.push({
+                            value: option.value,
+                            label: option.textContent
+                        });
+                    });
+                    
+                    // Mettre à jour Tagify
+                    tagifyInput._tagify.removeAllTags();
+                    tagifyInput._tagify.addTags(tags);
+                }
             }
+        } else {
+            console.log("Aucune donnée de production disponible");
         }
         
         // Remplir les produits finis si disponibles
         if (data.contrats && data.contrats.length > 0) {
+            console.log("Données de contrats disponibles:", data.contrats);
+            
             const produitFiniSelect = form.querySelector('#produit_fini');
             if (produitFiniSelect) {
                 // Récupérer tous les produits finis uniques de tous les contrats
                 const allProduitsFinis = [];
                 data.contrats.forEach(contrat => {
                     if (contrat.produits_finis) {
+                        console.log(`Produits finis pour contrat ${contrat.id_contrat}:`, contrat.produits_finis);
                         contrat.produits_finis.forEach(produitId => {
                             if (!allProduitsFinis.includes(produitId)) {
                                 allProduitsFinis.push(produitId);
@@ -221,6 +255,8 @@ class SiretHandler {
                         });
                     }
                 });
+                
+                console.log("Produits finis uniques à sélectionner:", allProduitsFinis);
                 
                 // Sélectionner les produits finis
                 allProduitsFinis.forEach(produitId => {
@@ -233,7 +269,38 @@ class SiretHandler {
                 // Déclencher un événement de changement pour mettre à jour Tagify
                 const event = new Event('change');
                 produitFiniSelect.dispatchEvent(event);
+                
+                // Mettre à jour directement le champ Tagify si possible
+                const tagifyInput = form.querySelector('#produit_fini_tagify');
+                if (tagifyInput) {
+                    console.log("Tentative de mise à jour directe du Tagify pour les produits finis");
+                    
+                    // Créer les tags au format attendu par Tagify
+                    const tags = [];
+                    Array.from(produitFiniSelect.selectedOptions).forEach(option => {
+                        tags.push({
+                            value: option.value,
+                            label: option.textContent
+                        });
+                    });
+                    
+                    // Mettre à jour Tagify de façon différente selon si Tagify est déjà initialisé
+                    if (tagifyInput._tagify) {
+                        tagifyInput._tagify.removeAllTags();
+                        tagifyInput._tagify.addTags(tags);
+                    } else {
+                        // Si Tagify n'est pas encore initialisé, essayer de mettre directement la valeur
+                        const tagValues = tags.map(tag => tag.label).join(', ');
+                        tagifyInput.value = tagValues;
+                        
+                        // Essayer de créer un événement d'input pour déclencher l'initialisation de Tagify
+                        const inputEvent = new Event('input', { bubbles: true });
+                        tagifyInput.dispatchEvent(inputEvent);
+                    }
+                }
             }
+        } else {
+            console.log("Aucun contrat disponible dans data.contrats");
         }
     }
     
