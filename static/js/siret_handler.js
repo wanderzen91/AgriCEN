@@ -112,7 +112,7 @@ class SiretHandler {
                 // Afficher un message d'avertissement pour informer l'utilisateur
                 const warningDiv = document.createElement('div');
                 warningDiv.className = 'alert alert-warning mt-2';
-                warningDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>L\'entreprise associée à ce n°SIRET existe déjà dans la base de données, certains champs sont donc verrouillés !';
+                warningDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>L\'entreprise associée à ce n°SIRET existe déjà dans la base de données ! Seul la saisie d\'un nouveau contrat dans le champ "Partenariat CEN" est possible !';
                 
                 // Insérer le message après le champ SIRET
                 const siretFormGroup = siretInput.closest('.mb-3');
@@ -128,23 +128,11 @@ class SiretHandler {
                     this.lockFieldsExceptContractTab(form);
                 }
                 
-                // Si des agriculteurs sont associés, les afficher
-                if (data.agriculteurs && data.agriculteurs.length > 0) {
-                    const agriculteur = data.agriculteurs[0];
-                    const nomAgriInput = document.querySelector('[name="nom_agri"]');
-                    const prenomAgriInput = document.querySelector('[name="prenom_agri"]');
-                    
-                    if (nomAgriInput && prenomAgriInput) {
-                        nomAgriInput.value = agriculteur.nom_agri || '';
-                        prenomAgriInput.value = agriculteur.prenom_agri || '';
-                    }
-                    
-                    // Si un champ de recherche d'agriculteur existe, le mettre à jour
-                    const searchAgriInput = document.getElementById('search_agriculteur');
-                    if (searchAgriInput && agriculteur.nom_agri && agriculteur.prenom_agri) {
-                        searchAgriInput.value = `${agriculteur.nom_agri} ${agriculteur.prenom_agri}`;
-                    }
-                }
+                // Remplir tous les champs du formulaire avec les données existantes
+                this.fillFormWithExistingData(data, form);
+                
+                // Mettre à jour le numéro de contrat en fonction du nombre de contrats existants
+                this.updateContractNumber(data);
             }
 
             Swal.fire({
@@ -163,6 +151,137 @@ class SiretHandler {
         }
     }
 
+    /**
+     * Remplit le formulaire avec les données existantes de la société
+     * @param {Object} data - Les données de la société
+     * @param {HTMLElement} form - Le formulaire à remplir
+     */
+    fillFormWithExistingData(data, form) {
+        // Remplir les informations de l'agriculteur
+        if (data.agriculteurs && data.agriculteurs.length > 0) {
+            const agriculteur = data.agriculteurs[0];
+            const nomAgriInput = form.querySelector('[name="nom_agri"]');
+            const prenomAgriInput = form.querySelector('[name="prenom_agri"]');
+            
+            if (nomAgriInput && prenomAgriInput) {
+                nomAgriInput.value = agriculteur.nom_agri || '';
+                prenomAgriInput.value = agriculteur.prenom_agri || '';
+            }
+            
+            // Si un champ de recherche d'agriculteur existe, le mettre à jour
+            const searchAgriInput = form.querySelector('#search_agriculteur');
+            if (searchAgriInput && agriculteur.nom_agri && agriculteur.prenom_agri) {
+                searchAgriInput.value = `${agriculteur.nom_agri} ${agriculteur.prenom_agri}`;
+            }
+            
+            // Si date de naissance est disponible
+            const dateNaissanceInput = form.querySelector('[name="date_naissance"]');
+            if (dateNaissanceInput && agriculteur.date_naissance) {
+                dateNaissanceInput.value = agriculteur.date_naissance;
+            }
+        }
+        
+        // Remplir les types de production
+        if (data.productions && data.productions.length > 0) {
+            const typeProductionSelect = form.querySelector('.type-production-select');
+            const modeProductionInput = form.querySelector('[name="mode_production"]');
+            
+            if (typeProductionSelect && modeProductionInput) {
+                // Sélectionner les types de production
+                data.productions.forEach(production => {
+                    const option = typeProductionSelect.querySelector(`option[value="${production.id_type_production}"]`);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+                
+                // Mettre à jour le mode de production (utiliser le premier trouvé)
+                if (data.productions[0].id_mode_production) {
+                    modeProductionInput.value = data.productions[0].id_mode_production;
+                }
+                
+                // Déclencher un événement de changement pour mettre à jour Tagify si nécessaire
+                const event = new Event('change');
+                typeProductionSelect.dispatchEvent(event);
+            }
+        }
+        
+        // Remplir les produits finis si disponibles
+        if (data.contrats && data.contrats.length > 0) {
+            const produitFiniSelect = form.querySelector('#produit_fini');
+            if (produitFiniSelect) {
+                // Récupérer tous les produits finis uniques de tous les contrats
+                const allProduitsFinis = [];
+                data.contrats.forEach(contrat => {
+                    if (contrat.produits_finis) {
+                        contrat.produits_finis.forEach(produitId => {
+                            if (!allProduitsFinis.includes(produitId)) {
+                                allProduitsFinis.push(produitId);
+                            }
+                        });
+                    }
+                });
+                
+                // Sélectionner les produits finis
+                allProduitsFinis.forEach(produitId => {
+                    const option = produitFiniSelect.querySelector(`option[value="${produitId}"]`);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+                
+                // Déclencher un événement de changement pour mettre à jour Tagify
+                const event = new Event('change');
+                produitFiniSelect.dispatchEvent(event);
+            }
+        }
+    }
+    
+    /**
+     * Met à jour le numéro de contrat en fonction du nombre de contrats existants
+     * @param {Object} data - Les données de la société
+     */
+    updateContractNumber(data) {
+        // Mettre à jour le numéro de contrat en fonction du nombre de contrats existants
+        if (data.contrats) {
+            const contractTitle = document.querySelector('#contrat h5');
+            if (contractTitle) {
+                const nextContractNumber = data.contrats.length + 1;
+                contractTitle.textContent = `Contrat #${nextContractNumber}`;
+                
+                // Ajouter un message d'information à côté du titre du contrat
+                const contractTitleContainer = contractTitle.parentElement;
+                
+                // Vérifier si un message existe déjà pour éviter les doublons
+                const existingInfo = contractTitleContainer.querySelector('.alert-info');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                
+                // Créer le message d'information
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'alert alert-info mt-2';
+                infoDiv.innerHTML = `<i class="bi bi-info-circle-fill me-2"></i>Vous vous apprêtez à associer un ${nextContractNumber}${this.getOrdinalSuffix(nextContractNumber)} contrat à la société ${data.nom_societe}. Veuillez remplir les champs ci-dessous.`;
+                
+                // Insérer le message après le titre du contrat
+                contractTitle.insertAdjacentElement('afterend', infoDiv);
+            }
+        }
+    }
+    
+    /**
+     * Retourne le suffixe ordinal en français pour un nombre
+     * @param {Number} number - Le nombre
+     * @returns {String} Le suffixe ordinal
+     */
+    getOrdinalSuffix(number) {
+        if (number === 1) {
+            return 'er';
+        } else {
+            return 'ème';
+        }
+    }
+    
     /**
      * Verrouille tous les champs du formulaire sauf ceux dans l'onglet contrat-tab
      * @param {HTMLElement} form - Le formulaire contenant les champs
