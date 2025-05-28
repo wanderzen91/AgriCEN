@@ -109,6 +109,24 @@ class SiretHandler {
 
             // Vérifier si des données supplémentaires sont disponibles dans la base de données
             if (data.exists_in_db) {
+                // Afficher un message d'avertissement pour informer l'utilisateur
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'alert alert-warning mt-2';
+                warningDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>L\'entreprise associée à ce n°SIRET existe déjà dans la base de données, certains champs sont donc verrouillés !';
+                
+                // Insérer le message après le champ SIRET
+                const siretFormGroup = siretInput.closest('.mb-3');
+                if (siretFormGroup) {
+                    // Vérifier si un message existe déjà pour éviter les doublons
+                    const existingWarning = siretFormGroup.querySelector('.alert-warning');
+                    if (existingWarning) {
+                        existingWarning.remove();
+                    }
+                    siretFormGroup.appendChild(warningDiv);
+                    
+                    // Verrouiller tous les champs à l'exception de ceux dans l'onglet contrat-tab
+                    this.lockFieldsExceptContractTab(form);
+                }
                 
                 // Si des agriculteurs sont associés, les afficher
                 if (data.agriculteurs && data.agriculteurs.length > 0) {
@@ -142,6 +160,66 @@ class SiretHandler {
                 title: "Erreur serveur",
                 text: "Une erreur s'est produite lors de la récupération des données."
             });
+        }
+    }
+
+    /**
+     * Verrouille tous les champs du formulaire sauf ceux dans l'onglet contrat-tab
+     * @param {HTMLElement} form - Le formulaire contenant les champs
+     */
+    lockFieldsExceptContractTab(form) {
+        // Si aucun formulaire n'est fourni, utiliser le formulaire principal
+        const targetForm = form || document.getElementById('addForm');
+        if (!targetForm) return;
+
+        // Sélectionner tous les onglets sauf l'onglet contrat
+        const tabsToLock = ['#infos-general', '#exploitation'];
+        
+        tabsToLock.forEach(tabId => {
+            const tabPane = document.querySelector(tabId);
+            if (tabPane) {
+                // Verrouiller tous les champs de saisie dans cet onglet
+                const inputElements = tabPane.querySelectorAll('input, select, textarea');
+                inputElements.forEach(input => {
+                    // Ne pas verrouiller les champs cachés ou les boutons
+                    if (input.type !== 'hidden' && input.type !== 'button' && input.type !== 'submit') {
+                        input.setAttribute('readonly', true);
+                        
+                        // Pour les selects, on les désactive car readonly ne fonctionne pas bien avec eux
+                        if (input.tagName === 'SELECT') {
+                            input.setAttribute('disabled', true);
+                        }
+                        
+                        // Ajouter une classe pour indiquer visuellement que le champ est verrouillé
+                        input.classList.add('bg-light');
+                    }
+                });
+                
+                // Désactiver également les champs Tagify s'ils existent
+                const tagifyInputs = tabPane.querySelectorAll('.tagify');
+                tagifyInputs.forEach(tagify => {
+                    tagify.classList.add('disabled');
+                    // Ajouter un style pour montrer que c'est désactivé
+                    tagify.style.pointerEvents = 'none';
+                    tagify.style.opacity = '0.7';
+                });
+                
+                // Désactiver les boutons dans ces onglets
+                const buttons = tabPane.querySelectorAll('button:not([data-bs-toggle="tab"])');
+                buttons.forEach(button => {
+                    button.setAttribute('disabled', true);
+                });
+            }
+        });
+        
+        // Afficher un message pour indiquer que seul l'onglet Partenariat CEN est modifiable
+        const contractTab = document.querySelector('#contrat-tab');
+        if (contractTab) {
+            contractTab.classList.add('text-success', 'fw-bold');
+            // Ajouter une icône de déverrouillage si elle n'existe pas déjà
+            if (!contractTab.querySelector('.bi-unlock')) {
+                contractTab.innerHTML = '<i class="bi bi-unlock me-1"></i>' + contractTab.innerHTML;
+            }
         }
     }
 }
