@@ -211,13 +211,30 @@ def fetch_siret_data(siret, flash_messages = False):
 def check_siret_in_database(siret):
     """
     Vérifie si un SIRET existe déjà dans la base de données et retourne les données associées.
+    Utilise selectinload pour charger toutes les données nécessaires en une seule requête.
     """
     if not siret or len(siret) != 14 or not siret.isdigit():
         return None
     
     try:
-        # Recherche de la société par SIRET
-        societe = Societe.query.filter_by(siret=siret).first()
+        # Recherche de la société par SIRET avec chargement optimisé de toutes les relations
+        societe = (
+            db.session.query(Societe)
+            .options(
+                selectinload(Societe.activite_principale_obj),
+                selectinload(Societe.categorie_juridique_obj),
+                selectinload(Societe.tranche_effectif_obj),
+                selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.type_production),
+                selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.mode_production),
+                selectinload(Societe.agriculteurs_intermediaires).selectinload(AgriculteurSociete.agriculteur),
+                selectinload(Societe.contrats).selectinload(Contrat.referent),
+                selectinload(Societe.contrats).selectinload(Contrat.sites_cen),
+                selectinload(Societe.contrats).selectinload(Contrat.types_milieu).selectinload(TypeMilieuContrat.type_milieu),
+                selectinload(Societe.contrats).selectinload(Contrat.produits_finis).selectinload(ProduitFiniContrat.produit_fini)
+            )
+            .filter_by(siret=siret)
+            .first()
+        )
         
         if societe:
             # Récupération des données de la société
