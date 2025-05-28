@@ -17,7 +17,6 @@ class SiretHandler {
             const fetchButtons = document.querySelectorAll('[name="fetch_sirene"]');
             
             if (fetchButtons.length > 0) {
-                console.log(`${fetchButtons.length} bouton(s) SIRET trouvé(s), ajout des écouteurs d'événements`);
                 
                 fetchButtons.forEach(button => {
                     button.addEventListener('click', this.handleFetchSirene.bind(this));
@@ -34,7 +33,6 @@ class SiretHandler {
      */
     async handleFetchSirene(event) {
         event.preventDefault();
-        console.log('Bouton SIRET cliqué');
 
         // Trouver le champ SIRET le plus proche du bouton cliqué ou dans le formulaire parent
         const form = event.target.closest('form');
@@ -66,7 +64,6 @@ class SiretHandler {
                 }
             });
 
-            console.log('Envoi de la requête SIRET:', siret);
             const response = await fetch("/api/siret", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -74,7 +71,6 @@ class SiretHandler {
             });
 
             const data = await response.json();
-            console.log('Réponse API SIRET:', data);
             
             // Fermer l'indicateur de chargement
             Swal.close();
@@ -113,7 +109,6 @@ class SiretHandler {
 
             // Vérifier si des données supplémentaires sont disponibles dans la base de données
             if (data.exists_in_db) {
-                console.log('Données existantes trouvées dans la base de données');
                 
                 // Si des agriculteurs sont associés, les afficher
                 if (data.agriculteurs && data.agriculteurs.length > 0) {

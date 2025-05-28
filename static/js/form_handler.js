@@ -3,7 +3,6 @@
  * Ce fichier regroupe les fonctions liées à la gestion du formulaire modal d'ajout de données
  */
 
-console.log('Form Handler loaded!');
 
 // Créer un objet global pour éviter les conflits de noms
 window.FormHandler = {};
@@ -11,8 +10,6 @@ window.FormHandler = {};
 // Fonction pour réinitialiser le formulaire
 FormHandler.resetForm = function() {
     try {
-        console.log("Début de la fonction resetForm()");
-        
         // Stocker les valeurs des champs de l'onglet "Informations générales"
         const nomSiteElement = document.getElementById('modal_nom_site');
         const codeSiteElement = document.getElementById('modal_code_site');
@@ -154,7 +151,6 @@ FormHandler.resetForm = function() {
             alert("Formulaire réinitialisé");
         }
         
-        console.log("Fin de la fonction resetForm() - succès");
     } catch (error) {
         console.error("Erreur dans la fonction resetForm():", error);
         alert("Une erreur s'est produite lors de la réinitialisation du formulaire: " + error.message);
@@ -163,12 +159,10 @@ FormHandler.resetForm = function() {
 
 // Ajouter un gestionnaire d'événements pour initialiser les fonctionnalités au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Form Handler: DOMContentLoaded event fired');
     
     // Attacher la fonction resetForm au bouton de réinitialisation
     const resetButton = document.getElementById('reset-form-button');
     if (resetButton) {
-        console.log('Form Handler: Reset button found, attaching event listener');
         resetButton.addEventListener('click', FormHandler.resetForm);
     }
 });

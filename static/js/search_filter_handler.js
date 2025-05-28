@@ -174,7 +174,6 @@ function resetFilters() {
     document.getElementById('searchTypeContrat').value = '';
     document.getElementById('searchTypeProduction').value = '';
     document.getElementById('searchProduitFini').value = '';
-    document.getElementById('searchTypeAgriculture').value = '';
     document.getElementById('searchSAUOperator').value = '';
     document.getElementById('searchSAUValue').value = '' ;
     document.getElementById('searchSurfaceContractualiseeOperator').value = '';
@@ -201,7 +200,6 @@ function filterMarkers() {
     const typeContrat = document.getElementById('searchTypeContrat').value.trim().toLowerCase();
     const typeProduction = document.getElementById('searchTypeProduction').value.trim().toLowerCase();
     const produitFini = document.getElementById('searchProduitFini').value.trim().toLowerCase();
-    const typeAgriculture = document.getElementById('searchTypeAgriculture').value.trim().toLowerCase();
     
     // Récupérer les valeurs pour le filtre de surface contractualisée
     const surfaceOperator = document.getElementById('searchSurfaceContractualiseeOperator').value;
@@ -210,12 +208,6 @@ function filterMarkers() {
     // Récupérer les valeurs pour le filtre de SAU
     const sauOperator = document.getElementById('searchSAUOperator').value;
     const sauValue = document.getElementById('searchSAUValue').value;
-
-    // Afficher les valeurs sélectionnées pour le débogage
-    console.log('Filtre Type de production:', typeProduction);
-    console.log('Filtre Produit fini:', produitFini);
-    console.log('Filtre Surface contractualisée:', surfaceOperator, surfaceValue);
-    console.log('Filtre SAU:', sauOperator, sauValue);
 
     let hasResults = false;
 
@@ -229,12 +221,9 @@ function filterMarkers() {
             if (typeContrat && data.type_contrat.toLowerCase().trim() !== typeContrat) match = false;
             if (nomSociete && data.nom_societe.toLowerCase().trim() !== nomSociete) match = false;
             if (referent && data.referent.toLowerCase().trim() !== referent) match = false;
-            if (typeAgriculture && data.type_agriculture && data.type_agriculture.toLowerCase().trim() !== typeAgriculture) match = false;
 
             if (typeProduction) {
-                // Afficher les données pour le débogage
-                console.log('Données type_productions:', data.type_productions);
-                
+
                 // Vérifier que type_productions existe et est un tableau
                 if (!data.type_productions || !Array.isArray(data.type_productions) || data.type_productions.length === 0) {
                     console.log('Type productions invalide ou vide');
