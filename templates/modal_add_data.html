@@ -88,10 +88,6 @@
                                             <small class="text-muted">Ce champ est facultatif.</small>
                                         </div>
                                         <div class="mb-3">
-                                            {{ form.contact.label }}
-                                            {{ form.contact(class="form-control") }}
-                                        </div>
-                                        <div class="mb-3">
                                             <div id="production-container">
                                                 <div class="production-entry mb-3">
                                                     <div class="row gx-4 gy-3">
@@ -152,13 +148,8 @@
                                         {{ form.tranche_effectif(class="form-control", readonly=True) }}
                                     </div>
                                     <div class="mb-3">
-                                        {{ form.produit_fini.label }}
-                                        <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
-                                        <select id="produit_fini" name="produit_fini" multiple hidden>
-                                            {% for value, label in form.produit_fini.choices %}
-                                                <option value="{{ value }}">{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        {{ form.contact.label }}
+                                        {{ form.contact(class="form-control") }}
                                     </div>
                                 </div>
                             </div>
@@ -186,6 +177,15 @@
                                             <div class="mb-3">
                                                 {{ form.date_fin.label }}
                                                 {{ form.date_fin(class="form-control date-fin") }}
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.produit_fini.label }}
+                                                <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
+                                                <select id="produit_fini" name="produit_fini" multiple hidden>
+                                                    {% for value, label in form.produit_fini.choices %}
+                                                        <option value="{{ value }}">{{ label }}</option>
+                                                    {% endfor %}
+                                                </select>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
