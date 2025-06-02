@@ -36,7 +36,11 @@ FormHandler.resetForm = function() {
         if (surfContractualisee) surfContractualisee.disabled = false;
         
         const contact = document.querySelector('[name="contact"]');
-        if (contact) contact.disabled = false;
+        if (contact) {
+            contact.disabled = false;
+            contact.readOnly = false;
+            contact.classList.remove('bg-light');
+        }
         
         // Champs du référent
         const nomReferent = document.getElementById('modal_nom_referent');
@@ -47,17 +51,40 @@ FormHandler.resetForm = function() {
         
         // Champs de l'agriculteur
         const nomAgri = document.getElementById('modal_nom_agri');
-        if (nomAgri) nomAgri.disabled = false;
+        if (nomAgri) {
+            nomAgri.disabled = false;
+            nomAgri.readOnly = false;
+            nomAgri.classList.remove('bg-light');
+        }
         
         const prenomAgri = document.getElementById('modal_prenom_agri');
-        if (prenomAgri) prenomAgri.disabled = false;
+        if (prenomAgri) {
+            prenomAgri.disabled = false;
+            prenomAgri.readOnly = false;
+            prenomAgri.classList.remove('bg-light');
+        }
         
         const dateNaissance = document.querySelector('[name="date_naissance"]');
-        if (dateNaissance) dateNaissance.disabled = false;
+        if (dateNaissance) {
+            dateNaissance.disabled = false;
+            dateNaissance.readOnly = false;
+            dateNaissance.classList.remove('bg-light');
+        }
         
-        // Champ SIRET
-        const siretElement = document.getElementById('siret');
-        if (siretElement) siretElement.disabled = false;
+        // Champ SIRET et bouton de recherche
+        const siretElement = document.querySelector('[name="siret"]');
+        if (siretElement) {
+            siretElement.disabled = false;
+            siretElement.readOnly = false;
+            siretElement.classList.remove('bg-light');
+            siretElement.value = '';
+        }
+        
+        // Réactiver le bouton de recherche SIRET
+        const fetchSireneButton = document.querySelector('[name="fetch_sirene"]');
+        if (fetchSireneButton) {
+            fetchSireneButton.disabled = false;
+        }
         
         // Réinitialiser le formulaire
         const addForm = document.getElementById('addForm');
@@ -80,6 +107,31 @@ FormHandler.resetForm = function() {
             typeContratTagify.setReadonly(false);
             typeContratTagify.removeAllTags();
         }
+        
+        // Réactiver et réinitialiser les champs Tagify pour les types de production
+        const typeProductionBioTagify = document.querySelector('.type-production-bio-tagify');
+        if (typeProductionBioTagify && typeProductionBioTagify._tagify) {
+            typeProductionBioTagify._tagify.setReadonly(false);
+            typeProductionBioTagify._tagify.removeAllTags();
+            typeProductionBioTagify.style.pointerEvents = '';
+            typeProductionBioTagify.style.opacity = '';
+        }
+        
+        const typeProductionConvTagify = document.querySelector('.type-production-conv-tagify');
+        if (typeProductionConvTagify && typeProductionConvTagify._tagify) {
+            typeProductionConvTagify._tagify.setReadonly(false);
+            typeProductionConvTagify._tagify.removeAllTags();
+            typeProductionConvTagify.style.pointerEvents = '';
+            typeProductionConvTagify.style.opacity = '';
+        }
+        
+        // Réactiver tous les champs Tagify
+        const allTagifyInputs = document.querySelectorAll('.tagify');
+        allTagifyInputs.forEach(tagify => {
+            tagify.classList.remove('disabled');
+            tagify.style.pointerEvents = '';
+            tagify.style.opacity = '';
+        });
         
         // Supprimer toutes les entrées de production sauf la première
         const productionContainer = document.getElementById('production-container');
@@ -118,17 +170,46 @@ FormHandler.resetForm = function() {
         const searchAgriculteur = document.getElementById('search_agriculteur');
         if (searchAgriculteur) {
             searchAgriculteur.disabled = false;
+            searchAgriculteur.readOnly = false;
+            searchAgriculteur.classList.remove('bg-light');
             searchAgriculteur.value = '';
         }
         
         const searchReferent = document.getElementById('search_referent');
         if (searchReferent) {
             searchReferent.disabled = false;
+            searchReferent.readOnly = false;
+            searchReferent.classList.remove('bg-light');
             searchReferent.value = '';
         }
         
-        // Vider le champ SIRET
-        if (siretElement) siretElement.value = '';
+        // Réactiver tous les selects qui ont été désactivés
+        const allSelects = document.querySelectorAll('select');
+        allSelects.forEach(select => {
+            select.disabled = false;
+        });
+        
+        // Réactiver tous les boutons qui ont été désactivés
+        const allButtons = document.querySelectorAll('button:not([data-bs-toggle="tab"])');
+        allButtons.forEach(button => {
+            if (button.id !== 'reset-form-button' && 
+                button.className.indexOf('btn-close') === -1 && 
+                button.className.indexOf('btn-secondary') === -1) {
+                button.disabled = false;
+            }
+        });
+        
+        // Supprimer les alertes d'avertissement ajoutées par le siret_handler
+        const warningAlerts = document.querySelectorAll('.alert-warning');
+        warningAlerts.forEach(alert => {
+            alert.remove();
+        });
+        
+        // Supprimer les alertes d'information ajoutées par le siret_handler
+        const infoAlerts = document.querySelectorAll('.alert-info');
+        infoAlerts.forEach(alert => {
+            alert.remove();
+        });
         
         // Réinitialiser les champs cachés
         const idAgriculteur = document.getElementById('id_agriculteur');
@@ -136,6 +217,23 @@ FormHandler.resetForm = function() {
         
         const idReferent = document.getElementById('id_referent');
         if (idReferent) idReferent.value = '';
+        
+        // Réinitialiser le titre du contrat
+        const contractTitle = document.querySelector('#contrat h5');
+        if (contractTitle) {
+            contractTitle.textContent = 'Contrat #1';
+        }
+        
+        // Réinitialiser l'apparence des onglets
+        const contractTab = document.querySelector('#contrat-tab');
+        if (contractTab) {
+            contractTab.classList.remove('text-success', 'fw-bold');
+            // Supprimer l'icône de déverrouillage si elle existe
+            const unlockIcon = contractTab.querySelector('.bi-unlock');
+            if (unlockIcon) {
+                contractTab.innerHTML = contractTab.innerHTML.replace('<i class="bi bi-unlock me-1"></i>', '');
+            }
+        }
         
         // Afficher un message de confirmation si SweetAlert2 est disponible
         if (typeof Swal !== 'undefined') {
