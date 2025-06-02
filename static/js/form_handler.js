@@ -110,19 +110,41 @@ FormHandler.resetForm = function() {
         
         // Réactiver et réinitialiser les champs Tagify pour les types de production
         const typeProductionBioTagify = document.querySelector('.type-production-bio-tagify');
-        if (typeProductionBioTagify && typeProductionBioTagify._tagify) {
-            typeProductionBioTagify._tagify.setReadonly(false);
-            typeProductionBioTagify._tagify.removeAllTags();
-            typeProductionBioTagify.style.pointerEvents = '';
-            typeProductionBioTagify.style.opacity = '';
+        if (typeProductionBioTagify) {
+            // Réafficher le champ Tagify s'il était caché
+            typeProductionBioTagify.style.display = '';
+            
+            if (typeProductionBioTagify._tagify) {
+                typeProductionBioTagify._tagify.setReadonly(false);
+                typeProductionBioTagify._tagify.removeAllTags();
+                typeProductionBioTagify.style.pointerEvents = '';
+                typeProductionBioTagify.style.opacity = '';
+            }
+            
+            // Supprimer les badges de production bio s'ils existent
+            const bioBadgesContainer = document.querySelector('.production-badges-bio');
+            if (bioBadgesContainer) {
+                bioBadgesContainer.remove();
+            }
         }
         
         const typeProductionConvTagify = document.querySelector('.type-production-conv-tagify');
-        if (typeProductionConvTagify && typeProductionConvTagify._tagify) {
-            typeProductionConvTagify._tagify.setReadonly(false);
-            typeProductionConvTagify._tagify.removeAllTags();
-            typeProductionConvTagify.style.pointerEvents = '';
-            typeProductionConvTagify.style.opacity = '';
+        if (typeProductionConvTagify) {
+            // Réafficher le champ Tagify s'il était caché
+            typeProductionConvTagify.style.display = '';
+            
+            if (typeProductionConvTagify._tagify) {
+                typeProductionConvTagify._tagify.setReadonly(false);
+                typeProductionConvTagify._tagify.removeAllTags();
+                typeProductionConvTagify.style.pointerEvents = '';
+                typeProductionConvTagify.style.opacity = '';
+            }
+            
+            // Supprimer les badges de production conventionnelle s'ils existent
+            const convBadgesContainer = document.querySelector('.production-badges-conv');
+            if (convBadgesContainer) {
+                convBadgesContainer.remove();
+            }
         }
         
         // Réactiver tous les champs Tagify

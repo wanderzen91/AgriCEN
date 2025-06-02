@@ -198,7 +198,7 @@ class SiretHandler {
             const modeProductionInput = form.querySelector('[name="mode_production"]');
             
             if (typeProductionSelect && modeProductionInput) {
-                // Sélectionner les types de production
+                // Sélectionner les types de production dans le select caché
                 data.productions.forEach(production => {
                     const option = typeProductionSelect.querySelector(`option[value="${production.id_type_production}"]`);
                     if (option) {
@@ -211,26 +211,84 @@ class SiretHandler {
                     modeProductionInput.value = data.productions[0].id_mode_production;
                 }
                 
-                // Déclencher un événement de changement pour mettre à jour Tagify
-                const event = new Event('change');
-                typeProductionSelect.dispatchEvent(event);
+                // Séparer les productions bio et conventionnelles
+                const productionsBio = [];
+                const productionsConv = [];
                 
-                // Mettre à jour directement le champ Tagify si possible
-                const tagifyInput = form.querySelector('.type-production-tagify');
-                if (tagifyInput && tagifyInput._tagify) {
-                    console.log("Mise à jour directe du Tagify pour les types de production");
-                    // Créer les tags au format attendu par Tagify
-                    const tags = [];
-                    Array.from(typeProductionSelect.selectedOptions).forEach(option => {
-                        tags.push({
-                            value: option.value,
-                            label: option.textContent
-                        });
-                    });
+                data.productions.forEach(production => {
+                    const option = typeProductionSelect.querySelector(`option[value="${production.id_type_production}"]`);
+                    if (option) {
+                        const productionInfo = {
+                            id: production.id_type_production,
+                            label: option.textContent,
+                            mode: production.id_mode_production
+                        };
+                        
+                        // Mode 1 = Bio, Mode 2 = Conventionnel
+                        if (production.id_mode_production == 1) {
+                            productionsBio.push(productionInfo);
+                        } else {
+                            productionsConv.push(productionInfo);
+                        }
+                    }
+                });
+                
+                // Cacher les champs Tagify pour les types de production
+                const bioTagifyContainer = form.querySelector('.type-production-bio-tagify').closest('.mb-3');
+                const convTagifyContainer = form.querySelector('.type-production-conv-tagify').closest('.mb-3');
+                
+                // Créer et afficher les badges pour les productions bio
+                if (productionsBio.length > 0) {
+                    // Cacher le champ Tagify
+                    const bioTagify = bioTagifyContainer.querySelector('.type-production-bio-tagify');
+                    if (bioTagify) {
+                        bioTagify.style.display = 'none';
+                    }
                     
-                    // Mettre à jour Tagify
-                    tagifyInput._tagify.removeAllTags();
-                    tagifyInput._tagify.addTags(tags);
+                    // Créer un conteneur pour les badges s'il n'existe pas déjà
+                    let badgesContainer = bioTagifyContainer.querySelector('.production-badges-bio');
+                    if (!badgesContainer) {
+                        badgesContainer = document.createElement('div');
+                        badgesContainer.className = 'production-badges-bio mt-2';
+                        bioTagifyContainer.appendChild(badgesContainer);
+                    } else {
+                        badgesContainer.innerHTML = '';
+                    }
+                    
+                    // Ajouter les badges
+                    productionsBio.forEach(prod => {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-success me-2 mb-2';
+                        badge.textContent = prod.label;
+                        badgesContainer.appendChild(badge);
+                    });
+                }
+                
+                // Créer et afficher les badges pour les productions conventionnelles
+                if (productionsConv.length > 0) {
+                    // Cacher le champ Tagify
+                    const convTagify = convTagifyContainer.querySelector('.type-production-conv-tagify');
+                    if (convTagify) {
+                        convTagify.style.display = 'none';
+                    }
+                    
+                    // Créer un conteneur pour les badges s'il n'existe pas déjà
+                    let badgesContainer = convTagifyContainer.querySelector('.production-badges-conv');
+                    if (!badgesContainer) {
+                        badgesContainer = document.createElement('div');
+                        badgesContainer.className = 'production-badges-conv mt-2';
+                        convTagifyContainer.appendChild(badgesContainer);
+                    } else {
+                        badgesContainer.innerHTML = '';
+                    }
+                    
+                    // Ajouter les badges
+                    productionsConv.forEach(prod => {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-secondary me-2 mb-2';
+                        badge.textContent = prod.label;
+                        badgesContainer.appendChild(badge);
+                    });
                 }
             }
         } else {
