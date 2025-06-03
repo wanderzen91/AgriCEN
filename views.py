@@ -979,6 +979,34 @@ def search_referent():
     return jsonify(results), 200
 
 
+@app.route('/api/check_existing_contract_by_siret/<siret>', methods=['GET'])
+def check_existing_contract_by_siret(siret):
+    """
+    Vérifie si un SIRET correspond à un contrat existant et renvoie l'ID du contrat et le nom de la société
+    """
+    try:
+        # Rechercher un contrat associé au SIRET spécifié avec le nom de la société
+        result = db.session.query(Contrat.id_contrat, Societe.nom_societe)\
+            .join(Societe, Contrat.id_societe == Societe.id_societe)\
+            .filter(Societe.siret == siret)\
+            .first()
+        
+        if result:
+            return jsonify({
+                'exists': True,
+                'contract_id': result[0],
+                'nom_societe': result[1] or 'Nom non spécifié'
+            })
+        else:
+            return jsonify({'exists': False})
+    except Exception as e:
+        logging.error(f"Erreur lors de la vérification du SIRET {siret}: {e}")
+        return jsonify({
+            'exists': False,
+            'error': str(e)
+        }), 500
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)

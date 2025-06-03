@@ -17,12 +17,18 @@ class SiretHandler {
             const fetchButtons = document.querySelectorAll('[name="fetch_sirene"]');
             
             if (fetchButtons.length > 0) {
-                
                 fetchButtons.forEach(button => {
                     button.addEventListener('click', this.handleFetchSirene.bind(this));
                 });
             } else {
                 console.warn('Aucun bouton SIRET trouvé dans la page');
+            }
+            
+            // Ajouter un écouteur d'événement sur le champ SIRET dans edit_contract.html
+            // pour vérifier si le SIRET existe déjà dans un autre contrat
+            const siretInput = document.querySelector('[name="siret"]');
+            if (siretInput && window.location.pathname.includes('edit_contract')) {
+                siretInput.addEventListener('change', this.checkExistingContractBySiret.bind(this));
             }
         });
     }
@@ -522,6 +528,85 @@ class SiretHandler {
                     contractTab.innerHTML = '<i class="bi bi-unlock me-1"></i>' + contractTab.innerHTML;
                 }
             }
+        }
+    }
+    
+    /**
+     * Vérifie si un SIRET est déjà associé à un contrat existant
+     * Si oui, propose de rediriger vers ce contrat
+     * @param {Event} event - L'événement de changement du champ SIRET
+     */
+    async checkExistingContractBySiret(event) {
+        const siret = event.target.value.trim();
+        
+        // Vérifier que le SIRET a la bonne longueur
+        if (siret.length !== 14) {
+            return;
+        }
+        
+        // Récupérer l'ID du contrat actuel depuis l'URL
+        const currentUrl = window.location.pathname;
+        const currentContractId = currentUrl.split('/').pop();
+        
+        console.log(`Vérification du SIRET ${siret} pour le contrat ${currentContractId}`);
+        
+        try {
+            // Afficher un indicateur de chargement discret
+            const loadingToast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 30000
+            });
+            
+            loadingToast.fire({
+                title: 'Vérification du SIRET...',
+                icon: 'info'
+            });
+            
+            // Appeler l'API pour vérifier si le SIRET existe déjà
+            const response = await fetch(`/api/check_existing_contract_by_siret/${siret}`);
+            
+            // Fermer le toast de chargement
+            Swal.close();
+            
+            // Vérifier si la réponse est OK
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('Réponse API:', data);
+            
+            // Si le SIRET est associé à un contrat existant différent du contrat actuel
+            if (data.exists && data.contract_id != currentContractId) {
+                // Demander confirmation à l'utilisateur
+                Swal.fire({
+                    title: 'Contrat existant détecté',
+                    text: `Un contrat existe déjà avec ce SIRET (${data.nom_societe}). Souhaitez-vous éditer ce contrat existant à la place ?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Oui, éditer ce contrat',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Rediriger vers le contrat existant
+                        window.location.href = `/edit_contract/${data.contract_id}`;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Erreur lors de la vérification du SIRET:', error);
+            
+            // Afficher un message d'erreur convivial
+            Swal.fire({
+                title: 'Erreur',
+                text: 'Impossible de vérifier ce SIRET. Veuillez réessayer ou contacter l\'administrateur.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
         }
     }
 }
