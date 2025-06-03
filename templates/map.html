@@ -602,12 +602,17 @@ const productionsHtml = contractData.type_productions.map(production => {
     });
     
     // Initialiser le gestionnaire de recherche avec les marqueurs
-    if (typeof initSearchHandler === 'function') {
-        console.log('Initialisation du gestionnaire de recherche avec ' + allMarkers.length + ' marqueurs');
-        initSearchHandler(allMarkers);
-    } else {
-        console.error('La fonction initSearchHandler n\'est pas disponible');
-    }
+    // Utiliser un événement de chargement du document pour s'assurer que tous les scripts sont chargés
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            if (typeof window.initSearchHandler === 'function') {
+                console.log('Initialisation du gestionnaire de recherche avec ' + allMarkers.length + ' marqueurs');
+                window.initSearchHandler(allMarkers);
+            } else {
+                console.error('La fonction initSearchHandler n\'est pas disponible');
+            }
+        }, 100); // Un petit délai pour s'assurer que tous les scripts sont bien chargés
+    });
 </script>
 
 {% endblock %}

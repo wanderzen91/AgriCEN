@@ -28,6 +28,9 @@ function initSearchHandler(markers) {
     initAutocomplete();
 }
 
+// Exposer la fonction au niveau global pour qu'elle soit accessible depuis d'autres scripts
+window.initSearchHandler = initSearchHandler;
+
 /**
  * Génère une liste de valeurs uniques à partir d'une clé spécifique
  * @param {Array} markers - Tableau de marqueurs avec leurs données
@@ -101,6 +104,9 @@ function initAutocomplete() {
     );
 }
 
+// Exposer initAutocomplete au niveau global
+window.initAutocomplete = initAutocomplete;
+
 /**
  * Configure l'autocomplétion pour un champ de saisie
  * @param {HTMLElement} input - Élément input
@@ -151,6 +157,7 @@ function autocomplete(input, suggestionsList, data) {
                 input.value = match;
                 suggestionsList.innerHTML = "";
                 input.dispatchEvent(new Event('change')); // Trigger change event for filtering
+                // Ne pas appliquer automatiquement le filtre
             });
 
             listItem.innerHTML = match.replace(new RegExp(value, "gi"), (m) => `<strong>${m}</strong>`);
