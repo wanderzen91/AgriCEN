@@ -408,7 +408,9 @@ class SiretHandler {
     }
     
     /**
-     * Verrouille tous les champs du formulaire sauf ceux dans l'onglet contrat-tab
+     * Verrouille les champs du formulaire selon le contexte de la page
+     * - Pour modal_add_data.html: verrouille tous les champs sauf ceux dans l'onglet contrat-tab
+     * - Pour edit_contract.html: verrouille uniquement la section "Informations Entreprise"
      * @param {HTMLElement} form - Le formulaire contenant les champs
      */
     lockFieldsExceptContractTab(form) {
@@ -416,15 +418,30 @@ class SiretHandler {
         const targetForm = form || document.getElementById('addForm');
         if (!targetForm) return;
 
-        // Sélectionner tous les onglets sauf l'onglet contrat
-        const tabsToLock = ['#infos-general', '#exploitation'];
+        // Détecter la page actuelle
+        const isEditContractPage = window.location.pathname.includes('edit_contract');
         
-        tabsToLock.forEach(tabId => {
-            const tabPane = document.querySelector(tabId);
-            if (tabPane) {
-                // Verrouiller tous les champs de saisie dans cet onglet
-                const inputElements = tabPane.querySelectorAll('input, select, textarea');
+        if (isEditContractPage) {
+            // Pour edit_contract.html: verrouiller uniquement la section "Informations Entreprise"
+            const entrepriseSection = document.querySelector('.card-header:has(h5:contains("Informations Entreprise"))');
+            
+            // Utiliser la méthode alternative si :has n'est pas supporté
+            let entrepriseCard;
+            document.querySelectorAll('.card-header h5').forEach(h5 => {
+                if (h5.textContent.includes('Informations Entreprise')) {
+                    entrepriseCard = h5.closest('.card');
+                }
+            });
+            
+            if (entrepriseCard) {
+                // Verrouiller tous les champs de saisie dans cette section
+                const inputElements = entrepriseCard.querySelectorAll('input, select, textarea');
                 inputElements.forEach(input => {
+                    // Ne pas verrouiller le champ SIRET et le bouton de recherche
+                    if (input.name === 'siret' || input.name === 'fetch_sirene') {
+                        return;
+                    }
+                    
                     // Ne pas verrouiller les champs cachés ou les boutons
                     if (input.type !== 'hidden' && input.type !== 'button' && input.type !== 'submit') {
                         input.setAttribute('readonly', true);
@@ -439,30 +456,71 @@ class SiretHandler {
                     }
                 });
                 
-                // Désactiver également les champs Tagify s'ils existent
-                const tagifyInputs = tabPane.querySelectorAll('.tagify');
-                tagifyInputs.forEach(tagify => {
-                    tagify.classList.add('disabled');
-                    // Ajouter un style pour montrer que c'est désactivé
-                    tagify.style.pointerEvents = 'none';
-                    tagify.style.opacity = '0.7';
-                });
-                
-                // Désactiver les boutons dans ces onglets
-                const buttons = tabPane.querySelectorAll('button:not([data-bs-toggle="tab"])');
+                // Désactiver les boutons dans cette section sauf le bouton de recherche SIRET
+                const buttons = entrepriseCard.querySelectorAll('button:not([name="fetch_sirene"])');
                 buttons.forEach(button => {
                     button.setAttribute('disabled', true);
                 });
+                
+                // Ajouter un message d'information
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'alert alert-info mt-2';
+                infoDiv.innerHTML = '<i class="bi bi-info-circle-fill me-2"></i>Les informations de l\'entreprise sont verrouillées car elles proviennent de la base SIRENE.';
+                
+                // Insérer le message après la section entreprise si ce n'est pas déjà fait
+                if (!entrepriseCard.querySelector('.alert-info')) {
+                    entrepriseCard.querySelector('.card-body').appendChild(infoDiv);
+                }
             }
-        });
-        
-        // Afficher un message pour indiquer que seul l'onglet Partenariat CEN est modifiable
-        const contractTab = document.querySelector('#contrat-tab');
-        if (contractTab) {
-            contractTab.classList.add('text-success', 'fw-bold');
-            // Ajouter une icône de déverrouillage si elle n'existe pas déjà
-            if (!contractTab.querySelector('.bi-unlock')) {
-                contractTab.innerHTML = '<i class="bi bi-unlock me-1"></i>' + contractTab.innerHTML;
+        } else {
+            // Pour modal_add_data.html: verrouiller tous les champs sauf ceux dans l'onglet contrat-tab
+            const tabsToLock = ['#infos-general', '#exploitation'];
+            
+            tabsToLock.forEach(tabId => {
+                const tabPane = document.querySelector(tabId);
+                if (tabPane) {
+                    // Verrouiller tous les champs de saisie dans cet onglet
+                    const inputElements = tabPane.querySelectorAll('input, select, textarea');
+                    inputElements.forEach(input => {
+                        // Ne pas verrouiller les champs cachés ou les boutons
+                        if (input.type !== 'hidden' && input.type !== 'button' && input.type !== 'submit') {
+                            input.setAttribute('readonly', true);
+                            
+                            // Pour les selects, on les désactive car readonly ne fonctionne pas bien avec eux
+                            if (input.tagName === 'SELECT') {
+                                input.setAttribute('disabled', true);
+                            }
+                            
+                            // Ajouter une classe pour indiquer visuellement que le champ est verrouillé
+                            input.classList.add('bg-light');
+                        }
+                    });
+                    
+                    // Désactiver également les champs Tagify s'ils existent
+                    const tagifyInputs = tabPane.querySelectorAll('.tagify');
+                    tagifyInputs.forEach(tagify => {
+                        tagify.classList.add('disabled');
+                        // Ajouter un style pour montrer que c'est désactivé
+                        tagify.style.pointerEvents = 'none';
+                        tagify.style.opacity = '0.7';
+                    });
+                    
+                    // Désactiver les boutons dans ces onglets
+                    const buttons = tabPane.querySelectorAll('button:not([data-bs-toggle="tab"])');
+                    buttons.forEach(button => {
+                        button.setAttribute('disabled', true);
+                    });
+                }
+            });
+            
+            // Afficher un message pour indiquer que seul l'onglet Partenariat CEN est modifiable
+            const contractTab = document.querySelector('#contrat-tab');
+            if (contractTab) {
+                contractTab.classList.add('text-success', 'fw-bold');
+                // Ajouter une icône de déverrouillage si elle n'existe pas déjà
+                if (!contractTab.querySelector('.bi-unlock')) {
+                    contractTab.innerHTML = '<i class="bi bi-unlock me-1"></i>' + contractTab.innerHTML;
+                }
             }
         }
     }
