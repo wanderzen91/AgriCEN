@@ -8,8 +8,8 @@ let proprietors = [];
 let societes = [];
 let referents = [];
 
-// Variable globale pour stocker les marqueurs
-let allMarkers = [];
+// Utiliser la variable globale allMarkers déjà définie dans map.html
+// Ne pas redéclarer allMarkers ici
 
 /**
  * Initialise le gestionnaire de recherche avec les marqueurs disponibles
@@ -167,26 +167,31 @@ function autocomplete(input, suggestionsList, data) {
  * Réinitialise tous les filtres et affiche tous les marqueurs
  */
 function resetFilters() {
-    // Réinitialiser les champs de filtre
-    document.getElementById('searchNom').value = '';
-    document.getElementById('searchSociete').value = '';
-    document.getElementById('searchReferent').value = '';
-    document.getElementById('searchTypeContrat').value = '';
-    document.getElementById('searchTypeProduction').value = '';
-    document.getElementById('searchProduitFini').value = '';
-    document.getElementById('searchSAUOperator').value = '';
-    document.getElementById('searchSAUValue').value = '' ;
-    document.getElementById('searchSurfaceContractualiseeOperator').value = '';
-    document.getElementById('searchSurfaceContractualiseeValue').value = '';    
-
-    // Rendre tous les marqueurs visibles et les replacer correctement
-    allMarkers.forEach(item => {
-        item.marker.setOpacity(1); // Rendre visible
-        item.marker.setLatLng([item.data.latitude, item.data.longitude]); // Replacer au bon endroit
+    // Réinitialiser les champs de filtre - vérifier l'existence avant d'accéder
+    const elements = [
+        'searchNom', 'searchSociete', 'searchReferent', 'searchTypeContrat',
+        'searchTypeProduction', 'searchProduitFini', 'searchSurfaceContractualiseeOperator',
+        'searchSurfaceContractualiseeValue'
+    ];
+    
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = '';
     });
+    
+    // Rendre tous les marqueurs visibles et les replacer correctement
+    if (allMarkers && allMarkers.length > 0) {
+        allMarkers.forEach(item => {
+            item.marker.setOpacity(1); // Rendre visible
+            item.marker.setLatLng([item.data.latitude, item.data.longitude]); // Replacer au bon endroit
+        });
+    }
 
     closeModal('searchModal'); // Fermer la modale après application
 }
+
+// Expose to global
+window.resetFilters = resetFilters;
 
 /**
  * Filtre les marqueurs selon les critères sélectionnés
@@ -194,20 +199,26 @@ function resetFilters() {
 function filterMarkers() {
     showLoader(); // Afficher le loader
 
-    const nomProprietaire = document.getElementById('searchNom').value.trim().toLowerCase();
-    const nomSociete = document.getElementById('searchSociete').value.trim().toLowerCase();
-    const referent = document.getElementById('searchReferent').value.trim().toLowerCase();
-    const typeContrat = document.getElementById('searchTypeContrat').value.trim().toLowerCase();
-    const typeProduction = document.getElementById('searchTypeProduction').value.trim().toLowerCase();
-    const produitFini = document.getElementById('searchProduitFini').value.trim().toLowerCase();
+    // Fonction utilitaire pour récupérer la valeur d'un élément s'il existe
+    function getElementValue(id, defaultValue = '') {
+        const element = document.getElementById(id);
+        return element ? element.value.trim().toLowerCase() : defaultValue;
+    }
+
+    const nomProprietaire = getElementValue('searchNom');
+    const nomSociete = getElementValue('searchSociete');
+    const referent = getElementValue('searchReferent');
+    const typeContrat = getElementValue('searchTypeContrat');
+    const typeProduction = getElementValue('searchTypeProduction');
+    const produitFini = getElementValue('searchProduitFini');
     
     // Récupérer les valeurs pour le filtre de surface contractualisée
-    const surfaceOperator = document.getElementById('searchSurfaceContractualiseeOperator').value;
-    const surfaceValue = document.getElementById('searchSurfaceContractualiseeValue').value;
+    const surfaceOperator = getElementValue('searchSurfaceContractualiseeOperator', '>');
+    const surfaceValue = getElementValue('searchSurfaceContractualiseeValue');
     
-    // Récupérer les valeurs pour le filtre de SAU
-    const sauOperator = document.getElementById('searchSAUOperator').value;
-    const sauValue = document.getElementById('searchSAUValue').value;
+    // Ne pas utiliser les filtres SAU s'ils n'existent pas dans le DOM
+    const sauOperator = getElementValue('searchSAUOperator', '>');
+    const sauValue = getElementValue('searchSAUValue');
 
     let hasResults = false;
 
@@ -332,6 +343,9 @@ function filterMarkers() {
         hideLoader(); 
     }, 500); // Délai de 500ms avant d'afficher les résultats
 }
+
+// Expose to global
+window.filterMarkers = filterMarkers;
 
 /**
  * Affiche le loader pendant le chargement
