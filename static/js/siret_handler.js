@@ -115,23 +115,28 @@ class SiretHandler {
 
             // Vérifier si des données supplémentaires sont disponibles dans la base de données
             if (data.exists_in_db) {
-                // Afficher un message d'avertissement pour informer l'utilisateur
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'alert alert-warning mt-2';
-                warningDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>L\'entreprise associée à ce n°SIRET existe déjà dans la base de données ! Seul la saisie d\'un nouveau contrat dans le champ "Partenariat CEN" est possible !';
+                // Vérifier si nous sommes sur la page modal_add_data.html et non sur edit_contract.html
+                const isModalAddData = !window.location.pathname.includes('edit_contract');
                 
-                // Insérer le message après le champ SIRET
-                const siretFormGroup = siretInput.closest('.mb-3');
-                if (siretFormGroup) {
-                    // Vérifier si un message existe déjà pour éviter les doublons
-                    const existingWarning = siretFormGroup.querySelector('.alert-warning');
-                    if (existingWarning) {
-                        existingWarning.remove();
-                    }
-                    siretFormGroup.appendChild(warningDiv);
+                if (isModalAddData) {
+                    // Afficher un message d'avertissement uniquement dans modal_add_data.html
+                    const warningDiv = document.createElement('div');
+                    warningDiv.className = 'alert alert-warning mt-2';
+                    warningDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i>L\'entreprise associée à ce n°SIRET existe déjà dans la base de données ! Seul la saisie d\'un nouveau contrat dans le champ "Partenariat CEN" est possible !';
                     
-                    // Verrouiller tous les champs à l'exception de ceux dans l'onglet contrat-tab
-                    this.lockFieldsExceptContractTab(form);
+                    // Insérer le message après le champ SIRET
+                    const siretFormGroup = siretInput.closest('.mb-3');
+                    if (siretFormGroup) {
+                        // Vérifier si un message existe déjà pour éviter les doublons
+                        const existingWarning = siretFormGroup.querySelector('.alert-warning');
+                        if (existingWarning) {
+                            existingWarning.remove();
+                        }
+                        siretFormGroup.appendChild(warningDiv);
+                        
+                        // Verrouiller tous les champs à l'exception de ceux dans l'onglet contrat-tab
+                        this.lockFieldsExceptContractTab(form);
+                    }
                 }
                 
                 // Remplir tous les champs du formulaire avec les données existantes
@@ -531,6 +536,12 @@ class SiretHandler {
         }
     }
     
+    // Variable pour stocker le dernier SIRET vérifié
+    lastCheckedSiret = null;
+    
+    // Variable pour empêcher les vérifications simultanées
+    isCheckingContract = false;
+    
     /**
      * Vérifie si un SIRET est déjà associé à un contrat existant
      * Si oui, propose de rediriger vers ce contrat
@@ -544,31 +555,42 @@ class SiretHandler {
             return;
         }
         
+        // Éviter les vérifications simultanées ou répétées du même SIRET
+        if (this.isCheckingContract || siret === this.lastCheckedSiret) {
+            console.log('Vérification déjà en cours ou SIRET déjà vérifié:', siret);
+            return;
+        }
+        
+        // Marquer comme en cours de vérification
+        this.isCheckingContract = true;
+        this.lastCheckedSiret = siret;
+        
         // Récupérer l'ID du contrat actuel depuis l'URL
         const currentUrl = window.location.pathname;
         const currentContractId = currentUrl.split('/').pop();
         
         console.log(`Vérification du SIRET ${siret} pour le contrat ${currentContractId}`);
         
+        // Fermer toute alerte SweetAlert existante
+        if (Swal.isVisible()) {
+            Swal.close();
+            // Attendre que l'alerte soit fermée
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
         try {
-            // Afficher un indicateur de chargement discret
-            const loadingToast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 30000
-            });
-            
-            loadingToast.fire({
+            // Afficher un indicateur de chargement
+            Swal.fire({
                 title: 'Vérification du SIRET...',
-                icon: 'info'
+                text: 'Veuillez patienter...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
             
             // Appeler l'API pour vérifier si le SIRET existe déjà
             const response = await fetch(`/api/check_existing_contract_by_siret/${siret}`);
-            
-            // Fermer le toast de chargement
-            Swal.close();
             
             // Vérifier si la réponse est OK
             if (!response.ok) {
@@ -578,10 +600,16 @@ class SiretHandler {
             const data = await response.json();
             console.log('Réponse API:', data);
             
+            // Fermer l'indicateur de chargement
+            Swal.close();
+            
+            // Attendre que l'alerte soit fermée
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
             // Si le SIRET est associé à un contrat existant différent du contrat actuel
             if (data.exists && data.contract_id != currentContractId) {
                 // Demander confirmation à l'utilisateur
-                Swal.fire({
+                await Swal.fire({
                     title: 'Contrat existant détecté',
                     text: `Un contrat existe déjà avec ce SIRET (${data.nom_societe}). Souhaitez-vous éditer ce contrat existant à la place ?`,
                     icon: 'question',
@@ -589,7 +617,8 @@ class SiretHandler {
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
                     confirmButtonText: 'Oui, éditer ce contrat',
-                    cancelButtonText: 'Annuler'
+                    cancelButtonText: 'Annuler',
+                    allowOutsideClick: false
                 }).then((result) => {
                     if (result.isConfirmed) {
                         // Rediriger vers le contrat existant
@@ -600,13 +629,23 @@ class SiretHandler {
         } catch (error) {
             console.error('Erreur lors de la vérification du SIRET:', error);
             
+            // Fermer toute alerte existante
+            if (Swal.isVisible()) {
+                Swal.close();
+                // Attendre que l'alerte soit fermée
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
             // Afficher un message d'erreur convivial
-            Swal.fire({
+            await Swal.fire({
                 title: 'Erreur',
                 text: 'Impossible de vérifier ce SIRET. Veuillez réessayer ou contacter l\'administrateur.',
                 icon: 'error',
                 confirmButtonText: 'OK'
             });
+        } finally {
+            // Marquer comme terminé
+            this.isCheckingContract = false;
         }
     }
 }
