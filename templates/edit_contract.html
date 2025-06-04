@@ -6,7 +6,7 @@
 <div class="container mt-5 p-4 shadow-sm bg-white rounded">
     <!-- Titre principal -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Modifier le contrat</h2>
+        <h2>Modifier le contrat <span class="badge bg-secondary">#{{ contrat.id_contrat }}</span></h2>
         <button id="backButton" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left"></i> Retour à la carte
         </button>
@@ -241,7 +241,7 @@
                                 <!-- Encart d'information pour les autres contrats de la même société -->
                                 <div class="card border-info mb-3">
                                     <div class="card-header bg-info text-white">
-                                        <i class="fas fa-link me-2"></i>Autres contrats liés à {{ contrat.societe.nom_societe }} <small><em>(cliquer sur un contrat pour l'éditer)</em></small>
+                                        <i class="fas fa-link me-2"></i>Autres contrats de {{ contrat.societe.nom_societe }} <small><em>(cliquer sur un contrat pour l'éditer)</em></small>
                                     </div>
                                     <div class="card-body p-0">
                                         {% if autres_contrats %}
@@ -262,7 +262,7 @@
                                         </div>
                                         <div class="card-footer bg-transparent text-muted small">
                                             <i class="fas fa-info-circle me-1"></i>
-                                            {{ autres_contrats|length }} autre(s) contrat(s) associé(s) à {{ contrat.societe.nom_societe }}
+                                            {{ autres_contrats|length }} autre(s) contrat(s) pour cette société
                                         </div>
                                         {% else %}
                                         <div class="card-body">
