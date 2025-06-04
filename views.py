@@ -380,159 +380,196 @@ def map_page():
             form.nom_societe.data = siret_data["denomination"]
         return render_template('map.html', form=form, geojson=geojson)
 
-    if form.submit.data and form.validate_on_submit():  # Si "Enregistrer les données" est cliqué
-        try:
-            # Debug prints
-            print("Form Data:", request.form)
-            print("Type Production Data:", request.form.getlist('type_production'))
-            print("Type Production Field:", form.type_production.data)
-            print("Type Production Errors:", form.type_production.errors)
-            # Logique pour enregistrer les données
+    # Vérifier si le SIRET existe déjà avant la validation du formulaire
+    siret_existant = False
+    if form.siret.data:
+        societe_existante = Societe.query.filter_by(siret=form.siret.data).first()
+        if societe_existante:
+            siret_existant = True
+            
+    # Si le formulaire est soumis
+    if form.submit.data:
+        # Si le SIRET existe, ignorer la validation des champs liés à la société et à l'agriculteur
+        validation_ok = True
+        if siret_existant:
+            # Liste des champs à ne pas valider pour une société existante
+            champs_a_ignorer = [
+                'type_production', 'mode_production',  # Champs de production
+                'nom_agri', 'prenom_agri',  # Champs de l'agriculteur
+                'contact'  # Champ de contact de la société
+            ]
+            
+            # Valider manuellement tous les champs sauf ceux à ignorer
+            for field_name, field in form._fields.items():
+                if field_name not in champs_a_ignorer and field_name != 'csrf_token' and field_name != 'submit':
+                    if not field.validate(form):
+                        print(f"Erreur de validation pour le champ {field_name}: {field.errors}")
+                        validation_ok = False
+        else:
+            # Validation normale de tous les champs
+            validation_ok = form.validate_on_submit()
+            if not validation_ok:
+                print("Erreurs de validation:", form.errors)
+        
+        if validation_ok:  # Si la validation est réussie
+            try:
+                # Debug prints
+                print("Form Data:", request.form)
+                print("Type Production Data:", request.form.getlist('type_production'))
+                print("Type Production Field:", form.type_production.data)
+                print("Type Production Errors:", form.type_production.errors)
+                
+                # Logique pour enregistrer les données
+                # Vérifier si la société existe déjà (par SIRET ou nom)
+                societe = None
+                societe_existante = False
+                if form.siret.data:
+                    societe = Societe.query.filter_by(siret=form.siret.data).first()
+                    if societe:
+                        societe_existante = True
+                if not societe:
+                    societe = Societe.query.filter_by(nom_societe=form.nom_societe.data).first()
+                    if societe:
+                        societe_existante = True
 
-            # Vérifier si la société existe déjà (par SIRET ou nom)
-            societe = None
-            if form.siret.data:
-                societe = Societe.query.filter_by(siret=form.siret.data).first()
-            if not societe:
-                societe = Societe.query.filter_by(nom_societe=form.nom_societe.data).first()
+                # Si la société n'existe pas, la créer avec toutes les données associées
+                if not societe:
+                    societe = Societe(
+                        nom_societe=form.nom_societe.data,
+                        contact=form.contact.data,
+                        siret=form.siret.data, 
+                        adresse_etablissement=form.adresse_etablissement.data,  
+                        tranche_effectif=form.tranche_effectif.data, 
+                        categorie_juridique=form.categorie_juridique.data,
+                        activite_principale=form.activite_principale.data
+                    )
 
-            # Si la société n'existe pas, la créer
-            if not societe:
-                societe = Societe(
-                    nom_societe=form.nom_societe.data,
-                    contact=form.contact.data,
-                    siret=form.siret.data, 
-                    adresse_etablissement=form.adresse_etablissement.data,  
-                    tranche_effectif=form.tranche_effectif.data, 
-                    categorie_juridique=form.categorie_juridique.data,
-                    activite_principale=form.activite_principale.data
-                )
+                    db.session.add(societe)
+                    db.session.commit()
 
-                db.session.add(societe)
-                db.session.commit()
+                    # Ajouter un agriculteur uniquement si la société est nouvelle
+                    agriculteur = Agriculteur(
+                        nom_agri=form.nom_agri.data,
+                        prenom_agri=form.prenom_agri.data,
+                        date_naissance=form.date_naissance.data,
+                    )
+                    db.session.add(agriculteur)
+                    db.session.commit()
 
-            # Ajouter un agriculteur
-            agriculteur = Agriculteur(
-                nom_agri=form.nom_agri.data,
-                prenom_agri=form.prenom_agri.data,
-                date_naissance=form.date_naissance.data,
-            )
-            db.session.add(agriculteur)
-            db.session.commit()
+                    # Ajouter une association dans AgriculteurSociete
+                    agriculteur_societe = AgriculteurSociete(
+                        id_agriculteur=agriculteur.id_agriculteur,
+                        id_societe=societe.id_societe
+                    )
+                    db.session.add(agriculteur_societe)
+                    db.session.commit()
+                    
+                    # Ajouter les types de production uniquement pour une nouvelle société
+                    # Récupérer les types de production bio et conventionnelle
+                    type_production_bio = request.form.getlist('type_production_bio[]')
+                    type_production_conv = request.form.getlist('type_production_conv[]')
+                    
+                    # Définir les IDs des modes de production
+                    mode_production_bio_id = 1  # ID pour le mode Bio
+                    mode_production_conv_id = 2  # ID pour le mode Conventionnelle
 
-            # Ajouter une association dans AgriculteurSociete
-            agriculteur_societe = AgriculteurSociete(
-                id_agriculteur=agriculteur.id_agriculteur,
-                id_societe=societe.id_societe
-            )
-            db.session.add(agriculteur_societe)
-            db.session.commit()
+                    # Traiter les types de production bio
+                    for production_id in type_production_bio:
+                        if production_id:  # Vérifier que l'ID n'est pas vide
+                            # Créer directement l'association TypeProductionSociete
+                            type_production_societe = TypeProductionSociete(
+                                id_societe=societe.id_societe,
+                                id_type_production=int(production_id),
+                                id_mode_production=mode_production_bio_id
+                            )
+                            db.session.add(type_production_societe)
+                    
+                    # Traiter les types de production conventionnelle
+                    for production_id in type_production_conv:
+                        if production_id:  # Vérifier que l'ID n'est pas vide
+                            # Créer directement l'association TypeProductionSociete
+                            type_production_societe = TypeProductionSociete(
+                                id_societe=societe.id_societe,
+                                id_type_production=int(production_id),
+                                id_mode_production=mode_production_conv_id
+                            )
+                            db.session.add(type_production_societe)
+                            
+                    db.session.commit()
 
-            # Vérifier si le référent existe déjà
-            referent = Referent.query.filter_by(
-                nom_referent=form.nom_referent.data,
-                prenom_referent=form.prenom_referent.data
-            ).first()
-            if not referent:
-                referent = Referent(
+                # Vérifier si le référent existe déjà
+                referent = Referent.query.filter_by(
                     nom_referent=form.nom_referent.data,
                     prenom_referent=form.prenom_referent.data
+                ).first()
+                if not referent:
+                    referent = Referent(
+                        nom_referent=form.nom_referent.data,
+                        prenom_referent=form.prenom_referent.data
+                    )
+                    db.session.add(referent)
+                    db.session.commit()
+
+                # Nous n'avons plus besoin de créer un SiteCEN séparé car les informations sont maintenant directement dans ContratSiteCEN
+
+                # Ajouter un contrat (toujours créé, que la société soit nouvelle ou existante)
+                contrat = Contrat(
+                    surf_contractualisee=form.surf_contractualisee.data,
+                    date_signature=form.date_signature.data,
+                    date_fin=form.date_fin.data,
+                    date_prise_effet=form.date_prise_effet.data,
+                    latitude=form.latitude.data,
+                    longitude=form.longitude.data,
+                    remarques=form.remarques.data,
+                    id_societe=societe.id_societe,
+                    id_referent=referent.id_referent,
+                    id_type_contrat=form.appellation_contrat.data
                 )
-                db.session.add(referent)
+                db.session.add(contrat)
                 db.session.commit()
 
-            # Nous n'avons plus besoin de créer un SiteCEN séparé car les informations sont maintenant directement dans ContratSiteCEN
 
-            # Ajouter un contrat
-            contrat = Contrat(
-                surf_contractualisee=form.surf_contractualisee.data,
-                date_signature=form.date_signature.data,
-                date_fin=form.date_fin.data,
-                date_prise_effet=form.date_prise_effet.data,
-                latitude=form.latitude.data,
-                longitude=form.longitude.data,
-                remarques=form.remarques.data,
-                id_societe=societe.id_societe,
-                id_referent=referent.id_referent,
-                id_type_contrat=form.appellation_contrat.data
-            )
-            db.session.add(contrat)
-            db.session.commit()
-
-
-            # Rechercher le site correspondant dans VueSites par son code
-            vue_site = VueSites.query.filter_by(codesite=form.code_site.data).first()
-            
-            # Si le site existe dans VueSites, utiliser son idsite
-            # Sinon, générer un nouvel ID
-            site_id = vue_site.idsite if vue_site else db.session.query(db.func.nextval('saisie.site_cen_id_site_seq')).scalar()
-            
-            # Créer directement une entrée ContratSiteCEN avec les informations du site
-            contrat_site_cen = ContratSiteCEN(
-                id_site=site_id,
-                id_contrat=contrat.id_contrat,
-                code_site=form.code_site.data,
-                nom_site=form.nom_site.data
-            )
-            db.session.add(contrat_site_cen)
-            db.session.commit()
-
-            # Associer des types de milieu, productions, et produits finis
-            for milieu_id in request.form.getlist('type_milieu'):
-                type_milieu_contrat = TypeMilieuContrat(
-                    id_type_milieu=int(milieu_id),
-                    id_contrat=contrat.id_contrat
+                # Rechercher le site correspondant dans VueSites par son code
+                vue_site = VueSites.query.filter_by(codesite=form.code_site.data).first()
+                
+                # Si le site existe dans VueSites, utiliser son idsite
+                # Sinon, générer un nouvel ID
+                site_id = vue_site.idsite if vue_site else db.session.query(db.func.nextval('saisie.site_cen_id_site_seq')).scalar()
+                
+                # Créer directement une entrée ContratSiteCEN avec les informations du site
+                contrat_site_cen = ContratSiteCEN(
+                    id_site=site_id,
+                    id_contrat=contrat.id_contrat,
+                    code_site=form.code_site.data,
+                    nom_site=form.nom_site.data
                 )
-                db.session.add(type_milieu_contrat)
+                db.session.add(contrat_site_cen)
                 db.session.commit()
 
-            # Récupérer les types de production bio et conventionnelle
-            type_production_bio = request.form.getlist('type_production_bio[]')
-            type_production_conv = request.form.getlist('type_production_conv[]')
-            
-            print("Types de production bio:", type_production_bio)
-            print("Types de production conventionnelle:", type_production_conv)
-            
-            # Définir les IDs des modes de production
-            mode_production_bio_id = 1  # ID pour le mode Bio
-            mode_production_conv_id = 2  # ID pour le mode Conventionnelle
-
-            # Traiter les types de production bio
-            for production_id in type_production_bio:
-                if production_id:  # Vérifier que l'ID n'est pas vide
-                    # Créer directement l'association TypeProductionSociete
-                    type_production_societe = TypeProductionSociete(
-                        id_societe=societe.id_societe,
-                        id_type_production=int(production_id),
-                        id_mode_production=mode_production_bio_id
+                # Associer des types de milieu au contrat (toujours fait, que la société soit nouvelle ou existante)
+                for milieu_id in request.form.getlist('type_milieu'):
+                    type_milieu_contrat = TypeMilieuContrat(
+                        id_type_milieu=int(milieu_id),
+                        id_contrat=contrat.id_contrat
                     )
-                    db.session.add(type_production_societe)
-            
-            # Traiter les types de production conventionnelle
-            for production_id in type_production_conv:
-                if production_id:  # Vérifier que l'ID n'est pas vide
-                    # Créer directement l'association TypeProductionSociete
-                    type_production_societe = TypeProductionSociete(
-                        id_societe=societe.id_societe,
-                        id_type_production=int(production_id),
-                        id_mode_production=mode_production_conv_id
+                    db.session.add(type_milieu_contrat)
+                    db.session.commit()
+
+                # Associer des produits finis au contrat (toujours fait, que la société soit nouvelle ou existante)
+                for produit_fini_id in request.form.getlist('produit_fini'):
+                    produit_fini_contrat = ProduitFiniContrat(
+                        id_type_produit_fini=int(produit_fini_id),
+                        id_contrat=contrat.id_contrat
                     )
-                    db.session.add(type_production_societe)
+                    db.session.add(produit_fini_contrat)
 
-            for produit_fini_id in request.form.getlist('produit_fini'):
-                produit_fini_contrat = ProduitFiniContrat(
-                    id_type_produit_fini=int(produit_fini_id),
-                    id_contrat=contrat.id_contrat
-                )
-                db.session.add(produit_fini_contrat)
-
-            db.session.commit()
-            flash('Les données ont été ajoutées avec succès !', 'success')
-            return redirect('/')
-
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Erreur : {str(e)}", 'danger')
+                db.session.commit()
+                flash('Les données ont été ajoutées avec succès !', 'success')
+                return redirect('/')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Erreur : {str(e)}", 'danger')
     else:
         # Afficher les erreurs spécifiques
         for field, errors in form.errors.items():
@@ -852,7 +889,21 @@ def edit_contract(contract_id):
     # Récupérer les données GeoJSON pour la carte
     sites_geojson = get_geojson_data()
     
-    return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson)
+    # Récupérer les autres contrats de la même société (s'il y en a)    
+    autres_contrats = []
+    if contrat and contrat.societe:
+        autres_contrats = (
+            db.session.query(Contrat)
+            .options(
+                selectinload(Contrat.sites_cen),
+                selectinload(Contrat.type_contrat)
+            )
+            .filter(Contrat.id_societe == contrat.id_societe)
+            .filter(Contrat.id_contrat != contrat.id_contrat)  # Exclure le contrat actuel
+            .all()
+        )
+    
+    return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson, autres_contrats=autres_contrats)
 
 
 @app.route('/delete_contract/<int:contract_id>', methods=['POST'])
