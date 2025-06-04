@@ -14,7 +14,8 @@ from flask_migrate import Migrate
 from flask_login import login_required, current_user
 import flask_session
 from auth import init_auth
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 app.config['WTF_CSRF_ENABLED'] = False
@@ -412,13 +413,7 @@ def map_page():
                 print("Erreurs de validation:", form.errors)
         
         if validation_ok:  # Si la validation est réussie
-            try:
-                # Debug prints
-                print("Form Data:", request.form)
-                print("Type Production Data:", request.form.getlist('type_production'))
-                print("Type Production Field:", form.type_production.data)
-                print("Type Production Errors:", form.type_production.errors)
-                
+            try:              
                 # Logique pour enregistrer les données
                 # Vérifier si la société existe déjà (par SIRET ou nom)
                 societe = None
@@ -793,11 +788,41 @@ def edit_contract(contract_id):
             for mode_id, type_prods in existing_productions.items()
         ]
         
+        # Récupérer les autres contrats de la même société (s'il y en a)
+        autres_contrats = []
+        
+        # Récupérer d'abord l'id_societe du contrat actuel
+        id_societe_contrat_actuel = db.session.query(Contrat.id_societe).filter(Contrat.id_contrat == contract_id).scalar()
+        logger.info(f"ID de société du contrat {contract_id}: {id_societe_contrat_actuel}")
+        
+        if id_societe_contrat_actuel:
+            # Requête directe: tous les autres contrats ayant le même id_societe
+            autres_contrats = (
+                db.session.query(Contrat)
+                .options(
+                    selectinload(Contrat.sites_cen),
+                    selectinload(Contrat.type_contrat)
+                )
+                .filter(
+                    Contrat.id_societe == id_societe_contrat_actuel,
+                    Contrat.id_contrat != contract_id  # Exclure le contrat actuel
+                )
+                .all()
+            )
+            logger.info(f"Autres contrats trouvés: {len(autres_contrats)}")
+            if autres_contrats:
+                for ac in autres_contrats:
+                    logger.info(f"  - Contrat #{ac.id_contrat} (société: {ac.id_societe})")
+        else:
+            logger.info(f"Contrat {contract_id} n'a pas d'id_societe associé.")
+            autres_contrats = []
+        
         return render_template('edit_contract.html', 
                             contrat=contrat, 
                             form=form, 
                             initial_productions=json.dumps(initial_productions),
-                            geojson=sites_geojson)
+                            geojson=sites_geojson,
+                            autres_contrats=autres_contrats)
 
     # 🟢 Traitement du formulaire soumis
     elif request.method == 'POST':
@@ -889,19 +914,36 @@ def edit_contract(contract_id):
     # Récupérer les données GeoJSON pour la carte
     sites_geojson = get_geojson_data()
     
-    # Récupérer les autres contrats de la même société (s'il y en a)    
+    # Récupérer les autres contrats de la même société (s'il y en a)
     autres_contrats = []
-    if contrat and contrat.societe:
+    
+    # Récupérer d'abord l'id_societe du contrat actuel
+    id_societe_contrat_actuel = db.session.query(Contrat.id_societe).filter(Contrat.id_contrat == contract_id).scalar()
+    logger.info(f"ID de société du contrat {contract_id}: {id_societe_contrat_actuel}")
+    
+    if id_societe_contrat_actuel:
+        # Requête directe: tous les autres contrats ayant le même id_societe
         autres_contrats = (
             db.session.query(Contrat)
             .options(
                 selectinload(Contrat.sites_cen),
                 selectinload(Contrat.type_contrat)
             )
-            .filter(Contrat.id_societe == contrat.id_societe)
-            .filter(Contrat.id_contrat != contrat.id_contrat)  # Exclure le contrat actuel
+            .filter(
+                Contrat.id_societe == id_societe_contrat_actuel,
+                Contrat.id_contrat != contract_id  # Exclure le contrat actuel
+            )
             .all()
         )
+        print(f"Autres contrats trouvés: {len(autres_contrats)}")
+        if autres_contrats:
+            for ac in autres_contrats:
+                print(f"  - Contrat #{ac.id_contrat} (société: {ac.id_societe})")
+        else:
+            print("Aucun autre contrat trouvé pour cette société.")
+    else:
+        print(f"Contrat {contract_id} n'a pas d'id_societe associé.")
+        autres_contrats = []
     
     return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson, autres_contrats=autres_contrats)
 
