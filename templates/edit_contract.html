@@ -143,12 +143,12 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Bio</label>
                                                     <input class="form-control type-production-bio-tagify" name="type_production_bio_display" placeholder="Ajouter des types de production bio">
+                                                    <input type="hidden" name="mode_production_bio" value="1"> <!-- Valeur fixe pour Bio -->
                                                     <select class="type-production-bio-select" name="type_production_bio[]" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
                                                             <option value="{{ value }}" {% if form.type_production_bio and value|int in form.type_production_bio %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
-                                                    <input type="hidden" name="mode_production_bio" value="1"> <!-- Valeur fixe pour Bio -->
                                                 </div>
                                             </div>
                                             <div class="col-12">
@@ -156,6 +156,7 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Types de Production Conventionnelle</label>
                                                     <input class="form-control type-production-conv-tagify" name="type_production_conv_display" placeholder="Ajouter des types de production conventionnelle">
+                                                    <input type="hidden" name="mode_production_conv" value="2"> <!-- Valeur fixe pour Conventionnelle -->
                                                     <select class="type-production-conv-select" name="type_production_conv[]" multiple hidden>
                                                         {% for value, label in form.type_production.choices %}
                                                             <option value="{{ value }}" {% if form.type_production_conv and value|int in form.type_production_conv %}selected{% endif %}>{{ label }}</option>
@@ -305,11 +306,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     
-    // Debugging
-    console.log("emojiTypeProductionMapping:", emojiTypeProductionMapping);
-    console.log("emojiProduitFiniMapping:", emojiProduitFiniMapping);
-    console.log("emojiTypeMilieuMapping:", emojiTypeMilieuMapping);
-
     // Add event listener for the back button
     document.getElementById('backButton').addEventListener('click', goBackOrRedirect);
 
