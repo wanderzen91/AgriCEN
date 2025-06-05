@@ -63,7 +63,7 @@ def _build_auth_url(authority=None, scopes=None, state=None):
     return _build_msal_app().get_authorization_request_url(
         scopes or Config.SCOPE,
         state=state or str(uuid.uuid4()),
-        redirect_uri=url_for('auth_callback', _external=True, scheme='https')
+        redirect_uri=url_for('auth_callback', _external=True, _scheme='https')
     )
 
 def _get_token_from_code(code):
@@ -71,7 +71,7 @@ def _get_token_from_code(code):
     result = _build_msal_app().acquire_token_by_authorization_code(
         code,
         scopes=Config.SCOPE,
-        redirect_uri=url_for('auth_callback', _external=True, scheme='https')
+        redirect_uri=url_for('auth_callback', _external=True, _scheme='https')
     )
     return result
 
