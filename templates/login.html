@@ -3,20 +3,7 @@
 {% block title %}Connexion - AgriCEN{% endblock %}
 
 {% block content %}
-<style>
-    body {
-        background-image: url('{{ url_for("static", filename="images/fond_ecran_agri_cenna.jpg") }}');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        height: 100vh;
-    }
-    
-    .card {
-        background-color: rgba(255, 255, 255, 0.9);
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">

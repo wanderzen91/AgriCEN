@@ -1,0 +1,12 @@
+body {
+    background-image: url('../images/fond_ecran_agri_cenna.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    height: 100vh;
+}
+
+.card {
+    background-color: rgba(255, 255, 255, 0.9);
+}
