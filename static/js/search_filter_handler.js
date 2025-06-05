@@ -226,6 +226,10 @@ function filterMarkers() {
     // Ne pas utiliser les filtres SAU s'ils n'existent pas dans le DOM
     const sauOperator = getElementValue('searchSAUOperator', '>');
     const sauValue = getElementValue('searchSAUValue');
+    
+    // Vérifier si la case à cocher "Contrats en cours" est cochée
+    const contratsEnCours = document.getElementById('searchContratsEnCours')?.checked || false;
+    const currentDate = new Date();
 
     let hasResults = false;
 
@@ -322,6 +326,32 @@ function filterMarkers() {
                     if (sauOperator === '<' && dataSAU >= sauNum) match = false;
                 } else if (sauValue) {
                     // Si la valeur de SAU n'est pas un nombre valide dans les données mais qu'un filtre est appliqué
+                    match = false;
+                }
+            }
+            
+            // Filtrage des contrats en cours
+            if (contratsEnCours && match) {
+                // Convertir les dates de string (YYYY-MM-DD) en objets Date
+                let datePriseEffet = null;
+                let dateFin = null;
+                
+                if (data.date_prise_effet) {
+                    datePriseEffet = new Date(data.date_prise_effet);
+                }
+                
+                if (data.date_fin) {
+                    dateFin = new Date(data.date_fin);
+                }
+                
+                // Vérifier si le contrat est en cours (date actuelle est comprise entre date_prise_effet et date_fin)
+                const contratEnCours = (
+                    datePriseEffet && dateFin && 
+                    currentDate >= datePriseEffet && 
+                    currentDate <= dateFin
+                );
+                
+                if (!contratEnCours) {
                     match = false;
                 }
             }

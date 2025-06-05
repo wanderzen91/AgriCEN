@@ -78,6 +78,13 @@
                         <input type="text" id="searchReferent" class="form-control" placeholder="Rechercher un(e) référent(e)..." autocomplete="off">
                         <ul id="suggestionsReferent" class="list-group" style="position: absolute; z-index: 2000;"></ul>
                     </div>
+                    
+                    <!-- Contrats en cours -->
+                    <div class="mb-3 form-check border-top pt-3">
+                        <input type="checkbox" class="form-check-input" id="searchContratsEnCours">
+                        <label class="form-check-label" for="searchContratsEnCours">Contrats en cours uniquement</label>
+                        <small class="form-text text-muted d-block">Affiche uniquement les contrats dont la date de prise d'effet est antérieure à la date du jour et dont la date de fin est postérieure à la date du jour</small>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
