@@ -27,6 +27,9 @@ EditContractTagify.initialize = function() {
     this.createTagifyOptions('#type_milieu_tagify', '#type_milieu', emojiTypeMilieuMapping);
     this.createTagifyOptions('.type-production-bio-tagify', '.type-production-bio-select', emojiTypeProductionMapping);
     this.createTagifyOptions('.type-production-conv-tagify', '.type-production-conv-select', emojiTypeProductionMapping);
+    
+    // Ajouter l'événement de soumission du formulaire
+    this.setupFormSubmission();
 };
 
 // Fonction pour trouver un emoji en utilisant une correspondance insensible à la casse
@@ -140,6 +143,112 @@ EditContractTagify.syncTagifyWithHidden = function(tagify, selectElement) {
         console.log(`Valeurs sélectionnées dans ${selectElement.id}:`, 
             Array.from(selectElement.selectedOptions).map(o => o.value));
     });
+};
+
+// Fonction pour préparer les données de production au format JSON attendu par le backend
+EditContractTagify.prepareProductionData = function() {
+    console.log('Préparation des données de production...');
+    const productionData = [];
+    
+    // Récupérer les données de production Bio
+    const bioSelect = document.querySelector('.type-production-bio-select');
+    console.log('Select Bio trouvé:', !!bioSelect);
+    
+    if (bioSelect) {
+        const selectedBioOptions = Array.from(bioSelect.selectedOptions).map(option => option.value);
+        console.log('Options Bio sélectionnées:', selectedBioOptions);
+        if (selectedBioOptions.length > 0) {
+            productionData.push({
+                mode_production: "1", // 1 pour Bio
+                type_production: selectedBioOptions
+            });
+            console.log('Données Bio ajoutées au tableau productionData');
+        }
+    }
+    
+    // Récupérer les données de production Conventionnelle
+    const convSelect = document.querySelector('.type-production-conv-select');
+    console.log('Select Conventionnel trouvé:', !!convSelect);
+    
+    if (convSelect) {
+        const selectedConvOptions = Array.from(convSelect.selectedOptions).map(option => option.value);
+        console.log('Options Conventionnelles sélectionnées:', selectedConvOptions);
+        if (selectedConvOptions.length > 0) {
+            productionData.push({
+                mode_production: "2", // 2 pour Conventionnel
+                type_production: selectedConvOptions
+            });
+            console.log('Données Conventionnelles ajoutées au tableau productionData');
+        }
+    }
+    
+    console.log('Données de production finales:', productionData);
+    return productionData;
+};
+
+// Fonction pour configurer la soumission du formulaire
+EditContractTagify.setupFormSubmission = function() {
+    console.log('Configuration de la soumission du formulaire...');
+    const form = document.querySelector('form');
+    
+    if (!form) {
+        console.error('Formulaire non trouvé');
+        return;
+    }
+    
+    console.log('Formulaire trouvé:', form);
+    
+    form.addEventListener('submit', function(event) {
+        console.log('Événement de soumission du formulaire déclenché');
+        
+        // Inspecter les selects de type de production avant de collecter les données
+        const bioSelect = document.querySelector('.type-production-bio-select');
+        const convSelect = document.querySelector('.type-production-conv-select');
+        
+        console.log('Status des selects de production:');
+        console.log('- Bio select trouvé:', !!bioSelect);
+        if (bioSelect) {
+            console.log('  - Options sélectionnées:', bioSelect.selectedOptions.length);
+            console.log('  - Valeurs:', Array.from(bioSelect.selectedOptions).map(opt => opt.value));
+        }
+        
+        console.log('- Conv select trouvé:', !!convSelect);
+        if (convSelect) {
+            console.log('  - Options sélectionnées:', convSelect.selectedOptions.length);
+            console.log('  - Valeurs:', Array.from(convSelect.selectedOptions).map(opt => opt.value));
+        }
+        
+        // Préparer les données de production
+        const productionData = EditContractTagify.prepareProductionData();
+        
+        // Vérifier qu'au moins un type de production est sélectionné
+        if (productionData.length === 0) {
+            console.warn('ATTENTION: Aucun type de production sélectionné');
+            // Empêcher la soumission si aucun type de production n'est sélectionné
+            // event.preventDefault();
+            // return false;
+        } else {
+            console.log('Données de production préparées avec succès:', JSON.stringify(productionData));
+        }
+        
+        // Vérifier si un champ all_productions existe déjà
+        const existingInput = form.querySelector('input[name="all_productions"]');
+        if (existingInput) {
+            console.log('Champ all_productions existant trouvé, mise à jour de la valeur');
+            existingInput.value = JSON.stringify(productionData);
+        } else {
+            console.log('Création d\'un nouveau champ all_productions');
+            // Ajouter les données au formulaire
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'all_productions';
+            hiddenInput.value = JSON.stringify(productionData);
+            form.appendChild(hiddenInput);
+            console.log('Champ all_productions ajouté au formulaire');
+        }
+    });
+    
+    console.log('Gestionnaire d\'événement de soumission ajouté au formulaire');
 };
 
 // Initialiser les champs Tagify lorsque le DOM est chargé

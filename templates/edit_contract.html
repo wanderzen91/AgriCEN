@@ -20,22 +20,23 @@
         </div>
 
         <!-- Formulaire à droite -->
-        <div class="flex-grow-2 bg-light p-4 rounded shadow-sm" id="form-container" style="width: 65%;">
-            <form method="POST">
-                {{ form.hidden_tag() }}
-
-                <!-- Onglets pour organiser les champs -->
-                <ul class="nav nav-tabs" id="modalTabs" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active" id="infos-general-tab" data-bs-toggle="tab" data-bs-target="#infos-general" type="button" role="tab" aria-controls="infos-general" aria-selected="true">Informations générales</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="exploitation-tab" data-bs-toggle="tab" data-bs-target="#exploitation" type="button" role="tab" aria-controls="exploitation" aria-selected="false">Exploitation</button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link" id="contrat-tab" data-bs-toggle="tab" data-bs-target="#contrat" type="button" role="tab" aria-controls="contrat" aria-selected="false">Partenariat CEN</button>
-                    </li>
-                </ul>
+        <div class="flex-grow-2 bg-light rounded shadow-sm" id="form-container" style="width: 65%;">
+            <!-- Onglets pour organiser les champs -->
+            <ul class="nav nav-tabs" id="modalTabs" role="tablist" style="position: sticky; top: 0; background: #f8f9fa; padding-top: 10px; z-index: 10;">
+                <li class="nav-item">
+                    <button class="nav-link active" id="infos-general-tab" data-bs-toggle="tab" data-bs-target="#infos-general" type="button" role="tab" aria-controls="infos-general" aria-selected="true">Informations générales</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="exploitation-tab" data-bs-toggle="tab" data-bs-target="#exploitation" type="button" role="tab" aria-controls="exploitation" aria-selected="false">Exploitation</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="contrat-tab" data-bs-toggle="tab" data-bs-target="#contrat" type="button" role="tab" aria-controls="contrat" aria-selected="false">Partenariat CEN</button>
+                </li>
+            </ul>
+            
+            <div class="p-4">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
 
                 <!-- Contenu des onglets -->
                 <div class="tab-content mt-4">
@@ -283,14 +284,19 @@
                 <input type="hidden" id="all-productions-data" name="all_productions" value="[]">
 
                 <hr class="my-4">
-
-                <!-- Boutons d'action -->
-                <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Enregistrer les modifications
-                    </button>
+                
+                    <!-- Boutons d'action -->
+                    <div class="d-flex justify-content-between mb-5">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Enregistrer les modifications
+                        </button>
+                    </div>
+                    
+                    <!-- Espace supplémentaire en bas du formulaire -->
+                    <div class="mb-4"></div>
                 </div>
             </form>
+            </div>
         </div>
     </div>
 </div>
@@ -351,6 +357,10 @@
     // Centrer d'abord la carte sur le contrat avec un zoom approprié
     map.setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
 
+
+    // Définition de l'URL de la page de carte pour le gestionnaire de navigation
+    window.mapPageUrl = "{{ url_for('map_page') }}";
+
 </script>
 
 <!-- Inclusion du script de gestion SIRET -->
@@ -360,7 +370,7 @@
 <script src="{{ url_for('static', filename='js/referent_search.js') }}"></script>
 <!-- Inclusion du script pour la gestion des champs Tagify -->
 <script src="{{ url_for('static', filename='js/edit_contract_tagify.js') }}"></script>
-
-
+<!-- Inclusion du script pour la gestion de la navigation -->
+<script src="{{ url_for('static', filename='js/navigation_handler.js') }}"></script>
 
 {% endblock %}
