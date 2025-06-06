@@ -28,6 +28,10 @@ class SiretHandler {
             // pour vérifier si le SIRET existe déjà dans un autre contrat
             const siretInput = document.querySelector('[name="siret"]');
             if (siretInput && window.location.pathname.includes('edit_contract')) {
+                // Sauvegarder la valeur initiale sur focus
+                siretInput.addEventListener('focus', (e) => {
+                    this.initialSiret = e.target.value;
+                });
                 siretInput.addEventListener('change', this.checkExistingContractBySiret.bind(this));
             }
         });
@@ -620,9 +624,17 @@ class SiretHandler {
                     cancelButtonText: 'Annuler',
                     allowOutsideClick: false
                 }).then((result) => {
+                    const siretInput = document.querySelector('[name="siret"]');
                     if (result.isConfirmed) {
                         // Rediriger vers le contrat existant
                         window.location.href = `/edit_contract/${data.contract_id}`;
+                    } else {
+                        // Si Annuler, restaurer la valeur initiale du SIRET
+                        if (siretInput && typeof this.initialSiret !== 'undefined') {
+                            siretInput.value = this.initialSiret;
+                        }
+                        // Permettre une nouvelle vérification sur le même SIRET
+                        this.lastCheckedSiret = undefined;
                     }
                 });
             }
