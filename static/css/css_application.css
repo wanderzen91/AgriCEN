@@ -32,6 +32,13 @@ white-space: nowrap;
 margin-left: 20px;
 }
 
+/* Assurer que la navbar reste toujours visible */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1050; /* Valeur plus élevée que les z-index Leaflet */
+}
+
 
 /* Conteneur principal pour le panneau */
 .side-panel {
