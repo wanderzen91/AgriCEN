@@ -1,83 +1,78 @@
 /**
- * Gestionnaire de recherche de référents - Autocomplétion
- * Permet de rechercher des référents existants dans la base de données
- * ou d'en créer de nouveaux
+ * Gestionnaire de recherche de référents
+ * Gère la recherche dynamique, la sélection ou la création de référents
  */
 class ReferentSearch {
     constructor() {
+        // Stocke les timers pour la fonctionnalité de "debounce"
         this.debounceTimers = {};
         this.initEventListeners();
     }
 
     /**
-     * Initialise les écouteurs d'événements pour tous les champs de recherche de référents
+     * Initialise les écouteurs d'événements à la fin du chargement du DOM
      */
     initEventListeners() {
         document.addEventListener('DOMContentLoaded', () => {
-            // Recherche pour le formulaire principal (edit_contract.html)
+            // Champ de recherche principal
             const mainSearchReferent = document.getElementById('search_referent');
             if (mainSearchReferent) {
                 this.setupSingleReferentSearch(mainSearchReferent);
             }
-            
-            // Recherche pour les contrats dans modal_add_data.html
+
+            // Recherche dans les contrats
             this.setupAllContractReferents();
         });
     }
 
     /**
-     * Configure la recherche pour tous les contrats existants
+     * Initialise la recherche pour tous les contrats existants
      */
     setupAllContractReferents() {
-        // Trouver le champ de recherche de référent pour le contrat
         const contractSearchInput = document.getElementById('search_referent');
-        
         if (contractSearchInput) {
-            console.log('Configuration du champ de recherche de référent');
             this.setupSingleReferentSearch(contractSearchInput);
         }
     }
 
     /**
-     * Configure un champ de recherche de référent spécifique
-     * @param {HTMLElement} searchInput - L'élément input de recherche
+     * Configure un champ de recherche spécifique
+     * @param {HTMLElement} searchInput - Le champ input de recherche
      */
     setupSingleReferentSearch(searchInput) {
-        // Trouver l'élément de suggestions associé
         const referentSuggestionsDiv = searchInput.nextElementSibling || 
                                       document.getElementById('referent_suggestions');
-        
+
         if (!referentSuggestionsDiv) {
             console.error("Élément de suggestions non trouvé pour", searchInput.id);
             return;
         }
-        
-        // Plus besoin d'extraire l'index du contrat car il n'y a qu'un seul contrat
+
         const contractIndex = null;
-        
-        // Initialiser avec les valeurs actuelles si elles existent
+
+        // Remplit automatiquement le champ avec les données existantes 
         this.initializeWithExistingValues(searchInput, contractIndex);
-        
-        // Écouteur d'événement pour la saisie dans le champ de recherche
+
+        // Événement de saisie dans le champ
         searchInput.addEventListener('input', () => {
             const searchTerm = searchInput.value.trim();
             const inputId = searchInput.id;
-            
-            // Effacer le timer de debounce précédent pour cet input
+
+            // Réinitialise le timer précédent (fonction debounce)
             clearTimeout(this.debounceTimers[inputId]);
-            
+
             if (searchTerm.length < 2) {
                 referentSuggestionsDiv.style.display = 'none';
                 return;
             }
-            
-            // Définir un nouveau timer de debounce
+
+            // Lance une recherche après un délai de 300 ms
             this.debounceTimers[inputId] = setTimeout(() => {
                 this.searchReferent(searchTerm, searchInput, referentSuggestionsDiv, contractIndex);
             }, 300);
         });
-        
-        // Fermer les suggestions si on clique ailleurs
+
+        // Ferme la liste de suggestions si on clique à l'extérieur
         document.addEventListener('click', (event) => {
             if (!referentSuggestionsDiv.contains(event.target) && event.target !== searchInput) {
                 referentSuggestionsDiv.style.display = 'none';
@@ -86,23 +81,11 @@ class ReferentSearch {
     }
 
     /**
-     * Initialise le champ de recherche avec les valeurs existantes
-     * @param {HTMLElement} searchInput - L'élément input de recherche
-     * @param {number|null} contractIndex - L'index du contrat (si applicable)
+     * préremplit le champ de recherche avec les valeurs déjà existantes
      */
     initializeWithExistingValues(searchInput, contractIndex) {
-        let nomReferent, prenomReferent;
-        
-        if (contractIndex) {
-            // Pour les contrats dans modal_add_data.html
-            nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
-            prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
-        } else {
-            // Pour le formulaire principal dans edit_contract.html
-            nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
-            prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
-        }
-        
+        const { nomReferent, prenomReferent } = this.getReferentFields(contractIndex);
+
         if (nomReferent && prenomReferent && nomReferent.value && prenomReferent.value) {
             searchInput.value = `${nomReferent.value} ${prenomReferent.value}`;
             this.enableReferentFields(contractIndex, false);
@@ -110,60 +93,52 @@ class ReferentSearch {
     }
 
     /**
-     * Active ou désactive les champs de référent
-     * @param {number|null} contractIndex - L'index du contrat (si applicable)
-     * @param {boolean} enable - Indique si les champs doivent être activés ou désactivés
+     * Active ou désactive les champs nom/prénom du référent
      */
     enableReferentFields(contractIndex, enable) {
+        const { nomReferent, prenomReferent } = this.getReferentFields(contractIndex);
+
+        if (nomReferent && prenomReferent) {
+            [nomReferent, prenomReferent].forEach(field => {
+                field.readOnly = !enable;
+                field.classList.toggle('disabled-look', !enable);
+            });
+        }
+    }
+
+    /**
+     * Récupère les champs nom/prénom du référent en fonction du contexte
+     */
+    getReferentFields(contractIndex = null) {
         let nomReferent, prenomReferent;
-        
-        if (contractIndex) {
-            // Pour les contrats dans modal_add_data.html
+
+        if (contractIndex !== null) {
             nomReferent = document.getElementById(`modal_nom_referent_${contractIndex}`);
             prenomReferent = document.getElementById(`modal_prenom_referent_${contractIndex}`);
         } else {
-            // Pour le formulaire principal dans edit_contract.html
             nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
             prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
         }
-        
-        if (nomReferent && prenomReferent) {
-            if (enable) {
-                nomReferent.readOnly = false;
-                prenomReferent.readOnly = false;
-                nomReferent.classList.remove('disabled-look');
-                prenomReferent.classList.remove('disabled-look');
-            } else {
-                nomReferent.readOnly = true;
-                prenomReferent.readOnly = true;
-                nomReferent.classList.add('disabled-look');
-                prenomReferent.classList.add('disabled-look');
-            }
-        }
+
+        return { nomReferent, prenomReferent };
     }
 
     /**
-     * Sépare un terme de recherche en nom et prénom
-     * @param {string} searchTerm - Le terme de recherche
-     * @returns {Object} Un objet contenant le nom et le prénom
+     * Sépare une chaîne en nom et prénom
      */
     splitSearchTerm(searchTerm) {
-        const parts = searchTerm.split(' ');
+        const parts = searchTerm.trim().split(/\s+/);
         if (parts.length === 1) {
-            return { nom: parts[0], prenom: '' };
+            return { prenom: parts[0], nom: '' };
         } else {
-            const prenom = parts.pop();
+            const prenom = parts.shift();
             const nom = parts.join(' ');
-            return { nom, prenom };
+            return { prenom, nom };
         }
     }
 
     /**
-     * Effectue la recherche de référents
-     * @param {string} searchTerm - Le terme de recherche
-     * @param {HTMLElement} inputElement - L'élément input de recherche
-     * @param {HTMLElement} suggestionsElement - L'élément pour afficher les suggestions
-     * @param {number|null} contractIndex - L'index du contrat (si applicable)
+     * Effectue une requête de recherche de référents et gère les suggestions
      */
     async searchReferent(searchTerm, inputElement, suggestionsElement, contractIndex) {
         try {
@@ -178,60 +153,50 @@ class ReferentSearch {
             suggestionsElement.innerHTML = '';
 
             if (data.length === 0) {
-                // Ajouter la suggestion pour créer un nouveau référent
+                // Aucun résultat trouvé alors proposition de création
                 const newReferentItem = document.createElement('div');
                 newReferentItem.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
                 newReferentItem.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Ajouter un(e) nouvel(le) référent(e) : ' + searchTerm;
-                
+
                 newReferentItem.addEventListener('click', () => {
-                    // Pré-remplir les champs avec le terme de recherche séparé
                     const { nom, prenom } = this.splitSearchTerm(searchTerm);
-                    let nomReferent, prenomReferent;
-                    
-                    // Il n'y a plus qu'un seul contrat, donc on utilise les IDs sans suffixe
-                    nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
-                    prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
-                    
+                    const { nomReferent, prenomReferent } = this.getReferentFields(contractIndex);
+
                     if (nomReferent && prenomReferent) {
                         nomReferent.value = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
                         prenomReferent.value = prenom.charAt(0).toUpperCase() + prenom.slice(1).toLowerCase();
-                        // Désactiver les champs après les avoir remplis
                         this.enableReferentFields(contractIndex, false);
                     }
-                    
+
                     inputElement.value = '';
                     suggestionsElement.style.display = 'none';
                 });
-                
+
                 suggestionsElement.appendChild(newReferentItem);
                 suggestionsElement.style.display = 'block';
             } else {
-                // Afficher les référents existants
+                // Affiche les référents trouvés
                 data.forEach(referent => {
                     const div = document.createElement('div');
                     div.className = 'p-2 hover-bg-light cursor-pointer border-bottom';
                     div.textContent = `${referent.nom} ${referent.prenom}`;
-                    
+
                     div.addEventListener('click', () => {
-                        let nomReferent, prenomReferent;
-                        
-                        // Il n'y a plus qu'un seul contrat, donc on utilise les IDs sans suffixe
-                        nomReferent = document.getElementById('modal_nom_referent') || document.querySelector('[name="nom_referent"]');
-                        prenomReferent = document.getElementById('modal_prenom_referent') || document.querySelector('[name="prenom_referent"]');
-                        
+                        const { nomReferent, prenomReferent } = this.getReferentFields(contractIndex);
+
                         if (nomReferent && prenomReferent) {
                             nomReferent.value = referent.nom;
                             prenomReferent.value = referent.prenom;
                         }
-                        
+
                         this.enableReferentFields(contractIndex, false);
                         inputElement.value = `${referent.nom} ${referent.prenom}`;
                         suggestionsElement.style.display = 'none';
                     });
-                    
+
                     suggestionsElement.appendChild(div);
                 });
-                
+
                 suggestionsElement.style.display = 'block';
             }
         } catch (error) {
@@ -241,5 +206,5 @@ class ReferentSearch {
     }
 }
 
-// Initialiser le gestionnaire de recherche de référents
+// Initialise l'objet de recherche une fois le script chargé
 const referentSearch = new ReferentSearch();

@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add event listener for the back button
     document.getElementById('backButton').addEventListener('click', goBackOrRedirect);
 
-    // 🌍 Initialisation de la carte Leaflet
+    // Initialisation de la carte Leaflet
     const map = L.map('small_map');
         
     // Ajout du fond de carte OpenStreetMap
@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
         goBackOrRedirect();
     });
 
-    // 🎯 Fonction pour initialiser Tagify
+    // Fonction pour initialiser Tagify
     function initializeTagify(selector, choices, emojiMapping) {
         const input = document.querySelector(selector);
         if (!input) return null; 
@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 🎯 Fonction pour synchroniser Tagify avec un champ caché
+    // Fonction pour synchroniser Tagify avec un champ caché
     function syncTagifyWithHidden(tagifyInstance, hiddenSelector) {
         tagifyInstance.on("change", () => {
             const hiddenField = document.querySelector(hiddenSelector);
@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 🏷️ Initialisation des champs Tagify
+    // Initialisation des champs Tagify
     const tagifyInstances = {
         produitFini: initializeTagify("#produit_fini_tagify", 
             [{% for value, label in form.produit_fini.choices %}
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log("Produits finis element:", document.querySelector("#produit_fini_tagify"));
     console.log("Type milieu element:", document.querySelector("#type_milieu_tagify"));
 
-    // 🔄 Synchronisation des champs cachés avec Tagify
+    // Synchronisation des champs cachés avec Tagify
     if (tagifyInstances.produitFini) {
         syncTagifyWithHidden(tagifyInstances.produitFini, '#produit_fini');
     }
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 🔄 Ajout des valeurs déjà sélectionnées aux champs Tagify
+    // Ajout des valeurs déjà sélectionnées aux champs Tagify
     if (tagifyInstances.produitFini) {
         const selectedProduitFini = [
             {% if form.produit_fini.data %}
@@ -624,14 +624,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // 📌 Gestion du retour à la carte
     function goBackOrRedirect() {
     if (document.referrer && document.referrer !== window.location.href) {
-        history.back(); // 🔄 Retour à la page précédente si elle existe
+        history.back(); // Retour à la page précédente si elle existe
     } else {
-        window.location.href = "{{ url_for('map_page') }}"; // 🌍 Redirection vers la carte si pas d'historique
+        window.location.href = "{{ url_for('map_page') }}"; // Redirection vers la carte si pas d'historique
     }
 }
 
 
-    // 🏭 Gestion des types de production dynamiques
+    // Gestion des types de production dynamiques
     const productionContainer = document.getElementById('production-container');
     const allProductionsData = document.getElementById('all-productions-data');
 
@@ -827,7 +827,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Supprimer l'entrée par défaut vide
         productionContainer.innerHTML = '';
         
-        // Vérifier si nous avons déjà une entrée pour chaque mode
+        // Vérifier si déjà une entrée pour chaque mode
         let hasConventional = false;
         let hasBiological = false;
         
@@ -1035,7 +1035,6 @@ document.addEventListener('DOMContentLoaded', function () {
     `);
 
 
-    // La recherche de référents est maintenant gérée par le script referent_search.js
 });
 </script>
 
