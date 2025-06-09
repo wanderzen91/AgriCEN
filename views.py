@@ -34,14 +34,6 @@ init_auth(app)
 # Initialisation de la base de données
 db.init_app(app)
 
-# Exemple d'utilisation du logger d'application
-# app_logger.info("L'application Flask a démarré.")
-
-# print(Config.SQLALCHEMY_DATABASE_URI)
-
-# print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
-
-# Fonction pour charger les choix dynamiques
 
 # Configuration de Flask-Migrate
 migrate = Migrate(app, db)
