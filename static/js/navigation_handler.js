@@ -3,7 +3,7 @@
  * Fonctions pour gérer la navigation entre les pages de l'application
  */
 
-// Namespace pour le gestionnaire de navigation
+
 window.NavigationHandler = {};
 
 /**

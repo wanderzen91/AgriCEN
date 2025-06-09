@@ -152,5 +152,5 @@ class AgriculteurSearch {
     }
 }
 
-// Initialiser le gestionnaire de recherche d'agriculteurs
+// Initialiation du gestionnaire de recherche d'agriculteurs
 const agriculteurSearch = new AgriculteurSearch();

@@ -12,7 +12,14 @@ flex: 1;
 margin-left: -1.3em;
 margin-right: -1.3em;
 z-index: 1; 
-height: calc(100vh - 56px); /* 56px correspond à la hauteur de la navbar */
+height: calc(100vh - 56px); /* 56px correspond = hauteur de la navbar */
+/* Correctifs pour empêcher le décalage sur Chrome et Edge */
+position: relative;
+touch-action: none;
+overflow: hidden; /* Empêcher les scrollbars internes */
+-webkit-transform: translate3d(0, 0, 0);
+transform: translate3d(0, 0, 0);
+scroll-behavior: auto; /* Contrôler le comportement de scroll */
 }
 
 .container-fluid {
@@ -32,11 +39,27 @@ white-space: nowrap;
 margin-left: 20px;
 }
 
-/* Assurer que la navbar reste toujours visible */
 .navbar {
     position: sticky;
     top: 0;
-    z-index: 1050; /* Valeur plus élevée que les z-index Leaflet */
+    z-index: 1050; 
+}
+
+/* Empêcher le comportement de scroll automatique dans Chrome/Edge */
+.leaflet-container {
+    scroll-behavior: auto !important;
+    overflow: hidden !important;
+    -webkit-overflow-scrolling: auto !important;
+}
+
+/* Désactiver le focus automatique pour les tooltips */
+.leaflet-tooltip:focus {
+    outline: none !important;
+}
+
+/* Styles spécifiques pour nos tooltips sans auto-pan */
+.no-auto-pan-tooltip {
+    pointer-events: none; 
 }
 
 

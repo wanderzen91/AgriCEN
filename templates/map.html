@@ -237,6 +237,8 @@ function addGeoJSONToMap(geojsonData) {
                 permanent: false,
                 direction: 'top',
                 offset: [0, -10],
+                autoPan: false, // Désactiver le décalage automatique de la carte
+                className: "no-auto-pan-tooltip" // Classe CSS pour cibler spécifiquement ces tooltips
             });
 
             layer.on('click', function (e) {
@@ -407,7 +409,13 @@ loadSites();
                 <strong>Date de signature :</strong> ${contractData.date_signature}<br>
                 <strong>Date de prise en effet :</strong> ${contractData.date_prise_effet}<br>
                 <strong>Date de fin :</strong> ${contractData.date_fin}<br>`,
-                {permanent: false, direction: "top", offset: [0, -20]}
+                {
+                    permanent: false, 
+                    direction: "top", 
+                    offset: [0, -20],
+                    autoPan: false, // Désactiver le décalage automatique de la carte
+                    className: "no-auto-pan-tooltip" // Classe CSS pour cibler spécifiquement ces tooltips
+                }
             );
 
             // Ajouter le marqueur au groupe de clusters
@@ -611,7 +619,45 @@ const productionsHtml = contractData.type_productions.map(production => {
             } else {
                 console.error('La fonction initSearchHandler n\'est pas disponible');
             }
-        }, 100); // Un petit délai pour s'assurer que tous les scripts sont bien chargés
+            
+            // Correctif spécifique pour Chrome/Edge: empêcher le décalage au premier clic
+            if (/Chrome/.test(navigator.userAgent) || /Edg/.test(navigator.userAgent)) {
+                console.log("Navigateur Chrome/Edge détecté: application du correctif contre le décalage");
+                
+                // 1. Désactiver le focus automatique pour les popups/tooltips
+                L.Popup.prototype.oldOnAdd = L.Popup.prototype.onAdd;
+                L.Popup.prototype.onAdd = function(map) {
+                    this.options.autoPan = false;
+                    this.oldOnAdd(map);
+                    // Empêcher les éléments dans le popup de recevoir le focus automatique
+                    setTimeout(() => {
+                        const popupContent = this._contentNode;
+                        if (popupContent) {
+                            const focusables = popupContent.querySelectorAll('a, button, input, textarea, select');
+                            focusables.forEach(el => {
+                                el.setAttribute('tabindex', '-1');
+                            });
+                        }
+                    }, 10);
+                };
+                
+                // 2. Désactiver la propagation du scroll sur toutes les interactions avec la carte
+                map._container.addEventListener('mousedown', function(e) {
+                    // S'assurer que la page ne défile pas pendant les interactions
+                    e.preventDefault();
+                    document.body.style.overflow = 'hidden';
+                    // Restaurer après l'interaction
+                    setTimeout(() => { document.body.style.overflow = ''; }, 100);
+                }, { passive: false });
+                
+                // 3. Empêcher le décalage des marqueurs au clic
+                map.on('popupopen', function(e) {
+                    // Empêcher tout décalage de la carte lors de l'ouverture d'un popup
+                    const originalViewCenter = map.getCenter();
+                    setTimeout(() => { map.setView(originalViewCenter, map.getZoom()); }, 1);
+                });
+            }
+        }, 1000); // Délai pour s'assurer que le script externe est chargé
     });
 </script>
 

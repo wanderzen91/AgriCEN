@@ -9,7 +9,7 @@ let societes = [];
 let referents = [];
 
 // Utiliser la variable globale allMarkers déjà définie dans map.html
-// Ne pas redéclarer allMarkers ici
+
 
 /**
  * Initialise le gestionnaire de recherche avec les marqueurs disponibles
