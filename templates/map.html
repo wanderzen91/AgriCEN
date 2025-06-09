@@ -18,48 +18,6 @@
     <img src="/static/images/tracteur.gif" alt="Chargement...">
 </div>
 
-<style>
-    #map {
-        position: relative; /* Assure que les éléments absolus sont positionnés par rapport à la carte */
-    }
-    
-    #progressBarContainer {
-        position: absolute;
-        top: 10px; /* Ajusté pour être bien visible dans la carte */
-        right: 20px;
-        width: 250px;
-        height: 10px;
-        background: rgba(255, 255, 255, 0.9);
-        border: 2px solid #007bff;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        overflow: hidden;
-        display: none;
-        z-index: 1000;
-    }
-    
-    #progressBar {
-        width: 0%;
-        height: 100%;
-        background: linear-gradient(90deg, #007bff, #00c3ff);
-        transition: width 0.2s ease-in-out;
-    }
-    
-    #loadingMessage {
-        position: absolute;
-        top: 25px; /* Descend le texte sous la barre */
-        right: 10px;
-        background: rgba(0, 0, 0, 0.75);
-        color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        display: none;
-        z-index: 1000;
-        font-weight: bold;
-    }
-    
-</style>    
 
 <!-- Panneau latéral -->
 {% include 'side_panel.html' %}
