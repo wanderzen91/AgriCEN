@@ -332,27 +332,24 @@
         }
     }).addTo(map);
 
-    // Ajouter un marqueur pour le contrat sélectionné avec un style amélioré
+    // Ajouter un marqueur discret pour le contrat sélectionné
     const contractMarker = L.marker([{{ contrat.latitude }}, {{ contrat.longitude }}], {
         icon: L.divIcon({
             className: 'contract-marker',
-            html: '<div style="background-color: #ff3333; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
+            html: '<div style="background-color: #3388ff; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>',
+            iconSize: [14, 14],
+            iconAnchor: [7, 7]
         })
     }).addTo(map);
 
-    // Ajouter une popup améliorée au marqueur du contrat
-    const popupContent = `
-        <div style="text-align: center;">
-            <h6 style="margin: 0; padding: 5px 0;"><strong>Contrat sélectionné</strong></h6>
-            <div style="padding: 5px 0;">
-                <strong>Site:</strong> {{ contrat.sites_cen[0].site_cen.nom_site if contrat.sites_cen and contrat.sites_cen[0].site_cen else 'Site non spécifié' }}<br>
-                <strong>Code:</strong> {{ contrat.sites_cen[0].site_cen.code_site if contrat.sites_cen and contrat.sites_cen[0].site_cen else 'Non spécifié' }}
-            </div>
-        </div>
-    `;
-    contractMarker.bindPopup(popupContent, {maxWidth: 300}).openPopup();
+    // Ajouter un popup simple au survol du marqueur
+    contractMarker.bindTooltip(
+        "<div style='text-align: center;'>"
+        + "<strong>Contrat #{{ contrat.id_contrat }}</strong><br>"
+        + "{{ contrat.type_contrat.appellation_contrat if contrat.type_contrat else 'Type non spécifié' }}"
+        + "</div>",
+        {offset: [0, -7], direction: 'top', opacity: 0.9}
+    );
 
     // Centrer d'abord la carte sur le contrat avec un zoom approprié
     map.setView([{{ contrat.latitude }}, {{ contrat.longitude }}], 14);
