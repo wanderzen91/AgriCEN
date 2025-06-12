@@ -1,0 +1,46 @@
+site_name: Documentation AgriCEN
+site_description: Documentation de l'application de gestion des contrats agricoles pour le CEN
+theme:
+  name: material
+  language: fr
+  palette:
+    primary: green
+    accent: light green
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+  - pymdownx.tabbed
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+nav:
+  - Accueil: index.md
+  - Guide utilisateur:
+      - Présentation: user-guide/presentation.md
+      - Connexion: user-guide/login.md
+      - Interface cartographique: user-guide/map-interface.md
+      - Gestion des contrats: user-guide/contract-management.md
+      - Recherche SIRET: user-guide/siret-lookup.md
+      - Visualisation des données: user-guide/data-visualization.md
+  - Documentation technique:
+      - Architecture: technical/architecture.md
+      - Modèle de données: technical/data-model.md
+      - Authentication: technical/authentication.md
+      - API: technical/api.md
+      - Configuration: technical/configuration.md
+  - Développement:
+      - Installation: development/installation.md
+      - Configuration: development/configuration.md
+      - Déploiement: development/deployment.md

@@ -37,4 +37,4 @@ class Config:
     REDIRECT_PATH = "/auth/callback"  # Route de redirection après authentification
     SCOPE = ["User.Read"]  # Permissions demandées
     SESSION_TYPE = "filesystem"  # Pour stocker les sessions utilisateur
-    PERMANENT_SESSION_LIFETIME = 3600  # Durée de vie de la session en secondes
+    PERMANENT_SESSION_LIFETIME = 7200  # Durée de vie de la session en secondes
