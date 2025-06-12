@@ -5,7 +5,6 @@ from config import Config
 from datetime import datetime  
 import json
 import secrets
-import logging
 import requests
 from shapely.geometry import mapping
 from geoalchemy2.shape import to_shape
@@ -14,8 +13,12 @@ from flask_migrate import Migrate
 from flask_login import login_required, current_user
 import flask_session
 from auth import init_auth
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import os
+from dotenv import load_dotenv
+
+# Chargement des variables d'environnement depuis le fichier .env
+load_dotenv()
+
 app = Flask(__name__)
 
 app.config['WTF_CSRF_ENABLED'] = False
@@ -73,7 +76,6 @@ def populate_form_choices(form):
         form.mode_production.choices = [(mode.id, mode.nom) for mode in modes_production]
 
     except Exception as e:
-        logging.error(f"Erreur lors du chargement des choix dynamiques : {e}")
         flash("Erreur lors du chargement des données du formulaire.", "danger")
 
 
@@ -156,7 +158,7 @@ def fetch_siret_data(siret, flash_messages = False):
     url = f"https://api.insee.fr/api-sirene/3.11/siret/{siret}"
     headers = {
         "accept": "application/json",
-        "X-INSEE-Api-Key-Integration": "3f98f3ce-54c4-42eb-98f3-ce54c4f2eb52",
+        "X-INSEE-Api-Key-Integration": os.environ.get("INSEE_API_KEY"),
     }
 
     try:
@@ -785,7 +787,6 @@ def edit_contract(contract_id):
         
         # Récupérer d'abord l'id_societe du contrat actuel
         id_societe_contrat_actuel = db.session.query(Contrat.id_societe).filter(Contrat.id_contrat == contract_id).scalar()
-        logger.info(f"ID de société du contrat {contract_id}: {id_societe_contrat_actuel}")
         
         if id_societe_contrat_actuel:
             # Requête directe: tous les autres contrats ayant le même id_societe
@@ -801,12 +802,8 @@ def edit_contract(contract_id):
                 )
                 .all()
             )
-            logger.info(f"Autres contrats trouvés: {len(autres_contrats)}")
-            if autres_contrats:
-                for ac in autres_contrats:
-                    logger.info(f"  - Contrat #{ac.id_contrat} (société: {ac.id_societe})")
+
         else:
-            logger.info(f"Contrat {contract_id} n'a pas d'id_societe associé.")
             autres_contrats = []
         
         return render_template('edit_contract.html', 
@@ -911,7 +908,6 @@ def edit_contract(contract_id):
     
     # Récupérer d'abord l'id_societe du contrat actuel
     id_societe_contrat_actuel = db.session.query(Contrat.id_societe).filter(Contrat.id_contrat == contract_id).scalar()
-    logger.info(f"ID de société du contrat {contract_id}: {id_societe_contrat_actuel}")
     
     if id_societe_contrat_actuel:
         # Requête directe: tous les autres contrats ayant le même id_societe
@@ -1085,7 +1081,7 @@ def check_existing_contract_by_siret(siret):
         else:
             return jsonify({'exists': False})
     except Exception as e:
-        logging.error(f"Erreur lors de la vérification du SIRET {siret}: {e}")
+        flash(f"Erreur lors de la vérification du SIRET {siret}: {e}", "danger")
         return jsonify({
             'exists': False,
             'error': str(e)
