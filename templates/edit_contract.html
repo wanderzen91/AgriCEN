@@ -169,20 +169,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="row mt-4">
-                                    <div class="col-12">
-                                        <div class="mb-3">
-                                            <label for="produit_fini_tagify" class="form-label">Produits Finis</label>
-                                            <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
-                                            <select id="produit_fini" name="produit_fini" multiple hidden>
-                                                {% for value, label in form.produit_fini.choices %}
-                                                    <option value="{{ value }}" {% if form.produit_fini.data and value in form.produit_fini.data %}selected{% endif %}>{{ label }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -206,6 +192,19 @@
                                 <div class="mb-3">
                                     {{ form.date_fin.label }}
                                     {{ form.date_fin(class="form-control") }}
+                                </div>
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label for="produit_fini_tagify" class="form-label">Produits Finis</label>
+                                            <input id="produit_fini_tagify" class="form-control" name="produit_fini_display" placeholder="Ajouter des produits finis">
+                                            <select id="produit_fini" name="produit_fini" multiple hidden>
+                                                {% for value, label in form.produit_fini.choices %}
+                                                    <option value="{{ value }}" {% if form.produit_fini.data and value in form.produit_fini.data %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">

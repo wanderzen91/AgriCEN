@@ -338,6 +338,80 @@ Récupère les informations d'une entreprise via l'API SIRENE à partir d'un num
 ```
 
 
+## Intégration API externe : SIRENE (INSEE)
+
+L'application AgriCEN s'intègre avec l'API SIRENE de l'INSEE pour récupérer automatiquement les informations des entreprises agricoles à partir de leur numéro SIRET.
+
+### Description de l'intégration
+
+L'API SIRENE permet d'accéder à la base SIRENE (Système Informatique pour le Répertoire des Entreprises et des Établissements) qui contient les informations sur toutes les entreprises et établissements français.
+
+### Implémentation dans AgriCEN
+
+L'application utilise la fonction `fetch_siret_data` dans `views.py` qui encapsule les appels à l'API SIRENE :
+
+```python
+def fetch_siret_data(siret, flash_messages = False):
+    """
+    Récupère les informations d'une entreprise via l'API SIRENE en fonction du numéro SIRET.
+    """
+    # Validation du SIRET (14 chiffres)
+    if not siret or len(siret) != 14 or not siret.isdigit():
+        return {"error": "Le numéro SIRET est invalide."}, 400
+
+    url = f"https://api.insee.fr/api-sirene/3.11/siret/{siret}"
+    headers = {
+        "accept": "application/json",
+        "X-INSEE-Api-Key-Integration": "[API_KEY]",  # Clé masquée dans la documentation
+    }
+    
+    # Appel à l'API et traitement de la réponse
+    # ...
+```
+
+### Données récupérées
+
+La fonction extrait et structure les informations suivantes de l'API SIRENE :
+
+- **SIREN** : Identifiant de l'entreprise
+- **Dénomination** : Nom officiel de l'entreprise
+- **Activité principale** : Code NAF/APE
+- **Catégorie juridique** : Forme juridique (SARL, SA, etc.)
+- **Tranche d'effectif** : Nombre approximatif d'employés
+- **Adresse complète** : Adresse formatée de l'établissement
+
+### Format de réponse
+
+Une réponse réussie renvoie un objet structuré avec les informations de l'entreprise :
+
+```json
+{
+  "siren": "123456789",
+  "denomination": "EXPLOITATION AGRICOLE EXEMPLE",
+  "activite_principale": "01.11Z",
+  "categorie_juridique": "5499",
+  "tranche_effectif": "11",
+  "adresse_etablissement": "123 ROUTE DES CHAMPS, 33000 BORDEAUX"
+}
+```
+
+### Utilisation dans l'application
+
+Cette API est principalement utilisée pour :
+
+1. Pré-remplir automatiquement les informations de l'exploitation agricole lors de la création/modification de contrats
+2. Vérifier et valider les numéros SIRET saisis par les utilisateurs
+3. S'assurer de la cohérence des données enregistrées
+
+### Gestion des erreurs
+
+La fonction gère plusieurs cas d'erreur :
+
+- SIRET invalide (format incorrect)
+- Établissement non trouvé
+- Erreurs d'API (problèmes d'autorisation, timeout, etc.)
+- Erreurs de communication réseau
+
 ## Appel des API depuis le frontend
 
 Exemple d'appel d'API depuis JavaScript :

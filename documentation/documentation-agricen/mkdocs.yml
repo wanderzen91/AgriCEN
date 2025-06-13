@@ -1,5 +1,7 @@
 site_name: Documentation AgriCEN
 site_description: Documentation de l'application de gestion des contrats agricoles pour le CEN
+site_url: https://cen-nouvelle-aquitaine.github.io/documentation_AgriCEN/
+
 theme:
   name: material
   language: fr
