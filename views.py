@@ -245,6 +245,7 @@ def check_siret_in_database(siret):
                 "adresse_etablissement": societe.adresse_etablissement,
                 "commune_etablissement": societe.commune_etablissement,
                 "nom_etablissement": societe.nom_etablissement,
+                "remarques": societe.remarques,
                 "exists_in_db": True
             }
             
