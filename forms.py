@@ -3,7 +3,7 @@ from wtforms import (
     StringField, DecimalField, DateField, HiddenField, TextAreaField, 
     IntegerField, SubmitField, SelectField, SelectMultipleField, RadioField
 )
-from wtforms.validators import DataRequired, Optional, NumberRange, Length
+from wtforms.validators import DataRequired, Optional, NumberRange, Length, Email
 
 class CombinedForm(FlaskForm):
 
@@ -20,6 +20,7 @@ class CombinedForm(FlaskForm):
     date_prise_effet = DateField('Date de Prise d\'Effet', validators=[DataRequired()])
     latitude = HiddenField('Latitude', validators=[Optional()])
     longitude = HiddenField('Longitude', validators=[Optional()])
+    remarques_contrat = TextAreaField('Remarques sur le contrat', validators=[Optional(), Length(max=500)])
 
     # Champs type_contrat
     appellation_contrat = SelectField(
@@ -32,8 +33,9 @@ class CombinedForm(FlaskForm):
 
     # Champs Société
     nom_societe = StringField('Nom de la Société', validators=[DataRequired(), Length(max=100)])
-    contact = StringField('Contact', validators=[DataRequired(), Length(max=100)])
-    remarques = TextAreaField('Remarques', validators=[Optional(), Length(max=300)])
+    telephone = StringField('Téléphone', validators=[Optional(), Length(max=20)])
+    email = StringField('Email', validators=[Optional(), Length(max=100), Email()])
+    remarques = TextAreaField('Remarques sur l\'exploitation', validators=[Optional(), Length(max=300)])
 
     # Champs Agriculteur
     nom_agri = StringField("Nom de l'exploitant(e)", validators=[DataRequired(), Length(max=100)])

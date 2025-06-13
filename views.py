@@ -236,7 +236,8 @@ def check_siret_in_database(siret):
             societe_data = {
                 "id_societe": societe.id_societe,
                 "nom_societe": societe.nom_societe,
-                "contact": societe.contact,
+                "telephone": societe.telephone,
+                "email": societe.email,
                 "siret": societe.siret,
                 "categorie_juridique": societe.categorie_juridique,
                 "activite_principale": societe.activite_principale,
@@ -391,7 +392,7 @@ def map_page():
             champs_a_ignorer = [
                 'type_production', 'mode_production',  # Champs de production
                 'nom_agri', 'prenom_agri',  # Champs de l'agriculteur
-                'contact'  # Champ de contact de la société
+                'telephone', 'email' 
             ]
             
             # Valider manuellement tous les champs sauf ceux à ignorer
@@ -425,7 +426,8 @@ def map_page():
                 if not societe:
                     societe = Societe(
                         nom_societe=form.nom_societe.data,
-                        contact=form.contact.data,
+                        telephone=form.telephone.data,
+                        email=form.email.data,
                         siret=form.siret.data, 
                         adresse_etablissement=form.adresse_etablissement.data,  
                         tranche_effectif=form.tranche_effectif.data, 
@@ -617,7 +619,8 @@ def map_page():
             "code_site": contrat.sites_cen[0].code_site if contrat.sites_cen and len(contrat.sites_cen) > 0 else "Non spécifié",
             "nom_societe": contrat.societe.nom_societe if contrat.societe else "Non spécifié",
             "agriculteur": f"{contrat.societe.agriculteurs_intermediaires[0].agriculteur.prenom_agri} {contrat.societe.agriculteurs_intermediaires[0].agriculteur.nom_agri}" if contrat.societe and contrat.societe.agriculteurs_intermediaires else "Non spécifié",
-            "contact": contrat.societe.contact if contrat.societe else "Non spécifié",
+            "telephone": contrat.societe.telephone if contrat.societe else "Non spécifié",
+            "email": contrat.societe.email if contrat.societe else "Non spécifié",
             "siret": contrat.societe.siret,
             "adresse_etablissement": contrat.societe.adresse_etablissement,
             "tranche_effectif": contrat.societe.tranche_effectif_obj.lib_type_tranche_effectif if contrat.societe and contrat.societe.tranche_effectif_obj else "Non spécifié",
@@ -635,6 +638,8 @@ def map_page():
             "referent": f"{contrat.referent.prenom_referent} {contrat.referent.nom_referent}" if contrat.referent else "Non spécifié",
             "surface_contractualisee": contrat.surf_contractualisee if contrat.surf_contractualisee else 'Non spécifié',
             "type_milieux": type_milieux,
+            "remarques": contrat.societe.remarques if contrat.societe and contrat.societe.remarques else "Non spécifié",
+            "remarques_contrat": contrat.remarques if contrat.remarques else "Non spécifié",
         })
 
     # Envoyer les données au template après la boucle
@@ -714,7 +719,9 @@ def edit_contract(contract_id):
             form.categorie_juridique.data = contrat.societe.categorie_juridique
             form.tranche_effectif.data = contrat.societe.tranche_effectif
             form.adresse_etablissement.data = contrat.societe.adresse_etablissement
-            form.contact.data = contrat.societe.contact
+            form.telephone.data = contrat.societe.telephone
+            form.email.data = contrat.societe.email
+            form.remarques.data = contrat.societe.remarques
 
         # Contrat
         form.surf_contractualisee.data = contrat.surf_contractualisee
@@ -722,6 +729,7 @@ def edit_contract(contract_id):
         form.date_prise_effet.data = contrat.date_prise_effet
         form.date_fin.data = contrat.date_fin
         form.appellation_contrat.data = contrat.id_type_contrat
+        form.remarques_contrat.data = contrat.remarques
 
         # Référent
         if contrat.referent:
@@ -824,7 +832,9 @@ def edit_contract(contract_id):
             # Mise à jour de la société
             if contrat.societe:
                 contrat.societe.nom_societe = form.nom_societe.data
-                contrat.societe.contact = form.contact.data
+                contrat.societe.telephone = form.telephone.data
+                contrat.societe.email = form.email.data
+                contrat.societe.remarques = form.remarques.data
                 contrat.societe.siret = form.siret.data
                 contrat.societe.activite_principale = form.activite_principale.data
                 contrat.societe.categorie_juridique = form.categorie_juridique.data
@@ -844,6 +854,7 @@ def edit_contract(contract_id):
             contrat.date_prise_effet = form.date_prise_effet.data
             contrat.date_fin = form.date_fin.data
             contrat.id_type_contrat = form.appellation_contrat.data
+            contrat.remarques = form.remarques_contrat.data
 
             # Mise à jour du référent
             if contrat.referent:

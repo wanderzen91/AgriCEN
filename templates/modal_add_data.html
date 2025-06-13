@@ -148,8 +148,16 @@
                                         {{ form.tranche_effectif(class="form-control", readonly=True) }}
                                     </div>
                                     <div class="mb-3">
-                                        {{ form.contact.label }}
-                                        {{ form.contact(class="form-control") }}
+                                        {{ form.telephone.label }}
+                                        {{ form.telephone(class="form-control", placeholder="Numéro de téléphone") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.email.label }}
+                                        {{ form.email(class="form-control", placeholder="Adresse email") }}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.remarques.label }}
+                                        {{ form.remarques(class="form-control", placeholder="Remarques éventuelles sur l'exploitation") }}
                                     </div>
                                 </div>
                             </div>
@@ -221,6 +229,12 @@
                                                     {% endfor %}
                                                 </select>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <div class="mb-3">
+                                            {{ form.remarques_contrat.label }}
+                                            {{ form.remarques_contrat(class="form-control remarques-contrat", placeholder="Remarques éventuelles sur le contrat") }}
                                         </div>
                                     </div>
                                 </div>

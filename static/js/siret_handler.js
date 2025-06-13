@@ -180,6 +180,20 @@ class SiretHandler {
             console.log("Remplissage du champ contact avec:", data.contact);
             contactInput.value = data.contact;
         }
+
+        // Remplir téléphone, email et remarques exploitation si présents
+        const telInput = form.querySelector('[name="telephone"]');
+        if (telInput && data.telephone) {
+            telInput.value = data.telephone;
+        }
+        const emailInput = form.querySelector('[name="email"]');
+        if (emailInput && data.email) {
+            emailInput.value = data.email;
+        }
+        const remarquesInput = form.querySelector('[name="remarques"]');
+        if (remarquesInput && data.remarques) {
+            remarquesInput.value = data.remarques;
+        }
         
         // Remplir les informations de l'agriculteur
         if (data.agriculteurs && data.agriculteurs.length > 0) {

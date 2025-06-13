@@ -335,28 +335,31 @@ loadSites();
             // Créer un objet avec les données du contrat
             var contractData = {
                 id: contrat.id,
-                nom_site: contrat.nom_site || "Non spécifié",
-                code_site: contrat.code_site || "Non spécifié",
-                agriculteur: contrat.agriculteur || "Non spécifié",
-                date_naissance: contrat.date_naissance || "Non spécifié",
-                nom_societe: contrat.nom_societe || "Non spécifié",
-                siret: contrat.siret || "Non spécifié",
-                adresse_etablissement: contrat.adresse_etablissement || "Non spécifié",
-                activite_principale: contrat.activite_principale || "Non spécifié",
-                categorie_juridique: contrat.categorie_juridique || "Non spécifié",
-                tranche_effectif: contrat.tranche_effectif || "Non spécifié",
-                contact: contrat.contact || "Non spécifié",
+                nom_site: contrat.nom_site || "Non renseigné",
+                code_site: contrat.code_site || "Non renseigné",
+                agriculteur: contrat.agriculteur || "Non renseigné",
+                date_naissance: contrat.date_naissance || "Non renseigné",
+                nom_societe: contrat.nom_societe || "Non renseigné",
+                siret: contrat.siret || "Non renseigné",
+                adresse_etablissement: contrat.adresse_etablissement || "Non renseigné",
+                activite_principale: contrat.activite_principale || "Non renseigné",
+                categorie_juridique: contrat.categorie_juridique || "Non renseigné",
+                tranche_effectif: contrat.tranche_effectif || "Non renseigné",
+                telephone: contrat.telephone || "Non renseigné",
+                email: contrat.email || "Non renseigné",
                 surface_contractualisee: parseFloat(contrat.surface_contractualisee) || 0,
-                referent: contrat.referent || "Non spécifié",
-                type_contrat: contrat.type_contrat || "Non spécifié",
+                referent: contrat.referent || "Non renseigné",
+                type_contrat: contrat.type_contrat || "Non renseigné",
                 latitude: parseFloat(contrat.latitude) || 0,
                 longitude: parseFloat(contrat.longitude) || 0,
                 type_productions: contrat.type_productions || [],
                 produits_finis: contrat.produits_finis || [],
                 type_milieux: contrat.type_milieux || [],
-                date_signature: contrat.date_signature || "Non spécifié",
-                date_prise_effet: contrat.date_prise_effet || "Non spécifié",
-                date_fin: contrat.date_fin || "Non spécifié"
+                date_signature: contrat.date_signature || "Non renseigné",
+                date_prise_effet: contrat.date_prise_effet || "Non renseigné",
+                date_fin: contrat.date_fin || "Non renseigné",
+                remarques: contrat.remarques || "Non renseigné",
+                remarques_contrat: contrat.remarques_contrat || "Non renseigné",
             };
 
             // Ajouter un popup avec les détails du contrat
@@ -415,7 +418,8 @@ loadSites();
         document.getElementById('panelCodeSite').innerHTML = `<strong>Code du site :</strong> ${contractData.code_site || "Non spécifié"}`;
         document.getElementById('panelAgriculteur').innerHTML = `<strong>Exploitant(e) :</strong> ${contractData.agriculteur || "Non spécifié"}`;
         document.getElementById('panelDateNaissanceAgriculteur').innerHTML = `<strong>Date de naissance :</strong> ${contractData.date_naissance || "Non spécifié"}`;
-        document.getElementById('panelContact').innerHTML = `<strong>Contact :</strong> ${contractData.contact || "Non spécifié"}`;
+        document.getElementById('panelTelephone').innerHTML = `<strong>Téléphone :</strong> ${contractData.telephone || "Non spécifié"}`;
+        document.getElementById('panelEmail').innerHTML = `<strong>Email :</strong> ${contractData.email || "Non spécifié"}`;
 
 
         // Gestion des types de production avec des classes dynamiques
@@ -442,11 +446,7 @@ loadSites();
 
 // Ajoutons un console.log pour déboguer
 const productionsHtml = contractData.type_productions.map(production => {
-    console.log("Type reçu:", production.type);  
-    console.log("Type en lowercase:", production.type.toLowerCase());
     const productionClass = productionClasses[production.type.toLowerCase()] || "bg-secondary";
-    console.log("Clés disponibles:", Object.keys(productionClasses));  // Voir toutes les clés
-    console.log("Classe trouvée:", productionClass);  // Voir quelle classe est attribuée
     const modeProduction = production.mode_production || "Non spécifié";
     const modeClass = modeProductionClasses[modeProduction.toLowerCase()] || "bg-secondary";
     return `
@@ -474,6 +474,8 @@ const productionsHtml = contractData.type_productions.map(production => {
             <strong>Types de production :</strong><br>
             ${productionsHtml}
         `;
+
+        document.getElementById('panelRemarquesExploitation').innerHTML = `<strong>Remarques : </strong>${contractData.remarques || "Non spécifié"}`;
     
         // Types de milieu
         document.getElementById('PanelTypeMilieu').innerHTML = `
@@ -506,7 +508,9 @@ const productionsHtml = contractData.type_productions.map(production => {
         document.getElementById('panelDateFin').innerHTML = `<strong>Date de fin :</strong> ${contractData.date_fin || "Non spécifié"}`;
         document.getElementById('PanelReferent').innerHTML = `<strong>Référent :</strong> ${contractData.referent || "Non spécifié"}`;
         document.getElementById('PanelSurfaceContractualisee').innerHTML = `<strong>Surface contractualisée :</strong> ${contractData.surface_contractualisee || "Non spécifié"}`;
-    
+        document.getElementById('panelRemarquesContrat').innerHTML = `<strong>Remarques : </strong>${contractData.remarques_contrat || "Non spécifié"}`;
+
+
         // Ouvrir le panneau latéral
         document.getElementById('sidePanel').setAttribute('data-contract-id', contractData.id);
         document.getElementById('sidePanel').style.right = '0';

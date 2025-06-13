@@ -27,7 +27,8 @@ class Societe(db.Model):
     __table_args__ = {'schema': 'saisie'}
     id_societe = db.Column(db.Integer, primary_key=True)
     nom_societe = db.Column(db.String(100))
-    contact = db.Column(db.String(100), nullable=False)
+    telephone = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(100), nullable=True)
     siret = db.Column(db.String(14), unique=True)
     categorie_juridique = db.Column(db.String(4), db.ForeignKey('referentiel.type_categorie_juridique.code_type_categorie_juridique'))
     activite_principale = db.Column(db.String(6), db.ForeignKey('referentiel.type_activite_principale.code_type_activite_principale'))

@@ -74,8 +74,12 @@
                                     {{ form.prenom_agri(class="form-control", id="modal_prenom_agri") }}
                                 </div>
                                 <div class="mb-3">
-                                    {{ form.contact.label }}
-                                    {{ form.contact(class="form-control") }}
+                                    {{ form.telephone.label }}
+                                    {{ form.telephone(class="form-control", placeholder="Numéro de téléphone") }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.email.label }}
+                                    {{ form.email(class="form-control", placeholder="Adresse email") }}
                                 </div>
                             </div>
                         </div>
@@ -131,7 +135,7 @@
                         </div>
 
                         <!-- Section Production -->
-                        <div class="card">
+                        <div class="card mb-4">
                             <div class="card-header bg-light">
                                 <h5 class="card-title mb-0">Production</h5>
                             </div>
@@ -167,6 +171,18 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="card-title mb-0">Remarques éventuelles sur l'exploitation</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="col-md-12 mb-4">
+                                    <div class="mb-3">
+                                        {{ form.remarques(class="form-control", placeholder="...") }}
                                     </div>
                                 </div>
                             </div>
@@ -235,6 +251,18 @@
                                             <option value="{{ value }}" {% if form.type_milieu.data and value in form.type_milieu.data %}selected{% endif %}>{{ label }}</option>
                                         {% endfor %}
                                     </select>
+                                </div>
+                            </div>
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h5 class="card-title mb-0">Remarques éventuelles sur le contrat</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="col-md-12 mb-4">
+                                        <div class="mb-3">
+                                            {{ form.remarques_contrat(class="form-control", placeholder="...") }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-12 mt-4">
