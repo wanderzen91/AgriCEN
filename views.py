@@ -1102,4 +1102,4 @@ def check_existing_contract_by_siret(siret):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8800)
+    app.run(host="0.0.0.0", port=8000)
