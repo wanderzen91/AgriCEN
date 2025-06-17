@@ -386,6 +386,117 @@ def map_page():
             
     # Si le formulaire est soumis
     if form.submit.data:
+        # Validation manuelle des champs Tagify avant la validation WTForms
+        validation_errors = {}
+        
+        # Vérifier les produits finis
+        produits_finis = request.form.getlist('produit_fini')
+        if not produits_finis or produits_finis == ['']:
+            validation_errors['produit_fini'] = ['Veuillez renseigner ce champ.']
+        
+        # Vérifier les types de milieu
+        types_milieu = request.form.getlist('type_milieu')
+        if not types_milieu or types_milieu == ['']:
+            validation_errors['type_milieu'] = ['Veuillez renseigner ce champ.']
+        
+        # Vérifier les types de production bio et conventionnelle
+        type_production_bio = request.form.getlist('type_production_bio[]')
+        type_production_conv = request.form.getlist('type_production_conv[]')
+        
+        # Au moins un type de production doit être sélectionné
+        if (not type_production_bio or type_production_bio == ['']) and (not type_production_conv or type_production_conv == ['']):
+            validation_errors['type_production'] = ['Veuillez sélectionner au moins un type de production.']
+        
+        # Si des erreurs de validation sont trouvées, les ajouter au formulaire et empêcher la soumission
+        if validation_errors:
+            for field_name, errors in validation_errors.items():
+                if hasattr(form, field_name):
+                    field = getattr(form, field_name)
+                    field.errors = errors
+                else:
+                    # Pour type_production, on l'ajoute comme erreur générale
+                    for error in errors:
+                        flash(f"Erreur : {error}", "danger")
+            
+            # Réinitialiser les choix du formulaire
+            populate_form_choices(form)
+            sites_cen_query = VueSites.query.all()
+            geojson = sites_to_geojson(sites_cen_query)
+            
+            # Préparer les données pour la visualisation
+            contrats_query = (
+                db.session.query(Contrat)
+                .options(
+                    selectinload(Contrat.societe).selectinload(Societe.activite_principale_obj),
+                    selectinload(Contrat.societe).selectinload(Societe.categorie_juridique_obj),
+                    selectinload(Contrat.societe).selectinload(Societe.tranche_effectif_obj),
+                    selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.type_production),
+                    selectinload(Contrat.societe).selectinload(Societe.types_production_societe).selectinload(TypeProductionSociete.mode_production),
+                    selectinload(Contrat.types_milieu).selectinload(TypeMilieuContrat.type_milieu),
+                    selectinload(Contrat.produits_finis).selectinload(ProduitFiniContrat.produit_fini),
+                    selectinload(Contrat.sites_cen),
+                    selectinload(Contrat.referent)
+                )
+            )
+
+            contrat_data = []
+
+            # Charger les contrats par lots de 50
+            for contrat in contrats_query.yield_per(50):
+                # Types de milieu
+                type_milieux = [milieu.type_milieu.milieu for milieu in contrat.types_milieu] if contrat.types_milieu else []
+
+                # Traitement des types de production avec leurs modes
+                type_productions = []
+                if contrat.societe and contrat.societe.types_production_societe:
+                    for tps in contrat.societe.types_production_societe:
+                        type_productions.append({
+                            'type': tps.type_production.nature_production,
+                            'mode_production': tps.mode_production.nom if tps.mode_production else None
+                        })
+
+                # Récupérer le premier mode de production (s'il existe)
+                mode_production = type_productions[0]['mode_production'] if type_productions else "Non spécifié"
+                        
+                # Produits finis
+                produits_finis_data = [
+                    produit.produit_fini.nature_produit_fini if produit.produit_fini else "Non spécifié"
+                    for produit in contrat.produits_finis
+                ]
+
+                contrat_data.append({
+                    "id": contrat.id_contrat,
+                    "latitude": float(contrat.latitude) if contrat.latitude else None,
+                    "longitude": float(contrat.longitude) if contrat.longitude else None,
+                    "nom_site": contrat.sites_cen[0].nom_site if contrat.sites_cen and len(contrat.sites_cen) > 0 else "Non spécifié",
+                    "code_site": contrat.sites_cen[0].code_site if contrat.sites_cen and len(contrat.sites_cen) > 0 else "Non spécifié",
+                    "nom_societe": contrat.societe.nom_societe if contrat.societe else "Non spécifié",
+                    "agriculteur": f"{contrat.societe.agriculteurs_intermediaires[0].agriculteur.prenom_agri} {contrat.societe.agriculteurs_intermediaires[0].agriculteur.nom_agri}" if contrat.societe and contrat.societe.agriculteurs_intermediaires else "Non spécifié",
+                    "telephone": contrat.societe.telephone if contrat.societe else "Non spécifié",
+                    "email": contrat.societe.email if contrat.societe else "Non spécifié",
+                    "siret": contrat.societe.siret,
+                    "adresse_etablissement": contrat.societe.adresse_etablissement,
+                    "tranche_effectif": contrat.societe.tranche_effectif_obj.lib_type_tranche_effectif if contrat.societe and contrat.societe.tranche_effectif_obj else "Non spécifié",
+                    "categorie_juridique": contrat.societe.categorie_juridique_obj.lib_type_categorie_juridique if contrat.societe and contrat.societe.categorie_juridique_obj else "Non spécifié",
+                    "activite_principale": contrat.societe.activite_principale_obj.lib_type_activite_principale if contrat.societe and contrat.societe.activite_principale_obj else "Non spécifié",
+                    "date_naissance": contrat.societe.agriculteurs_intermediaires[0].agriculteur.date_naissance if contrat.societe and contrat.societe.agriculteurs_intermediaires else "Non spécifié",
+                    "mode_production": mode_production,
+                    "type_productions": type_productions,
+                    "produits_finis": produits_finis_data,
+                    "type_contrat": contrat.type_contrat.appellation_contrat if contrat.type_contrat else "Non spécifié",
+                    "date_signature": contrat.date_signature.strftime("%Y-%m-%d") if contrat.date_signature else "Non spécifié",
+                    "date_prise_effet": contrat.date_prise_effet.strftime("%Y-%m-%d") if contrat.date_prise_effet else "Non spécifié",
+                    "date_fin": contrat.date_fin.strftime("%Y-%m-%d") if contrat.date_fin else "Non spécifié",
+                    "date_ajout_bdd": contrat.date_ajout_bdd.strftime("%Y-%m-%d %H:%M:%S") if contrat.date_ajout_bdd else "Non spécifié",
+                    "referent": f"{contrat.referent.prenom_referent} {contrat.referent.nom_referent}" if contrat.referent else "Non spécifié",
+                    "surface_contractualisee": contrat.surf_contractualisee if contrat.surf_contractualisee else 'Non spécifié',
+                    "type_milieux": type_milieux,
+                    "remarques": contrat.societe.remarques if contrat.societe and contrat.societe.remarques else "Non spécifié",
+                    "remarques_contrat": contrat.remarques if contrat.remarques else "Non spécifié",
+                })
+
+            return render_template('map.html', form=form, geojson=geojson, contrats=contrat_data)
+
         # Si le SIRET existe, ignorer la validation des champs liés à la société et à l'agriculteur
         validation_ok = True
         if siret_existant:
@@ -935,14 +1046,8 @@ def edit_contract(contract_id):
             )
             .all()
         )
-        print(f"Autres contrats trouvés: {len(autres_contrats)}")
-        if autres_contrats:
-            for ac in autres_contrats:
-                print(f"  - Contrat #{ac.id_contrat} (société: {ac.id_societe})")
-        else:
-            print("Aucun autre contrat trouvé pour cette société.")
+
     else:
-        print(f"Contrat {contract_id} n'a pas d'id_societe associé.")
         autres_contrats = []
     
     return render_template('edit_contract.html', contrat=contrat, form=form, geojson=sites_geojson, autres_contrats=autres_contrats)
