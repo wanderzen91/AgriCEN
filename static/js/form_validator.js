@@ -7,8 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const addForm = document.getElementById('addForm');
     
     if (addForm) {
+        // Masquer tous les textes JSON qui pourraient apparaître après les champs Tagify
+        cleanupDisplayedValues();
+        
         // Ajouter un gestionnaire d'événements pour valider avant la soumission
         addForm.addEventListener('submit', function(event) {
+            // Nettoyer tout texte brut JSON qui pourrait être affiché
+            cleanupDisplayedValues();
+            
             // Valider les champs Tagify
             const isValid = validateTagifyFields();
             
@@ -18,6 +24,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 event.stopPropagation();
             }
         });
+    }
+    
+    // Fonction pour supprimer tout texte JSON visible qui pourrait être affiché après les champs Tagify
+    function cleanupDisplayedValues() {
+        // Chercher les textes qui ressemblent à des valeurs JSON du Tagify
+        const textNodes = findTextNodes(document.body);
+        
+        textNodes.forEach(node => {
+            const text = node.nodeValue.trim();
+            // Si le texte ressemble à une valeur JSON Tagify (commence par [ et contient value, label, emoji)
+            if (/^\[.*"value".*"label".*"emoji".*\]$/.test(text)) {
+                // Supprimer ce nœud de texte
+                node.parentNode.removeChild(node);
+            }
+        });
+    }
+    
+    // Trouve tous les nœuds de texte dans un élément
+    function findTextNodes(element) {
+        const textNodes = [];
+        const walk = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        let node;
+        while (node = walk.nextNode()) {
+            if (node.nodeValue.trim() !== '') {
+                textNodes.push(node);
+            }
+        }
+        
+        return textNodes;
     }
     
     // Fonction pour valider tous les champs Tagify requis
@@ -104,4 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
             existingError.remove();
         }
     }
+    
+    // Exécuter le nettoyage initial pour éviter l'affichage des valeurs JSON
+    cleanupDisplayedValues();
 });
