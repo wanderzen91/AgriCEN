@@ -117,14 +117,6 @@
                                                                     <option value="{{ value }}">{{ label }}</option>
                                                                 {% endfor %}
                                                             </select>
-                                                            <!-- Affichage des erreurs de validation pour type_production -->
-                                                            {% if form.type_production.errors %}
-                                                                <div class="invalid-feedback d-block">
-                                                                    {% for error in form.type_production.errors %}
-                                                                        {{ error }}
-                                                                    {% endfor %}
-                                                                </div>
-                                                            {% endif %}
                                                             <!-- Champ caché pour le mode de production (pour la validation) -->
                                                             <input type="hidden" name="mode_production" value="1">
                                                         </div>
@@ -202,14 +194,6 @@
                                                         <option value="{{ value }}">{{ label }}</option>
                                                     {% endfor %}
                                                 </select>
-                                                <!-- Affichage des erreurs de validation pour produit_fini -->
-                                                {% if form.produit_fini.errors %}
-                                                    <div class="invalid-feedback d-block">
-                                                        {% for error in form.produit_fini.errors %}
-                                                            {{ error }}
-                                                        {% endfor %}
-                                                    </div>
-                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -244,14 +228,6 @@
                                                         <option value="{{ value }}">{{ label }}</option>
                                                     {% endfor %}
                                                 </select>
-                                                <!-- Affichage des erreurs de validation pour type_milieu -->
-                                                {% if form.type_milieu.errors %}
-                                                    <div class="invalid-feedback d-block">
-                                                        {% for error in form.type_milieu.errors %}
-                                                            {{ error }}
-                                                        {% endfor %}
-                                                    </div>
-                                                {% endif %}
                                             </div>
                                         </div>
                                     </div>
@@ -286,3 +262,4 @@
 <script src="{{ url_for('static', filename='js/referent_search.js') }}"></script>
 <script src="{{ url_for('static', filename='js/siret_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form_handler.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form_validator.js') }}"></script>

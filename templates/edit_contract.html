@@ -154,13 +154,6 @@
                                                             <option value="{{ value }}" {% if form.type_production_bio and value|int in form.type_production_bio %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
-                                                    {% if form.type_production.errors %}
-                                                        <div class="invalid-feedback d-block">
-                                                            {% for error in form.type_production.errors %}
-                                                                {{ error }}
-                                                            {% endfor %}
-                                                        </div>
-                                                    {% endif %}
                                                 </div>
                                             </div>
                                             <div class="col-12">
@@ -174,13 +167,6 @@
                                                             <option value="{{ value }}" {% if form.type_production_conv and value|int in form.type_production_conv %}selected{% endif %}>{{ label }}</option>
                                                         {% endfor %}
                                                     </select>
-                                                    {% if form.type_production.errors %}
-                                                        <div class="invalid-feedback d-block">
-                                                            {% for error in form.type_production.errors %}
-                                                                {{ error }}
-                                                            {% endfor %}
-                                                        </div>
-                                                    {% endif %}
                                                     <input type="hidden" name="mode_production_conv" value="2"> <!-- Valeur fixe pour Conventionnelle -->
                                                 </div>
                                             </div>
