@@ -401,12 +401,20 @@ def map_page():
                 if field_name not in champs_a_ignorer and field_name != 'csrf_token' and field_name != 'submit':
                     if not field.validate(form):
                         print(f"Erreur de validation pour le champ {field_name}: {field.errors}")
+                        # Afficher un message d'erreur pour chaque erreur de validation
+                        for error in field.errors:
+                            flash(f"Erreur dans {field.label.text} : {error}", "danger")
                         validation_ok = False
         else:
             # Validation normale de tous les champs
             validation_ok = form.validate_on_submit()
             if not validation_ok:
                 print("Erreurs de validation:", form.errors)
+                # Afficher des messages d'erreur pour chaque champ non valide
+                for field_name, errors in form.errors.items():
+                    field = getattr(form, field_name)
+                    for error in errors:
+                        flash(f"Erreur dans {field.label.text} : {error}", "danger")
         
         if validation_ok:  # Si la validation est réussie
             try:              
@@ -562,11 +570,12 @@ def map_page():
             except Exception as e:
                 db.session.rollback()
                 flash(f"Erreur : {str(e)}", 'danger')
-    else:
-        # Afficher les erreurs spécifiques
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f"Erreur dans {getattr(form, field).label.text} : {error}", "danger")
+    # Cette section n'est plus nécessaire car les erreurs sont maintenant affichées dans la section ci-dessus
+    # else:
+    #     # Afficher les erreurs spécifiques
+    #     for field, errors in form.errors.items():
+    #         for error in errors:
+    #             flash(f"Erreur dans {getattr(form, field).label.text} : {error}", "danger")
 
 
     # Préparer les données pour la visualisation avec yield_per()
