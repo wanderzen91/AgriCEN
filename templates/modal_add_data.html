@@ -34,18 +34,12 @@
                                     <div class="mb-3">
                                         {{ form.nom_site.label }}
                                         {{ form.nom_site(class="form-control", id="modal_nom_site", readonly=True) }}
-                                        {% for error in form.nom_site.errors %}
-                                            <div class="text-danger mt-1">{{ error }}</div>
-                                        {% endfor %}
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         {{ form.code_site.label }}
                                         {{ form.code_site(class="form-control", id="modal_code_site", readonly=True) }}
-                                        {% for error in form.code_site.errors %}
-                                            <div class="text-danger mt-1">{{ error }}</div>
-                                        {% endfor %}
                                     </div>
                                 </div>
                             </div>
@@ -83,16 +77,10 @@
                                         <div class="mb-3">
                                             {{ form.nom_agri.label }}
                                             {{ form.nom_agri(class="form-control", id="modal_nom_agri") }}
-                                            {% for error in form.nom_agri.errors %}
-                                                <div class="text-danger mt-1">{{ error }}</div>
-                                            {% endfor %}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.prenom_agri.label }}
                                             {{ form.prenom_agri(class="form-control", id="modal_prenom_agri") }}
-                                            {% for error in form.prenom_agri.errors %}
-                                                <div class="text-danger mt-1">{{ error }}</div>
-                                            {% endfor %}
                                         </div>
                                         <div class="mb-3">
                                             {{ form.date_naissance.label }}
@@ -130,12 +118,12 @@
                                                                 {% endfor %}
                                                             </select>
                                                             {% for error in form.type_production.errors %}
-                                                                <div class="text-danger mt-1">{{ error }}</div>
+                                                                <div class="text-danger">{{ error }}</div>
                                                             {% endfor %}
                                                             <!-- Champ caché pour le mode de production (pour la validation) -->
                                                             <input type="hidden" name="mode_production" value="1">
                                                             {% for error in form.mode_production.errors %}
-                                                                <div class="text-danger mt-1">{{ error }}</div>
+                                                                <div class="text-danger">{{ error }}</div>
                                                             {% endfor %}
                                                         </div>
                                                     </div>
@@ -148,9 +136,6 @@
                                     <div class="mb-3">
                                         {{ form.nom_societe.label }}
                                         {{ form.nom_societe(class="form-control", readonly=True) }}
-                                        {% for error in form.nom_societe.errors %}
-                                            <div class="text-danger mt-1">{{ error }}</div>
-                                        {% endfor %}
                                     </div>
                                     <div class="mb-3">
                                         {{ form.adresse_etablissement.label }}
@@ -195,29 +180,20 @@
                                                 {{ form.appellation_contrat.label }}
                                                 {{ form.appellation_contrat(class="form-control appellation-contrat") }}
                                                 {% for error in form.appellation_contrat.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
+                                                    <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.date_signature.label }}
                                                 {{ form.date_signature(class="form-control date-signature") }}
-                                                {% for error in form.date_signature.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
-                                                {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.date_prise_effet.label }}
                                                 {{ form.date_prise_effet(class="form-control date-prise-effet") }}
-                                                {% for error in form.date_prise_effet.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
-                                                {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.date_fin.label }}
                                                 {{ form.date_fin(class="form-control date-fin") }}
-                                                {% for error in form.date_fin.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
-                                                {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.produit_fini.label }}
@@ -228,7 +204,7 @@
                                                     {% endfor %}
                                                 </select>
                                                 {% for error in form.produit_fini.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
+                                                    <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
                                         </div>
@@ -248,21 +224,21 @@
                                                 {{ form.nom_referent.label }}
                                                 {{ form.nom_referent(class="form-control nom-referent", id="modal_nom_referent") }}
                                                 {% for error in form.nom_referent.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
+                                                    <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.prenom_referent.label }}
                                                 {{ form.prenom_referent(class="form-control prenom-referent", id="modal_prenom_referent") }}
                                                 {% for error in form.prenom_referent.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
+                                                    <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.surf_contractualisee.label }}
                                                 {{ form.surf_contractualisee(class="form-control surf-contractualisee") }}
                                                 {% for error in form.surf_contractualisee.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
+                                                    <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
                                             <div class="mb-3">
@@ -274,7 +250,7 @@
                                                     {% endfor %}
                                                 </select>
                                                 {% for error in form.type_milieu.errors %}
-                                                    <div class="text-danger mt-1">{{ error }}</div>
+                                                    <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
                                         </div>

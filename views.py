@@ -562,12 +562,12 @@ def map_page():
             except Exception as e:
                 db.session.rollback()
                 flash(f"Erreur : {str(e)}", 'danger')
-        else:
-            # Afficher les erreurs spécifiques quand la validation échoue
-            for field, errors in form.errors.items():
-                for error in errors:
-                    flash(f"Erreur dans {getattr(form, field).label.text} : {error}", "danger")
-            return render_template('map.html', form=form, geojson=geojson, keep_modal_open=True)
+    else:
+        # Afficher les erreurs spécifiques
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Erreur dans {getattr(form, field).label.text} : {error}", "danger")
+
 
     # Préparer les données pour la visualisation avec yield_per()
     contrats_query = (
@@ -935,7 +935,6 @@ def edit_contract(contract_id):
             )
             .all()
         )
-
         print(f"Autres contrats trouvés: {len(autres_contrats)}")
         if autres_contrats:
             for ac in autres_contrats:

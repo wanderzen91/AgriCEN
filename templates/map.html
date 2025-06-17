@@ -621,14 +621,6 @@ const productionsHtml = contractData.type_productions.map(production => {
             }
         }, 1000); // Délai pour s'assurer que le script externe est chargé
     });
-
-    // Gérer l'ouverture automatique du modal en cas d'erreur de validation
-    {% if keep_modal_open %}
-    document.addEventListener('DOMContentLoaded', function() {
-        const addModal = new bootstrap.Modal(document.getElementById('addModal'));
-        addModal.show();
-    });
-    {% endif %}
 </script>
 
 {% endblock %}
