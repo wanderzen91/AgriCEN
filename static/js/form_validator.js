@@ -22,8 +22,19 @@ FormValidator.validateTagifyFields = function() {
     
     // Vérifier le champ "Types de production"
     // Nous devons vérifier la combinaison des deux champs (bio et conventionnel)
-    const typeProductionBioEmpty = FormValidator.isTagifyEmpty(window.typeProductionBioTagify);
-    const typeProductionConvEmpty = FormValidator.isTagifyEmpty(window.typeProductionConvTagify);
+    let typeProductionBioEmpty = true;
+    let typeProductionConvEmpty = true;
+    
+    // Vérifier si les instances existent et ont des valeurs
+    if (window.typeProductionBioTagify && window.typeProductionBioTagify.value && 
+        Array.isArray(window.typeProductionBioTagify.value) && window.typeProductionBioTagify.value.length > 0) {
+        typeProductionBioEmpty = false;
+    }
+    
+    if (window.typeProductionConvTagify && window.typeProductionConvTagify.value && 
+        Array.isArray(window.typeProductionConvTagify.value) && window.typeProductionConvTagify.value.length > 0) {
+        typeProductionConvEmpty = false;
+    }
     
     // Si les deux types de production sont vides, c'est une erreur
     if (typeProductionBioEmpty && typeProductionConvEmpty) {
@@ -53,7 +64,7 @@ FormValidator.validateForm = function(event) {
         event.preventDefault();
         
         // Créer un message d'erreur formaté pour le popup
-        let errorMessage = "Veuillez corriger les erreurs suivantes :<br><ul>";
+        let errorMessage = "<ul>";
         errors.forEach(error => {
             errorMessage += `<li>${error}</li>`;
         });
@@ -63,25 +74,10 @@ FormValidator.validateForm = function(event) {
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: "error",
-                title: "Champs requis manquants",
+                title: "Validation impossible",
                 html: errorMessage,
-                confirmButtonColor: '#28a745',  // Couleur verte pour le bouton OK
-                cancelButtonColor: '#dc3545',    // Couleur rouge pour le bouton annuler
-                confirmButtonText: 'Compris !',
-                background: '#f8f9fa',           // Fond légèrement grisé
-                backdrop: `rgba(0,0,0,0.4)`,     // Fond semi-transparent
-                showClass: {
-                    popup: 'animate__animated animate__fadeInDown animate__faster'
-                },
-                hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp animate__faster'
-                },
-                customClass: {
-                    title: 'text-danger',          // Classe Bootstrap pour le titre en rouge
-                    htmlContainer: 'text-left',   // Alignement du texte à gauche
-                    popup: 'rounded-lg',          // Coins arrondis
-                },
-                focusConfirm: false              // Ne pas mettre automatiquement le focus sur le bouton confirmer
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
             });
         } else {
             // Fallback en cas d'absence de SweetAlert2

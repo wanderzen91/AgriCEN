@@ -149,6 +149,12 @@ TagifyHandler.initializeTypeProductionTagify = function() {
     // Récupérer le champ caché original pour la validation du formulaire
     const originalTypeProductionSelect = document.querySelector('.type-production-select[name="type_production"]');
     
+    // Créer un objet pour retourner les instances
+    const tagifyInstances = {
+        bioTagify: bioTagify,
+        convTagify: convTagify
+    };
+    
     if (originalTypeProductionSelect) {
         
         // Fonction pour mettre à jour le champ caché original
@@ -209,13 +215,14 @@ TagifyHandler.initializeTypeProductionTagify = function() {
         
         // Appeler la fonction une fois au démarrage pour initialiser le champ
         setTimeout(updateOriginalTypeProduction, 100);
+        
+        // Retourner les instances pour qu'elles soient accessibles à l'extérieur
+        return tagifyInstances;
     } else {
         console.error('Original type_production select not found for validation');
+        return tagifyInstances;
     }
     
-    return {
-        bioTagify: bioTagify,
-        convTagify: convTagify
     };
     
     // Fonction interne pour initialiser le champ des types de production bio
@@ -259,7 +266,7 @@ TagifyHandler.initializeTypeProductionTagify = function() {
             return null;
         }
     }
-}
+// Fonction interne pour initialiser le champ des types de production conventionnelle - fin
 
 // Initialiser Tagify pour les produits finis
 TagifyHandler.initializeProduitFiniTagify = function() {
@@ -344,6 +351,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialiser les champs de type de production (bio et conventionnel)
         if (document.querySelector('.type-production-bio-tagify') || document.querySelector('.type-production-conv-tagify')) {
             const tagifyInstances = TagifyHandler.initializeTypeProductionTagify();
+            // Stocker les instances dans des variables globales pour que form_validator.js puisse y accéder
+            if (tagifyInstances && tagifyInstances.bioTagify) {
+                window.typeProductionBioTagify = tagifyInstances.bioTagify;
+            }
+            if (tagifyInstances && tagifyInstances.convTagify) {
+                window.typeProductionConvTagify = tagifyInstances.convTagify;
+            }
         } else if (document.querySelector('.type-production-tagify')) {
             // Compatibilité avec l'ancien format si nécessaire
             window.typeProductionTagify = TagifyHandler.initializeTypeProductionTagify();
