@@ -3,7 +3,13 @@ from wtforms import (
     StringField, DecimalField, DateField, HiddenField, TextAreaField, 
     IntegerField, SubmitField, SelectField, SelectMultipleField, RadioField
 )
-from wtforms.validators import DataRequired, Optional, NumberRange, Length, Email
+from wtforms.validators import DataRequired, Optional, NumberRange, Length, Email, ValidationError
+
+# Validateur personnalisé pour les champs SelectMultipleField
+def validate_multiple_choice(form, field):
+    """Validateur pour s'assurer qu'au moins un élément est sélectionné dans un SelectMultipleField"""
+    if not field.data or (isinstance(field.data, list) and len(field.data) == 0):
+        raise ValidationError('Ce champ est requis. Veuillez sélectionner au moins une option.')
 
 class CombinedForm(FlaskForm):
 
@@ -50,7 +56,7 @@ class CombinedForm(FlaskForm):
     type_milieu = SelectMultipleField(
         'Types de Milieu',
         choices=[],  # Les choix seront définis dynamiquement
-        validators=[DataRequired(message="Veuillez renseigner ce champ.")],
+        validators=[validate_multiple_choice],
         coerce=int  # Convertit les données soumises en `int` automatiquement
     )
 
@@ -59,7 +65,14 @@ class CombinedForm(FlaskForm):
     type_production = SelectMultipleField(
         'Types de Production', 
         choices=[],  # Les choix seront définis dynamiquement
-        validators=[DataRequired()], #Essayer de trouver un validateur personnalisé pour SelectMultipleField car lorsqu'aucune valeur n'est sélectionnée, le champ renvoie une liste vide ([]) et DataRequired() ne considère pas une liste vide comme une valeur invalide, donc la validation passe silencieusement.
+        validators=[validate_multiple_choice],
+        coerce=int  # Convertit les données soumises en `int` automatiquement
+    )
+
+    mode_production = SelectField(
+        'Mode de Production',
+        choices=[],  # Les choix seront définis dynamiquement
+        validators=[DataRequired()],
         coerce=int  # Convertit les données soumises en int automatiquement
     )
     
@@ -67,7 +80,7 @@ class CombinedForm(FlaskForm):
     produit_fini = SelectMultipleField(
         'Produits Finis', 
         choices=[],  # Les choix seront définis dynamiquement
-        validators=[DataRequired(message="Veuillez renseigner ce champ.")],
+        validators=[validate_multiple_choice],
         coerce=int  # Convertit les données soumises en `int` automatiquement
     )
 

@@ -117,9 +117,14 @@
                                                                     <option value="{{ value }}">{{ label }}</option>
                                                                 {% endfor %}
                                                             </select>
-                                                            {% for error in form.type_production.errors %}
-                                                                <div class="text-danger">{{ error }}</div>
-                                                            {% endfor %}
+                                                            <!-- Affichage des erreurs de validation pour type_production -->
+                                                            {% if form.type_production.errors %}
+                                                                <div class="invalid-feedback d-block">
+                                                                    {% for error in form.type_production.errors %}
+                                                                        {{ error }}
+                                                                    {% endfor %}
+                                                                </div>
+                                                            {% endif %}
                                                             <!-- Champ caché pour le mode de production (pour la validation) -->
                                                             <input type="hidden" name="mode_production" value="1">
                                                         </div>
@@ -176,9 +181,6 @@
                                             <div class="mb-3">
                                                 {{ form.appellation_contrat.label }}
                                                 {{ form.appellation_contrat(class="form-control appellation-contrat") }}
-                                                {% for error in form.appellation_contrat.errors %}
-                                                    <div class="text-danger">{{ error }}</div>
-                                                {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.date_signature.label }}
@@ -200,9 +202,14 @@
                                                         <option value="{{ value }}">{{ label }}</option>
                                                     {% endfor %}
                                                 </select>
-                                                {% for error in form.produit_fini.errors %}
-                                                    <div class="text-danger">{{ error }}</div>
-                                                {% endfor %}
+                                                <!-- Affichage des erreurs de validation pour produit_fini -->
+                                                {% if form.produit_fini.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {% for error in form.produit_fini.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -220,23 +227,14 @@
                                             <div class="mb-3">
                                                 {{ form.nom_referent.label }}
                                                 {{ form.nom_referent(class="form-control nom-referent", id="modal_nom_referent") }}
-                                                {% for error in form.nom_referent.errors %}
-                                                    <div class="text-danger">{{ error }}</div>
-                                                {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.prenom_referent.label }}
                                                 {{ form.prenom_referent(class="form-control prenom-referent", id="modal_prenom_referent") }}
-                                                {% for error in form.prenom_referent.errors %}
-                                                    <div class="text-danger">{{ error }}</div>
-                                                {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.surf_contractualisee.label }}
                                                 {{ form.surf_contractualisee(class="form-control surf-contractualisee") }}
-                                                {% for error in form.surf_contractualisee.errors %}
-                                                    <div class="text-danger">{{ error }}</div>
-                                                {% endfor %}
                                             </div>
                                             <div class="mb-3">
                                                 {{ form.type_milieu.label }}
@@ -246,9 +244,14 @@
                                                         <option value="{{ value }}">{{ label }}</option>
                                                     {% endfor %}
                                                 </select>
-                                                {% for error in form.type_milieu.errors %}
-                                                    <div class="text-danger">{{ error }}</div>
-                                                {% endfor %}
+                                                <!-- Affichage des erreurs de validation pour type_milieu -->
+                                                {% if form.type_milieu.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {% for error in form.type_milieu.errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </div>
